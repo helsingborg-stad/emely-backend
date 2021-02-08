@@ -77,6 +77,7 @@ target/
 
 # exclude data from source control by default
 /data/
+/notebooks/01_conversation_output/
 
 # Mac OS-specific storage files
 .DS_Store
