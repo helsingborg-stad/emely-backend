@@ -1,0 +1,150 @@
+from googletrans import Translator
+from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration
+from torch import no_grad
+import random
+from src.chat.conversation import BlenderConversation
+
+
+class InterviewWorld:
+    # Class that keeps
+
+    def __init__(self, job, name, mname='facebook/blenderbot-1B-distill'):
+        # TODO: More sophisticated questions/greeting drawn from txt file(?) and formated with name and job
+        # TODO: init model and tokenizer from file
+        # TODO: init from opt like dictionary
+        self.questions = [question.format(job) if format_this else question for (question, format_this) in
+                          read_questions('interview_questions.txt')]
+        random.shuffle(self.questions)
+        self.greeting = 'Hej, och välkommen till din intervju. Hur står det till, {}?'.format(name)
+        self.context = ''  # TODO, maybe a function that updates this as well
+
+        self.job = job
+        self.human_name = name
+        self.model = BlenderbotForConditionalGeneration.from_pretrained(mname)  # Try to load on gpu
+        self.tokenizer = BlenderbotTokenizer.from_pretrained(mname)
+        self.model_name = mname.replace('facebook/', '')
+        self.translator = Translator()
+        self.episode_done = False
+        self.stop_tokens = ['färdig', 'slut', 'hejdå', 'done']  # TODO: Snyggare lösning
+        self.max_replies = 2  # Maximum number of replies back and forth for each question
+        self.nbr_replies = 0
+
+        desc = 'InterviewWorld\t job: {}\t name: {}\t model: {}'.format(self.job, self.human_name, self.model_name)
+        self.conversation_sv = BlenderConversation(lang='sv', tokenizer=self.tokenizer, description=desc)
+        self.conversation_en = BlenderConversation(lang='en', tokenizer=self.tokenizer, description=desc)
+
+        self.greet()
+
+    def greet(self):
+        print(self.greeting)
+        return
+
+    def start(self):
+        # TODO: Prompt the user to add name and job they're looking for?
+        return
+
+    def reset_conversatoin(self):
+        self.conversation_sv.reset()
+        self.conversation_en.reset()
+        return
+
+    def chat(self, user_input):
+        self.observe(user_input)
+        self.act()
+        return
+
+    def observe(self, user_input):
+        # TODO: Add spell check/grammar check here
+        # Observe the user input, translate and update internal states
+        # Check if user wants to quit/no questions left --> self.episode_done = True
+
+        translated_input = self._sv_to_en(user_input)
+        self.conversation_sv.add_user_text(user_input)
+        self.conversation_en.add_user_text(translated_input)
+
+        # Set episode done if exit conidion is met. TODO: Better check of input stop
+        if self.nbr_replies == self.max_replies and len(self.questions) == 0 or user_input.lower().replace(' ',
+                                                                                                           '') in self.stop_tokens:
+            self.episode_done = True
+
+        return
+
+    def act(self):
+        # Get context
+        # Get
+
+        if not self.episode_done:
+
+            # fixa context
+            # kör igneom model
+            # strip token
+            # addera output till convos
+            # increment self.nbr_replies om modellsvar är ok, annars resetta till 0 och ta fråga från banken
+
+            context = self._get_context()
+            inputs = self.tokenizer([context], return_tensors='pt')
+            with no_grad():
+                output_tokens = self.model.generate(**inputs)
+            reply = self.tokenizer.decode(output_tokens[0],skip_special_tokens=True)
+
+            if self._validate_reply(reply) and self.nbr_replies < self.max_replies:
+                self.nbr_replies += 1
+            else:
+                # TODO: More tries here? Change context or something
+                reply = self.questions.pop()
+                self.nbr_replies = 0
+
+            translated_reply = self._en_to_sv(reply)
+            self.conversation_sv.add_bot_text(translated_reply)
+            self.conversation_en.add_bot_text(reply)
+            self.conversation_sv.print_dialogue()
+
+        else:
+            self.conversation_sv.to_txt()
+            self.conversation_en.to_txt()
+            print('Tack för din intervju')
+        return
+
+    def _get_context(self):
+        # Implement this in subclasses
+        context = self.conversation_en.get_dialogue_history()
+        return context
+
+    def _validate_reply(self, answer):
+        # TODO:
+        previous_replies = self.conversation_en.get_bot_replies()
+
+        # If answer not in previous_replies ....
+        if True:
+            return True
+        else:
+            return False
+
+    def _strip_token(self,line):
+        # Removes SOS and EOS tokens from blenderbot reply
+        line = line.replace('<s>', '')
+        line = line.replace('</s>', '')
+        return line
+
+    # TODO: Change from googletrans to googles official API
+    def _sv_to_en(self, text):
+        out = self.translator.translate(text, src='sv', dest='en')
+        if out.text == text:
+            print('Input: {} \n Output: {}'.format(text,out.text))
+            raise ValueError('String not translated properly')
+        return out.text
+
+    def _en_to_sv(self, text):
+        out = self.translator.translate(text, src='en', dest='sv')
+        if out.text == text:
+            print('Input: {} \n Output: {}'.format(text,out.text))
+            raise ValueError('String not translated properly')
+        return out.text
+
+
+def read_questions(file_path):
+    # Reads interview questions from a text file, one question per line. '{}' in place where job should be inserted
+    with open(file_path,'r') as f:
+        questions = f.readlines()
+    format_this = [True if '{}' in question else False for question in questions]
+    return zip(questions,format_this)
