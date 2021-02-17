@@ -2,9 +2,8 @@ from pathlib import Path
 
 class BlenderConversation:
 
-    def __init__(self, lang, tokenizer, description='No description'):
+    def __init__(self, lang, tokenizer):
         self.lang = lang
-        self.description = description
         self.bot_text = []
         self.user_text = []
         self.user_turn = True
@@ -48,9 +47,9 @@ class BlenderConversation:
         # TODO: Option to return string instead of list?
         return self.user_text
 
-    def get_dialogue_history(self, max_len=100):
+    def get_dialogue_history(self, max_len=120):
         # Returns string of the dialogue history with bot and user inputs separated with '\n'
-        # max_len set to default 110 as model has max input length 128 and we want some space for new input
+        # max_len set to default 100 as model has max input length 128 and we want some space for new input
         history = ''
         tokens_left = max_len
         if self.user_turn:
@@ -72,7 +71,7 @@ class BlenderConversation:
             for i in reversed(range(len(self.user_text) - 1)):
                 bot_text = self.bot_text[i]
                 user_text = self.user_text[i]
-                nbr_tokens = len(bot_text.split()) + len(user_text.split())
+                nbr_tokens = len(self.tokenizer(bot_text)['input_ids']) + len(self.tokenizer(user_text)['input_ids'])
                 if nbr_tokens < tokens_left:  # This is not fool proof as the model tokenizer tokenizes differently
                     history = user_text + '\n' + bot_text + '\n' + history
                     tokens_left -= (nbr_tokens + 2)
@@ -80,9 +79,9 @@ class BlenderConversation:
                     break
         return history
 
-    def to_txt(self, file='None'):
+    def to_txt(self, description, file=None):
         # Writes the dialogue to txt file in subdirectory
-        text = '####################################\n' + 'Conversation description: ' + self.description + '\n\n'
+        text = '####################################\n' + 'Conversation description: ' + description + '\n\n'
         if self.user_turn:
             for i in range(len(self.user_text)):
                 text = text + 'User>>> ' + self.user_text[i] + '\n Bot>>> ' + self.bot_text[i] + '\n'
