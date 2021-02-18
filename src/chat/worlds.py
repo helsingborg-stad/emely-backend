@@ -2,7 +2,7 @@ from googletrans import Translator
 from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration
 from torch import no_grad
 import random
-from src.chat.conversation import BlenderConversation
+from conversation import BlenderConversation
 import re
 from itertools import product
 from difflib import SequenceMatcher
@@ -10,14 +10,11 @@ from difflib import SequenceMatcher
 class ChatWorld:
     # Class that keeps
 
-    def __init__(self, mname='facebook/blenderbot-1B-distill'):
-        # TODO: More sophisticated questions/greeting drawn from txt file(?) and formated with name and job
+    def __init__(self, mname='facebook/blenderbot-400M-distill'):
         # TODO: init model and tokenizer from file
         # TODO: init from opt like dictionary
 
-        self.model = BlenderbotForConditionalGeneration.from_pretrained(mname)  # Try to load on gpu
-
-
+        self.model = BlenderbotForConditionalGeneration.from_pretrained(mname)  #TODO: Try to load on gpu
         self.tokenizer = BlenderbotTokenizer.from_pretrained(mname)
 
         self.model_name = mname.replace('facebook/', '')
@@ -54,17 +51,7 @@ class ChatWorld:
         return
 
     def act(self):
-        # Get context
-        # Get
-
         if not self.episode_done:
-
-            # fixa context
-            # kör igneom model
-            # strip token
-            # addera output till convos
-            # increment self.nbr_replies om modellsvar är ok, annars resetta till 0 och ta fråga från banken
-
             context = self._get_context()
             inputs = self.tokenizer([context], return_tensors='pt')
             with no_grad():
@@ -83,24 +70,18 @@ class ChatWorld:
         return
 
     def _get_context(self):
-        # Implement this in subclasses
         context = self.conversation_en.get_dialogue_history()
         return context
 
     def _validate_reply(self, answer):
         return True
 
-    def _strip_token(self,line):
-        # Removes SOS and EOS tokens from blenderbot reply
-        line = line.replace('<s>', '')
-        line = line.replace('</s>', '')
-        return line
-
-    # TODO: Change from googletrans to googles official API
+    # TODO: try: googletrans except: googles official API
     def _sv_to_en(self, text):
         out = self.translator.translate(text, src='sv', dest='en')
         if out.text == text:
             print('Input: {} \n Output: {}'.format(text,out.text))
+            self.save(error='translation')
             raise ValueError('String not translated properly')
         return out.text
 
@@ -108,13 +89,13 @@ class ChatWorld:
         out = self.translator.translate(text, src='en', dest='sv')
         if out.text == text:
             print('Input: {} \n Output: {}'.format(text,out.text))
+            self.save(error='translation')
             raise ValueError('String not translated properly')
         return out.text
 
 class InterviewWorld(ChatWorld):
     # Class that keeps
-
-    def __init__(self, job, name, mname='facebook/blenderbot-1B-distill'):
+    def __init__(self, job, name, mname='facebook/blenderbot-400M-distill'):
         # TODO: More sophisticated questions/greeting drawn from txt file(?) and formated with name and job
         # TODO: init model and tokenizer from file
         # TODO: init from opt like dictionary
@@ -124,7 +105,6 @@ class InterviewWorld(ChatWorld):
                           read_questions('interview_questions.txt')]
         random.shuffle(self.questions)
         self.greeting = 'Hej, och välkommen till din intervju. Hur står det till, {}?'.format(name)
-        self.context = ''  # TODO, maybe a function that updates this as well
 
         self.job = job
         self.human_name = name
@@ -168,9 +148,6 @@ class InterviewWorld(ChatWorld):
         return
 
     def act(self):
-        # Get context
-        # Get
-
         if not self.episode_done:
             context = self._get_context()
             inputs = self.tokenizer([context], return_tensors='pt')
@@ -194,8 +171,6 @@ class InterviewWorld(ChatWorld):
             print(translated_reply)
             self.conversation_sv.add_bot_text(translated_reply)
             self.conversation_en.add_bot_text(reply)
-            #self.conversation_sv.print_dialogue()
-
         else:
             self.save()
             print('Tack för din intervju')
@@ -223,15 +198,25 @@ class InterviewWorld(ChatWorld):
 
         combos = list(product(sentences, previous_sentences))
         ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-        if max(ratios) > 0.6:
+        if max(ratios) > 0.75:
             return False
         else:
             return True
 
-    def save(self):
-        self.conversation_sv.to_txt(self.description, 'chat_output/interview_dialogue.txt')
-        self.conversation_en.to_txt('English '+ self.description, 'chat_output/interview_dialogue.txt')
+    def save(self, error=None):
+        self.conversation_sv.to_txt(self.description, 'chat_output/interview_dialogue.txt', error=None)
+        self.conversation_en.to_txt('English ' + self.description,  'chat_output/interview_dialogue.txt', error=None)
         return
+
+class InterviewWorld2(InterviewWorld):
+
+    def __init__(self, job, name, mname='facebook/blenderbot-400M-distill'):
+        super(InterviewWorld2, self).__init__(job, name, mname=mname)
+
+    # TODO: Implement another version
+    def _validate_reply(self, reply):
+        # Overrides the previous
+        return True
 
 def read_questions(file_path):
     # Reads interview questions from a text file, one question per line. '{}' in place where job should be inserted
