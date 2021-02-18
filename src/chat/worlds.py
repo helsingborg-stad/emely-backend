@@ -36,6 +36,11 @@ class ChatWorld:
         self.act()
         return
 
+    def save(self, error=None):
+        self.conversation_sv.to_txt(self.description, 'chat_output/interview_dialogue.txt', error=error)
+        self.conversation_en.to_txt('English ' + self.description,  'chat_output/interview_dialogue.txt', error=error)
+        return
+
     def observe(self, user_input):
         # TODO: Add spell check/grammar check here
         # Observe the user input, translate and update internal states
@@ -202,11 +207,6 @@ class InterviewWorld(ChatWorld):
             return False
         else:
             return True
-
-    def save(self, error=None):
-        self.conversation_sv.to_txt(self.description, 'chat_output/interview_dialogue.txt', error=None)
-        self.conversation_en.to_txt('English ' + self.description,  'chat_output/interview_dialogue.txt', error=None)
-        return
 
 class InterviewWorld2(InterviewWorld):
 

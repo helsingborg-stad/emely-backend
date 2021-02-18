@@ -5,6 +5,7 @@ if __name__ == '__main__':
     name = 'Alex'
     job = 'receptionist'
     mname = 'facebook/blenderbot-400M-distill' # facebook/blenderbot-1B-distill
+
     world = InterviewWorld(job, name, mname)
 
     while not world.episode_done:
