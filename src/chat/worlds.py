@@ -1,6 +1,7 @@
 from googletrans import Translator
 from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration
 from torch import no_grad
+import torch
 import random
 from conversation import BlenderConversation
 import re
@@ -14,7 +15,9 @@ class ChatWorld:
         # TODO: init model and tokenizer from file
         # TODO: init from opt like dictionary
 
-        self.model = BlenderbotForConditionalGeneration.from_pretrained(mname)  #TODO: Try to load on gpu
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model = BlenderbotForConditionalGeneration.from_pretrained(mname)
+        self.model.to(self.device)
         self.tokenizer = BlenderbotTokenizer.from_pretrained(mname)
 
         self.model_name = mname.replace('facebook/', '')
@@ -59,9 +62,10 @@ class ChatWorld:
         if not self.episode_done:
             context = self._get_context()
             inputs = self.tokenizer([context], return_tensors='pt')
+            inputs.to(self.device)
             with no_grad():
                 output_tokens = self.model.generate(**inputs)
-            reply = self.tokenizer.decode(output_tokens[0],skip_special_tokens=True)
+            reply = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
 
             translated_reply = self._en_to_sv(reply)
             self.conversation_sv.add_bot_text(translated_reply)
@@ -156,6 +160,7 @@ class InterviewWorld(ChatWorld):
         if not self.episode_done:
             context = self._get_context()
             inputs = self.tokenizer([context], return_tensors='pt')
+            inputs.to(self.device)
             with no_grad():
                 output_tokens = self.model.generate(**inputs)
             reply = self.tokenizer.decode(output_tokens[0],skip_special_tokens=True)
