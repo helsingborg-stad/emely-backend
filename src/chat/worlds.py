@@ -221,6 +221,8 @@ class InterviewWorld2(InterviewWorld):
     # TODO: Implement another version
     def _validate_reply(self, reply):
         # Overrides the previous
+        # For every bot reply, check what sentences are repetitive and remove that part only.
+        # Current check will discard a sentence where she asks something new but with a little detail
         return True
 
 def read_questions(file_path):
