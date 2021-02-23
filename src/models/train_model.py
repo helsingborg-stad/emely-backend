@@ -1,4 +1,4 @@
-from transformers import BlenderbotForConditionalGeneration, BlenderbotTokenizer
+from transformers import BlenderbotSmallForConditionalGeneration, BlenderbotSmallTokenizer
 from torch.utils.data import DataLoader, TensorDataset, random_split, RandomSampler, Dataset
 import pandas as pd
 from pathlib import Path
@@ -34,12 +34,13 @@ def token_collate_fn(batch):
 
 def main(hparams):
     # TODO: Add option to start from checkpoint!
-    mname = 'facebook/blenderbot-400M-distill'  # TODO: Add this as click
+    mname = 'facebook/blenderbot_small-90M'  # TODO: Add this as click
     global tokenizer # Dirty fix for collate_fn
-    tokenizer = BlenderbotTokenizer.from_pretrained(mname)
-    model = BlenderbotForConditionalGeneration.from_pretrained(mname)
+    tokenizer = BlenderbotSmallTokenizer.from_pretrained(mname)
+    model = BlenderbotSmallForConditionalGeneration.from_pretrained(mname)
     lightning_model = LitBlenderbot(model=model, tokenizer=tokenizer, hparams=hparams)
 
+    project_dir = Path(__file__).resolve().parents[2]
     train_path = project_dir.joinpath('data/processed/interview_train.csv')
     val_path = project_dir.joinpath('data/processed/interview_val.csv')
 
@@ -62,8 +63,6 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=4)
     parser.add_argument('--auto_scale_batch_size', type=str, default='power')
     hparams = parser.parse_args()
-
-    project_dir = Path(__file__).resolve().parents[2]
 
     main(hparams)
 
