@@ -9,6 +9,7 @@ import pytorch_lightning as pl
 import torch
 from pytorch_lightning.callbacks import ModelCheckpoint
 
+
 class LitBlenderbot(pl.LightningModule):
     def __init__(self, tokenizer, model, hparams):
         super().__init__()
@@ -32,36 +33,45 @@ class LitBlenderbot(pl.LightningModule):
         return reply
 
     def configure_optimizers(self):
+        # TODO: pick different optimizer with hparams
         optimizer = torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
         return optimizer
 
     def training_step(self, batch, batch_idx):
-
-        src_ids, src_mask = batch[0], batch[1]
-        tgt_ids = batch[2]
+        src_ids, src_mask, tgt_ids = batch['input_ids'], batch['attention_mask'], batch['target_ids']
         # Shift the decoder tokens right (but NOT the tgt_ids)
         decoder_input_ids = shift_tokens_right(tgt_ids, self.tokenizer.pad_token_id)
 
         # Run the model and get the logits
-        outputs = self(src_ids, attention_mask=src_mask, decoder_input_ids=decoder_input_ids, use_cache=False)
-        lm_logits = outputs[0]
+        outputs = self.model(src_ids, attention_mask=src_mask, decoder_input_ids=decoder_input_ids, use_cache=False)
+        lm_logits = outputs['logits']
+
         ce_loss_fct = torch.nn.CrossEntropyLoss(ignore_index=self.tokenizer.pad_token_id)
         loss = ce_loss_fct(lm_logits.view(-1, lm_logits.shape[-1]), tgt_ids.view(-1))
-        self.log('train_loss', loss)
 
+        self.log('train_loss', loss)
         return {'loss': loss}
 
-    def validation_step(self, val_batch, batch_idx):
-        loss = 0
-        self.log('val_loss', loss)
-        return loss
+    def validation_step(self, batch, batch_idx):
+        src_ids, src_mask, tgt_ids = batch['input_ids'], batch['attention_mask'], batch['target_ids']
+        decoder_input_ids = shift_tokens_right(tgt_ids, self.tokenizer.pad_token_id)
 
+        # Run the model and get the logits
+        outputs = self.model(src_ids, attention_mask=src_mask, decoder_input_ids=decoder_input_ids, use_cache=False)
+        lm_logits = outputs['logits']
+
+        ce_loss_fct = torch.nn.CrossEntropyLoss(ignore_index=self.tokenizer.pad_token_id)
+        val_loss = ce_loss_fct(lm_logits.view(-1, lm_logits.shape[-1]), tgt_ids.view(-1))
+
+        self.log('val_loss', val_loss)
+        return {'loss': val_loss}
 
 
 def freeze_params(model):
-  """ Freezes all parameters in a model"""
-  for layer in model.parameters():
-    layer.requires_grad = False
+    """ Freezes all parameters in a model"""
+    for layer in model.parameters():
+        layer.requires_grad = False
+
 
 def unfreeze_params(model):
     """ Unfreezes all parameters in a model"""
@@ -69,11 +79,15 @@ def unfreeze_params(model):
         layer.requires_grad = True
 
 
-def encode_sentences(tokenizer, source_sentences, target_sentences, max_length=127, pad_to_max_length=True):
+def encode_sentences(tokenizer, batch, max_length=127, pad_to_max_length=True):
     ''' Function that tokenizes a sentence
         Args: tokenizer - the Blenderbot tokenizer; source and target sentences are the source and target sentences
         Returns: Dictionary with keys: input_ids, attention_mask, target_ids
     '''
+    source_sentences, target_sentences = [], []
+    for _src, _tgt in batch:
+        source_sentences.append(_src)
+        target_sentences.append(_tgt)
 
     input_ids = []
     attention_masks = []
@@ -100,7 +114,7 @@ def encode_sentences(tokenizer, source_sentences, target_sentences, max_length=1
         encoded_dict = tokenizer(
             sentence,
             max_length=max_length,
-            padding = 'max_length',
+            padding='max_length',
             truncation=True,
             return_tensors='pt'
         )
@@ -113,10 +127,11 @@ def encode_sentences(tokenizer, source_sentences, target_sentences, max_length=1
     batch = {
         "input_ids": input_ids,
         "attention_mask": attention_masks,
-        "labels": target_ids,
+        "target_ids": target_ids,
     }
 
     return batch
+
 
 def shift_tokens_right(input_ids, pad_token_id):
     # TODO: Make sure this boy is alright. Should it add an <\s> at the start?
