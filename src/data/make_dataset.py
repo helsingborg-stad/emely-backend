@@ -77,6 +77,7 @@ def main(input_filepath, output_filepath):
     if not processed_data_path.exists():
         processed_data_path.mkdir()
 
+    read_interview_files(raw_data_path,processed_data_path)
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
