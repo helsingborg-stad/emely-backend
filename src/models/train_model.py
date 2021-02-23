@@ -3,8 +3,8 @@ from torch.utils.data import DataLoader, TensorDataset, random_split, RandomSamp
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from src.models.model import LitBlenderbot
 
-import torch.nn.functional as F
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -33,8 +33,8 @@ def token_collate_fn(batch):
     for _src, _target in batch:
         src_list.append(_src)
         target_list.append(_target)
-    x = tokenizer(src_list, return_tensors='pt', padding=True, truncation=True, max_length=128)
-    y = tokenizer(target_list, return_tensors='pt', padding=True, truncation=True, max_length=128)
+    x = tokenizer(src_list, return_tensors='pt', padding=True, truncation=True, max_length=127)
+    y = tokenizer(target_list, return_tensors='pt', padding=True, truncation=True, max_length=127)
     return x, y  # If you end up here, the model probably can't handle x and y of different lengths
 
 

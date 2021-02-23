@@ -35,16 +35,21 @@ class LitBlenderbot(pl.LightningModule):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
         return optimizer
 
-    def training_step(self, train_batch, batch_idx):
-        x, y = train_batch
+    def training_step(self, batch, batch_idx):
 
-        output = self(input_ids=x['input_ids'],
-                      attention_mask=x['attention:mask'],
-                      decoder_input_ids=y['input_ids'],
-                      decoder_attention_mask=y['attention:mask'],
-                      use_cache=False)
-        self.log('train_loss', output.loss)
-        return output.loss
+        src_ids, src_mask = batch[0], batch[1]
+        tgt_ids = batch[2]
+        # Shift the decoder tokens right (but NOT the tgt_ids)
+        decoder_input_ids = shift_tokens_right(tgt_ids, self.tokenizer.pad_token_id)
+
+        # Run the model and get the logits
+        outputs = self(src_ids, attention_mask=src_mask, decoder_input_ids=decoder_input_ids, use_cache=False)
+        lm_logits = outputs[0]
+        ce_loss_fct = torch.nn.CrossEntropyLoss(ignore_index=self.tokenizer.pad_token_id)
+        loss = ce_loss_fct(lm_logits.view(-1, lm_logits.shape[-1]), tgt_ids.view(-1))
+        self.log('train_loss', loss)
+
+        return {'loss': loss}
 
     def validation_step(self, val_batch, batch_idx):
         loss = 0
@@ -64,7 +69,7 @@ def unfreeze_params(model):
         layer.requires_grad = True
 
 
-def encode_sentences(tokenizer, source_sentences, target_sentences, max_length=127, pad_to_max_length=None):
+def encode_sentences(tokenizer, source_sentences, target_sentences, max_length=127, pad_to_max_length=True):
     ''' Function that tokenizes a sentence
         Args: tokenizer - the Blenderbot tokenizer; source and target sentences are the source and target sentences
         Returns: Dictionary with keys: input_ids, attention_mask, target_ids
@@ -75,11 +80,12 @@ def encode_sentences(tokenizer, source_sentences, target_sentences, max_length=1
     target_ids = []
     tokenized_sentences = {}
 
+    # TODO: One step instead of looping for dynamic padding
     for sentence in source_sentences:
         encoded_dict = tokenizer(
             sentence,
             max_length=max_length,
-            padding="max_length" if pad_to_max_length else None,
+            padding='max_length',
             truncation=True,
             return_tensors='pt'
         )
@@ -89,11 +95,12 @@ def encode_sentences(tokenizer, source_sentences, target_sentences, max_length=1
     input_ids = torch.cat(input_ids, dim=0)
     attention_masks = torch.cat(attention_masks, dim=0)
 
+    # TODO: One step instead of looping for dynamic padding
     for sentence in target_sentences:
         encoded_dict = tokenizer(
             sentence,
             max_length=max_length,
-            padding="max_length" if pad_to_max_length else None,
+            padding = 'max_length',
             truncation=True,
             return_tensors='pt'
         )
@@ -112,11 +119,9 @@ def encode_sentences(tokenizer, source_sentences, target_sentences, max_length=1
     return batch
 
 def shift_tokens_right(input_ids, pad_token_id):
-  """ Shift input ids one token to the right, and wrap the last non pad token (usually <eos>).
-      This is taken directly from modeling_bart.py
-  """
-  prev_output_tokens = input_ids.clone()
-  index_of_eos = (input_ids.ne(pad_token_id).sum(dim=1) - 1).unsqueeze(-1)
-  prev_output_tokens[:, 0] = input_ids.gather(1, index_of_eos).squeeze()
-  prev_output_tokens[:, 1:] = input_ids[:, :-1]
-  return prev_output_tokens
+    # TODO: Make sure this boy is alright. Should it add an <\s> at the start?
+    prev_output_tokens = input_ids.clone()
+    index_of_eos = (input_ids.ne(pad_token_id).sum(dim=1) - 1).unsqueeze(-1)
+    prev_output_tokens[:, 0] = input_ids.gather(1, index_of_eos).squeeze()
+    prev_output_tokens[:, 1:] = input_ids[:, :-1]
+    return prev_output_tokens
