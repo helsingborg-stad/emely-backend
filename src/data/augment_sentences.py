@@ -63,7 +63,7 @@ def main(path):
 
 
 if __name__ == "__main__":
-    path = "C:\\Users\\WilliamRosengren\\Documents\\Jobb\\Freja\\freja\\data\\processed\\interview_train.csv"
+    path = "freja\\data\\processed\\interview_train.csv"
 
     main(path)
 
