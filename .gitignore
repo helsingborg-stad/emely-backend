@@ -19,6 +19,8 @@ lib64/
 parts/
 sdist/
 var/
+venv/
+data/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -80,7 +82,7 @@ target/
 /notebooks/01_conversation_output/
 src/chat/*.txt
 src/chat/chat_output/*.txt
-
+todo.txt
 
 # Mac OS-specific storage files
 .DS_Store
