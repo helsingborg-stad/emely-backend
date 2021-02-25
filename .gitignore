@@ -19,6 +19,8 @@ lib64/
 parts/
 sdist/
 var/
+venv/
+data/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -83,7 +85,7 @@ src/chat/chat_output/*.txt
 src/chat/*.log
 src/models/lightning_logs
 notebooks/lightning_logs
-
+todo.txt
 
 # Mac OS-specific storage files
 .DS_Store

@@ -67,10 +67,17 @@ def main(input_filepath, output_filepath):
     """
     logger = logging.getLogger(__name__)
     logger.info('making final data set from raw data')
+    data_path = project_dir.joinpath('data')
     raw_data_path = project_dir.joinpath(input_filepath)
     processed_data_path = project_dir.joinpath(output_filepath)
-    read_interview_files(raw_data_path, processed_data_path)
+    if not data_path.exists():
+        data_path.mkdir()
+    if not raw_data_path.exists():
+        raw_data_path.mkdir()
+    if not processed_data_path.exists():
+        processed_data_path.mkdir()
 
+    read_interview_files(raw_data_path,processed_data_path)
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
