@@ -80,8 +80,10 @@ target/
 /notebooks/01_conversation_output/
 src/chat/*.txt
 src/chat/chat_output/*.txt
+src/chat/*.log
 src/models/lightning_logs
 notebooks/lightning_logs
+
 
 # Mac OS-specific storage files
 .DS_Store

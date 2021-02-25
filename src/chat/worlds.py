@@ -43,7 +43,7 @@ class ChatWorld:
         self.description = 'Open dialogue with {}'.format(self.model_name)
 
         # Used for logging translation problems
-        logging.basicConfig(filemode='translate.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
+        logging.basicConfig(filename='translate.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
 
     def reset_conversation(self):
         self.conversation_sv.reset()
