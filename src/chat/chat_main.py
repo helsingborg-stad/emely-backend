@@ -4,7 +4,7 @@ from worlds import InterviewWorld, ChatWorld
 if __name__ == '__main__':
     name = 'Alex'
     job = 'receptionist'
-    mname = 'facebook/blenderbot-400M-distill' # facebook/blenderbot-1B-distill
+    mname = 'facebook/blenderbot-400M-distill' # facebook/blenderbot-400M-distill facebook/blenderbot_small-90M
 
     world = InterviewWorld(job, name, mname)
 
