@@ -58,7 +58,7 @@ def main(input_path: Path, output_path: Path):
     output_dict = {}
     id = 0
     for k in range(M[0]):
-        # Extract source and targets texts. 
+        # Extract source and targets texts.
         src = data_frame.iloc[k]["src"]
 
         target = data_frame.iloc[k]["target"]
