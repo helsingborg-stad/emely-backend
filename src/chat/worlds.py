@@ -42,6 +42,7 @@ class ChatWorld:
         self.description = 'Open dialogue with {}'.format(self.model_name)
 
         # Used for logging translation problems
+        self.max_translations = 70
         logging.basicConfig(filename='translate.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
 
     def reset_conversation(self):
@@ -51,7 +52,8 @@ class ChatWorld:
 
     def chat(self, user_input):
         self.observe(user_input)
-        self.act()
+        if not self.episode_done:
+            self.act()
         return
 
     def save(self, error=None):
@@ -108,7 +110,7 @@ class ChatWorld:
         out = self.general_translator.translate(text, src='sv', dest='en')
         translated_text = out.text
         i = 0
-        while translated_text == text and i < 50:
+        while translated_text == text and i < self.max_translations:
             # Try translating again and alternate between translators until something works or timeout
             if i % 2 == 0:
                 try:
@@ -122,7 +124,7 @@ class ChatWorld:
 
         # Logging
         if i > 0:
-            if i == 20:
+            if i == self.max_translations:
                 outcome = 'Failure'
             elif i % 2 == 0:
                 outcome = 'success with deep_translator'
@@ -139,7 +141,7 @@ class ChatWorld:
         out = self.general_translator.translate(text, src='en', dest='sv')
         translated_text = out.text
         i = 0
-        while translated_text == text and i < 50:
+        while translated_text == text and i < self.max_translations:
             # Try translating again
             if i % 2 == 0:
                 try:
@@ -153,13 +155,13 @@ class ChatWorld:
 
         # Logging
         if i > 0:
-            if i == 20:
+            if i == self.max_translations:
                 outcome = 'Failure'
             elif i % 2 == 0:
                 outcome = 'success with deep_translator'
             else:
                 outcome = 'success with googletrans'
-            logging.warning('Failure to translate swedish to english. Tried {} times. Outcome: {}'.format(i, outcome))
+            logging.warning('Failure to translate english to swedish. Tried {} times. Outcome: {}'.format(i, outcome))
         return translated_text
 
 
@@ -220,7 +222,13 @@ class InterviewWorld(ChatWorld):
 
     def act(self):
         # If it's time for another interview question, we don't need to pass anything through the mode
-        if self.nbr_replies == self.max_replies:
+        if self.episode_done:
+            self.save()
+            self.reset_conversation()
+            bye = 'Tack för din tid, det var trevligt att få intervjua dig!'
+            print(bye)
+            return bye
+        elif self.nbr_replies == self.max_replies:
             self.nbr_replies = 0
             interview_question = self.questions.pop()
             interview_question_en = self._sv_to_en(interview_question)
@@ -228,7 +236,7 @@ class InterviewWorld(ChatWorld):
             self.conversation_en.add_bot_text(interview_question_en)
             print(interview_question)
             return interview_question
-        elif not self.episode_done:
+        else:
             context = self._get_context()
             inputs = self.tokenizer([context], return_tensors='pt')
             inputs.to(self.device)
@@ -246,6 +254,7 @@ class InterviewWorld(ChatWorld):
                 except IndexError:
                     reply_en = 'Thank you for your time. We will keep in touch'
                     reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig!'
+                    self.episode_done = True
             else:
                 self.nbr_replies += 1
                 reply_sv = self._en_to_sv(reply_en)
@@ -253,11 +262,7 @@ class InterviewWorld(ChatWorld):
             self.conversation_sv.add_bot_text(reply_sv)
             self.conversation_en.add_bot_text(reply_en)
             return reply_sv
-        else:
-            self.save()
-            bye = 'Tack för din tid, det var trevligt att få intervjua dig!'
-            print(bye)
-            return bye
+
 
     def _get_context(self):
         # persona + dialogue history
@@ -279,18 +284,31 @@ class InterviewWorld(ChatWorld):
         sentences = [sep for i, sep in enumerate(sentence_splits) if i % 2 == 0]
         separators = [sep for i, sep in enumerate(sentence_splits) if i % 2 != 0]
 
+
         for old_reply in previous_replies:
             raw_splits = re.split('[.?!]', old_reply)
             splits = [s for s in raw_splits if len(s) > 2]
             previous_sentences.extend(splits)
 
-        # For each part/sentence of the new reply, save it if it's not close to something said before
         keep_idx = []
+        # For each part/sentence of the new reply, save it if it's not close to something said before
         for i in range(len(sentences)):
             combos = list(product([sentences[i]], previous_sentences))
             ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
             if max(ratios) < 0.5:
                 keep_idx.append(i)
+
+        # Freja cannot say that she's also a {job}
+        frejas_lie = 'I am a {}'.format(self.job)
+        temp_idx = []
+        for i in keep_idx:
+            lie_prob = SequenceMatcher(a=frejas_lie, b=sentences[i]).ratio()
+            if lie_prob < 0.75:
+                temp_idx.append(i)
+            else:
+                logging.warning('Identified lie removed: {}'.format(frejas_lie))
+        keep_idx = temp_idx
+
 
         if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
             return reply
@@ -302,7 +320,7 @@ class InterviewWorld(ChatWorld):
                 except IndexError:
                     new_reply = new_reply + sentences[i]
             if len(new_reply) > 3:
-                logging.warning('_correct_reply: corrected:\n {} \n to: {}'.format(reply, new_reply))
+                logging.warning('Corrected: {} \n to: {}'.format(reply, new_reply))
             return new_reply
 
 
