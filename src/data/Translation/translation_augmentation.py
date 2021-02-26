@@ -6,6 +6,10 @@ import difflib
 
 from translator import TextTranslator
 
+# This function provides all Langugages that are supported by the deep_translate library.
+# langs_list = GoogleTranslator.get_supported_languages(as_dict=True)
+
+
 # English, German, French, Spanish, Latin, Esperanto.
 languages = ["en", "de", "fr", "es", "eo", "it"]
 
@@ -147,7 +151,7 @@ def main(input_path: Path, output_path: Path):
 
     # Store the data.
     src_target_df = pd.DataFrame.from_dict(output_dict, orient='index')
-    print("Storing data at: {0}".format(output_dict))
+    print("Storing data at: {0}".format(output_path))
     src_target_df.to_csv(output_path + "augmented_back_and_forth.csv", index_label='Name')
     # """
 
