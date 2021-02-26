@@ -6,5 +6,4 @@ setup(
     version='0.1.0',
     description='freja - our chat bot',
     author='NordAxon',
-    license='MIT',
 )
