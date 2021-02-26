@@ -136,7 +136,7 @@ def main(input_path: Path, output_path: Path):
     output_dict = {}
     id = 0
     for k in range(M[0]):
-
+        print("Working on text: {0}".format(k))
         # Extract source and targets texts.
         src = data_frame.iloc[k]["src"]
 
