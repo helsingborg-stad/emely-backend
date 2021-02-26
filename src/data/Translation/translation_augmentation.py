@@ -26,13 +26,18 @@ def translate_to_different_languages(text, src_language):
     :return: A dict with the original sentence is all languages.
     """
     output = dict()
-    for l in languages:
-        if not l == src_language:
-            output[l] = text_translator.from_x_to_y_dt(text, src_language, l)
+    for dest in languages:
+        if not dest == src_language:
+            text_trans = text_translator.translate_text(text, src_language, dest)
+
+            # Check so that the text is not a false statement.
+            if text_trans:
+                output[dest] = text_trans
 
         else:
             output[src_language] = text
     return output
+
 
 def test_text_similarity(data_base, text):
     """
@@ -55,7 +60,6 @@ def test_text_similarity(data_base, text):
     return False
 
 
-
 def translate_all_to_english(text_dict):
     """
     Translate all text to english and checks what text that should be added to the
@@ -68,15 +72,19 @@ def translate_all_to_english(text_dict):
     for src_1 in text_dict:
         for src_2 in text_dict[src_1]:
             # Check so that the languages are different.
-            #if src_1 == src_2 and src_2 !="en":
-            #    continue
-            text = text_dict[src_1][src_2]
 
-            text_en = text_translator.from_x_to_y_dt(text, src_2, "en")
+            text = text_dict[src_1][src_2]
+            # Translate the text.
+            text_en = text_translator.translate_text(text, src_2, "en")
+            # Check that the answer is not a False statement.
+            if not text_en:
+                continue
+
             # Check if the current text is already in the database.
             if not test_text_similarity(outputs, text_en):
                 outputs.append(text_en)
     return outputs
+
 
 def run_augmentation(text, src_language="en"):
     """
@@ -98,6 +106,7 @@ def run_augmentation(text, src_language="en"):
     text_english = translate_all_to_english(text_dict)
     return text_english
 
+
 def combine_source_and_target(data_dict, source_list, target_list, id):
     """
     Combines all the different sentences of source and target
@@ -113,6 +122,7 @@ def combine_source_and_target(data_dict, source_list, target_list, id):
             data_dict[id] = {"src": source_list[src_m], "target": target_list[target_m]}
             id += 1
     return id
+
 
 def main(input_path: Path, output_path: Path):
     """
