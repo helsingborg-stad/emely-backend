@@ -10,7 +10,6 @@ import re
 from itertools import product
 from difflib import SequenceMatcher
 
-import time
 import logging
 
 
@@ -109,10 +108,13 @@ class ChatWorld:
         out = self.general_translator.translate(text, src='sv', dest='en')
         translated_text = out.text
         i = 0
-        while translated_text == text and i < 20:
+        while translated_text == text and i < 50:
             # Try translating again and alternate between translators until something works or timeout
             if i % 2 == 0:
-                translated_text = self.translator_sv_to_en.translate(text)
+                try:
+                    translated_text = self.translator_sv_to_en.translate(text)
+                except KeyError:
+                    pass
             else:
                 out = self.general_translator.translate(text, src='sv', dest='en')
                 translated_text = out.text
@@ -137,10 +139,13 @@ class ChatWorld:
         out = self.general_translator.translate(text, src='en', dest='sv')
         translated_text = out.text
         i = 0
-        while translated_text == text and i < 20:
+        while translated_text == text and i < 50:
             # Try translating again
             if i % 2 == 0:
-                translated_text = self.translator_en_to_sv.translate(text)
+                try:
+                    translated_text = self.translator_en_to_sv.translate(text)
+                except KeyError:
+                    pass
             else:
                 out = self.general_translator.translate(text, src='en', dest='sv')
                 translated_text = out.text
@@ -155,7 +160,6 @@ class ChatWorld:
             else:
                 outcome = 'success with googletrans'
             logging.warning('Failure to translate swedish to english. Tried {} times. Outcome: {}'.format(i, outcome))
-
         return translated_text
 
 
@@ -193,21 +197,21 @@ class InterviewWorld(ChatWorld):
         print(self.greeting)
         return
 
-    def start(self):
-        # TODO: Prompt the user to add name and job they're looking for?
+    def start(self, session_id, name, job):
+        # TODO: Prompt the user to add name and job they're looking for with api
         return
 
     def observe(self, user_input):
-        # TODO: Add spell check/grammar check here
         # TODO: Is question? We don't want to reply to a question with a question. if is_question: reply model_answer + interview_question
         # TODO: Better check of input stop
-        # Observe the user input, translate and update internal states
+        # Observe the user input, translate and update internal states.
+        # We assume the user_input is always grammatically correct!
 
         translated_input = self._sv_to_en(user_input)
         self.conversation_sv.add_user_text(user_input)
         self.conversation_en.add_user_text(translated_input)
 
-        # Set episode done if exit conidion is met.
+        # Set episode done if exit condtion is met.
         if self.nbr_replies == self.max_replies and len(self.questions) == 0 or user_input.lower().replace(' ',
                                                                                                            '') in self.stop_tokens:
             self.episode_done = True
@@ -215,75 +219,91 @@ class InterviewWorld(ChatWorld):
         return
 
     def act(self):
-        if not self.episode_done:
+        # If it's time for another interview question, we don't need to pass anything through the mode
+        if self.nbr_replies == self.max_replies:
+            self.nbr_replies = 0
+            interview_question = self.questions.pop()
+            interview_question_en = self._sv_to_en(interview_question)
+            self.conversation_sv.add_bot_text(interview_question)
+            self.conversation_en.add_bot_text(interview_question_en)
+            print(interview_question)
+            return interview_question
+        elif not self.episode_done:
             context = self._get_context()
             inputs = self.tokenizer([context], return_tensors='pt')
             inputs.to(self.device)
             with no_grad():
                 output_tokens = self.model.generate(**inputs)
-            reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
+                reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
 
-            if self._validate_reply(reply_en) and self.nbr_replies < self.max_replies:
-                self.nbr_replies += 1
-                reply_sv = self._en_to_sv(reply_en)
-            else:
-                # TODO: More tries here? Change context or something
-                warning = 'I generated a repetitive answer: {}'.format(reply_en)
-                logging.warning(warning)
+            reply_en = self._correct_reply(reply_en)
+            # _correct_reply can return empty string -> force new question
+            if len(reply_en) < 3:
+                self.nbr_replies = 0
                 try:
                     reply_sv = self.questions.pop()
-                    reply_en = self.translator_sv_to_en.translate(reply_sv)
-                except:
+                    reply_en = self._sv_to_en(reply_sv)
+                except IndexError:
                     reply_en = 'Thank you for your time. We will keep in touch'
                     reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig!'
-                self.nbr_replies = 0
-
+            else:
+                self.nbr_replies += 1
+                reply_sv = self._en_to_sv(reply_en)
             print(reply_sv)
             self.conversation_sv.add_bot_text(reply_sv)
             self.conversation_en.add_bot_text(reply_en)
+            return reply_sv
         else:
             self.save()
-            print('Tack för din tid, det var trevligt att få intervjua dig!')
-        return
+            bye = 'Tack för din tid, det var trevligt att få intervjua dig!'
+            print(bye)
+            return bye
 
     def _get_context(self):
         # persona + dialogue history
         return self.persona + '\n' + self.conversation_en.get_dialogue_history(125 - self.persona_length)
 
-    def _validate_reply(self, reply):
-        # TODO:
+    def _correct_reply(self, reply):
+        # For every bot reply, check what sentences are repetitive and remove that part only.
+        # Current check will discard a sentence where she asks something new but with a little detail
         previous_replies = self.conversation_en.get_bot_replies()
 
         if len(previous_replies) == 0:
-            return True
+            return reply
         previous_sentences = []
 
-        # Split sentences, remove unwanted artefacts like empty strings, create permutations, and check argmax of ratio of all elements
-        sentences = re.split('[.?!]', reply)
+        # Split sentences and keep separators
+        sentence_splits = re.split('([.?!])', reply)
+        if sentence_splits[-1] == '':
+            del sentence_splits[-1]
+        sentences = [sep for i, sep in enumerate(sentence_splits) if i % 2 == 0]
+        separators = [sep for i, sep in enumerate(sentence_splits) if i % 2 != 0]
+
         for old_reply in previous_replies:
             raw_splits = re.split('[.?!]', old_reply)
             splits = [s for s in raw_splits if len(s) > 2]
             previous_sentences.extend(splits)
 
-        combos = list(product(sentences, previous_sentences))
-        ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-        if max(ratios) > 0.75:
-            return False
+        # For each part/sentence of the new reply, save it if it's not close to something said before
+        keep_idx = []
+        for i in range(len(sentences)):
+            combos = list(product([sentences[i]], previous_sentences))
+            ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
+            if max(ratios) < 0.5:
+                keep_idx.append(i)
+
+        if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
+            return reply
         else:
-            return True
-
-
-class InterviewWorld2(InterviewWorld):
-
-    def __init__(self, job, name, mname='facebook/blenderbot-400M-distill'):
-        super(InterviewWorld2, self).__init__(job, name, mname=mname)
-
-    # TODO: Implement another version
-    def _validate_reply(self, reply):
-        # Overrides the previous
-        # For every bot reply, check what sentences are repetitive and remove that part only.
-        # Current check will discard a sentence where she asks something new but with a little detail
-        return True
+            new_reply = ''
+            for i in keep_idx:
+                try:
+                    new_reply = new_reply + sentences[i] + separators[i] + ' '
+                except IndexError:
+                    new_reply = new_reply + sentences[i]
+            if len(new_reply) > 3:
+                logging.warning('_correct_reply: corrected:\n {} \n to: {}'.format(reply, new_reply))
+            return new_reply
 
 
 def read_questions(file_path):
