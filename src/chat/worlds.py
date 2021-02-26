@@ -176,7 +176,7 @@ class InterviewWorld(ChatWorld):
             reply = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
             reply = self._correct_reply(reply)
 
-            if reply == '': # Correct reply can return empty string
+            if reply == '':  # Correct reply can return empty string
                 reply = self.questions.pop()
                 self.nbr_replies = 0
             else:
@@ -217,29 +217,34 @@ class InterviewWorld(ChatWorld):
             return True
 
     # TODO: Implement another version
-    def _correct_reply(self, reply):
+    def correct_reply(self, reply):
         # Overrides the previous
         # For every bot reply, check what sentences are repetitive and remove that part only.
         # Current check will discard a sentence where she asks something new but with a little detail
         previous_replies = self.conversation_en.get_bot_replies()
 
         if len(previous_replies) == 0:
-            return True
+            return reply
         previous_sentences = []
 
-        # Split sentences, remove unwanted artefacts like empty strings, create permutations, and check argmax of ratio of all elements
-        sentences = re.split('[.?!]', reply)
+        # Split sentences and keep separators
+        sentence_splits = re.split('([.?!])', reply)
+        if sentence_splits[-1] == '':
+            del sentence_splits[-1]
+        sentences = [sep for i, sep in enumerate(sentence_splits) if i % 2 == 0]
+        separators = [sep for i, sep in enumerate(sentence_splits) if i % 2 != 0]
+
         for old_reply in previous_replies:
             raw_splits = re.split('[.?!]', old_reply)
             splits = [s for s in raw_splits if len(s) > 2]
             previous_sentences.extend(splits)
 
-        # For each part/sentence of the new reply, pop if it's close to something said before
+        # For each part/sentence of the new reply, save it if it's not close to something said before
         keep_idx = []
         for i in range(len(sentences)):
-            combos = list(product(sentences[i], previous_sentences))
+            combos = list(product([sentences[i]], previous_sentences))
             ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(ratios) < 0.75:
+            if max(ratios) < 0.5:
                 keep_idx.append(i)
 
         if len(keep_idx) == len(sentences):
@@ -247,8 +252,10 @@ class InterviewWorld(ChatWorld):
         else:
             new_reply = ''
             for i in keep_idx:
-                new_reply = new_reply + sentences[
-                    i] + ' '  # TODO: add a little thing here to keep the question of punctuation
+                try:
+                    new_reply = new_reply + sentences[i] + separators[i] + ' '
+                except IndexError:
+                    new_reply = new_reply + sentences[i]
             return new_reply
 
 
