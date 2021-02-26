@@ -96,3 +96,6 @@ todo.txt
 
 # Mypy cache
 .mypy_cache/
+
+/TestFiles
+ideas.txt
