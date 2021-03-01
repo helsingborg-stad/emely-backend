@@ -1,5 +1,3 @@
-from deep_translator import GoogleTranslator
-from googletrans import Translator
 from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration, BlenderbotSmallTokenizer, \
     BlenderbotSmallForConditionalGeneration
 from torch import no_grad
@@ -11,6 +9,7 @@ from itertools import product
 from difflib import SequenceMatcher
 
 import logging
+from translate import ChatTranslator
 
 
 class ChatWorld:
@@ -31,9 +30,8 @@ class ChatWorld:
         self.model.to(self.device)
 
         self.model_name = mname.replace('facebook/', '')
-        self.translator_en_to_sv = GoogleTranslator(source='en', target='sv')
-        self.translator_sv_to_en = GoogleTranslator(source='sv', target='en')
-        self.general_translator = Translator()
+        self.translator = ChatTranslator()
+
         self.episode_done = False
         self.stop_tokens = ['färdig', 'slut', 'hejdå', 'done']  # TODO: Snyggare lösning krävs
 
@@ -41,9 +39,7 @@ class ChatWorld:
         self.conversation_en = BlenderConversation(lang='en', tokenizer=self.tokenizer)
         self.description = 'Open dialogue with {}'.format(self.model_name)
 
-        # Used for logging translation problems
-        self.max_translations = 70
-        logging.basicConfig(filename='translate.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
+        logging.basicConfig(filename='worlds.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
 
     def reset_conversation(self):
         self.conversation_sv.reset()
@@ -66,7 +62,7 @@ class ChatWorld:
         # Observe the user input, translate and update internal states
         # Check if user wants to quit/no questions left --> self.episode_done = True
 
-        translated_input = self._sv_to_en(user_input)
+        translated_input = self.translator.translate(user_input, src='sv', target='en')
         self.conversation_sv.add_user_text(user_input)
         self.conversation_en.add_user_text(translated_input)
 
@@ -84,7 +80,7 @@ class ChatWorld:
                 output_tokens = self.model.generate(**inputs)
             reply = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
 
-            translated_reply = self._en_to_sv(reply)
+            translated_reply = self.translator.translate(reply, src='en', target='sv')
             self.conversation_sv.add_bot_text(translated_reply)
             self.conversation_en.add_bot_text(reply)
             self.conversation_sv.print_dialogue()
@@ -98,71 +94,6 @@ class ChatWorld:
     def _get_context(self):
         context = self.conversation_en.get_dialogue_history()
         return context
-
-    def _validate_reply(self, answer):
-        return True
-
-    # TODO: try: googletrans except: googles official API
-    def _sv_to_en(self, text):
-        """Alternates between googletrans and deep_translate packages to solve failure to translate """
-        if text[0] == ' ':
-            text = text[1:]
-        out = self.general_translator.translate(text, src='sv', dest='en')
-        translated_text = out.text
-        i = 0
-        while translated_text == text and i < self.max_translations:
-            # Try translating again and alternate between translators until something works or timeout
-            if i % 2 == 0:
-                try:
-                    translated_text = self.translator_sv_to_en.translate(text)
-                except KeyError:
-                    pass
-            else:
-                out = self.general_translator.translate(text, src='sv', dest='en')
-                translated_text = out.text
-            i += 1
-
-        # Logging
-        if i > 0:
-            if i == self.max_translations:
-                outcome = 'Failure'
-            elif i % 2 == 0:
-                outcome = 'success with deep_translator'
-            else:
-                outcome = 'success with googletrans'
-            logging.warning('Failure to translate swedish to english. Tried {} times. Outcome: {}'.format(i, outcome))
-
-        return translated_text
-
-    def _en_to_sv(self, text):
-        """Alternates between googletrans and deep_translate packages to solve failure to translate """
-        if text[0] == ' ':
-            text = text[1:]
-        out = self.general_translator.translate(text, src='en', dest='sv')
-        translated_text = out.text
-        i = 0
-        while translated_text == text and i < self.max_translations:
-            # Try translating again
-            if i % 2 == 0:
-                try:
-                    translated_text = self.translator_en_to_sv.translate(text)
-                except KeyError:
-                    pass
-            else:
-                out = self.general_translator.translate(text, src='en', dest='sv')
-                translated_text = out.text
-            i += 1
-
-        # Logging
-        if i > 0:
-            if i == self.max_translations:
-                outcome = 'Failure'
-            elif i % 2 == 0:
-                outcome = 'success with deep_translator'
-            else:
-                outcome = 'success with googletrans'
-            logging.warning('Failure to translate english to swedish. Tried {} times. Outcome: {}'.format(i, outcome))
-        return translated_text
 
 
 class InterviewWorld(ChatWorld):
@@ -209,7 +140,7 @@ class InterviewWorld(ChatWorld):
         # Observe the user input, translate and update internal states.
         # We assume the user_input is always grammatically correct!
 
-        translated_input = self._sv_to_en(user_input)
+        translated_input = self.translator.translate(user_input, src='sv', target='en')
         self.conversation_sv.add_user_text(user_input)
         self.conversation_en.add_user_text(translated_input)
 
@@ -231,7 +162,7 @@ class InterviewWorld(ChatWorld):
         elif self.nbr_replies == self.max_replies:
             self.nbr_replies = 0
             interview_question = self.questions.pop()
-            interview_question_en = self._sv_to_en(interview_question)
+            interview_question_en = self.translator.translate(interview_question, src='sv', target='en')
             self.conversation_sv.add_bot_text(interview_question)
             self.conversation_en.add_bot_text(interview_question_en)
             print(interview_question)
@@ -250,19 +181,18 @@ class InterviewWorld(ChatWorld):
                 self.nbr_replies = 0
                 try:
                     reply_sv = self.questions.pop()
-                    reply_en = self._sv_to_en(reply_sv)
+                    reply_en = self.translator.translate(reply_sv, src='sv', target='en')
                 except IndexError:
                     reply_en = 'Thank you for your time. We will keep in touch'
                     reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig!'
                     self.episode_done = True
             else:
                 self.nbr_replies += 1
-                reply_sv = self._en_to_sv(reply_en)
+                reply_sv = self.translator.translate(reply_en, src='en', target='sv')
             print(reply_sv)
             self.conversation_sv.add_bot_text(reply_sv)
             self.conversation_en.add_bot_text(reply_en)
             return reply_sv
-
 
     def _get_context(self):
         # persona + dialogue history
@@ -283,7 +213,6 @@ class InterviewWorld(ChatWorld):
             del sentence_splits[-1]
         sentences = [sep for i, sep in enumerate(sentence_splits) if i % 2 == 0]
         separators = [sep for i, sep in enumerate(sentence_splits) if i % 2 != 0]
-
 
         for old_reply in previous_replies:
             raw_splits = re.split('[.?!]', old_reply)
@@ -308,7 +237,6 @@ class InterviewWorld(ChatWorld):
             else:
                 logging.warning('Identified lie removed: {}'.format(frejas_lie))
         keep_idx = temp_idx
-
 
         if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
             return reply

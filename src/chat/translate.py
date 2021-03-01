@@ -4,7 +4,7 @@ import six
 from google.cloud import translate_v2 as translate
 
 import logging
-import os, json
+import os
 from pathlib import Path
 
 
@@ -32,12 +32,12 @@ class ChatTranslator:
         elif package == 'googletrans':
             try:
                 return self.gtrans_translate(text, src, target)
-            except Warning:
+            except:
                 return self.gcloud_translate(text, src, target)
         elif package == 'deep_translator':
             try:
                 return self.deep_translate(text, src, target)
-            except Warning:
+            except:
                 return self.gcloud_translate(text, src, target)
         else:
             raise ValueError('No package named{}'.format(package))
