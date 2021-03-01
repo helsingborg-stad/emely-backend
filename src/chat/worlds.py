@@ -10,36 +10,56 @@ from difflib import SequenceMatcher
 
 import logging
 from translate import ChatTranslator
+from pathlib import Path
 
 
 class ChatWorld:
     # Class that keeps
 
-    def __init__(self, mname='facebook/blenderbot-400M-distill'):
+    def __init__(self, **kwargs):
         # TODO: init model and tokenizer from file
         # TODO: init from opt like dictionary
 
+        self.model_name = kwargs['model_name']
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        if 'small' in mname:
-            self.model = BlenderbotSmallForConditionalGeneration.from_pretrained(mname)
-            self.tokenizer = BlenderbotSmallTokenizer.from_pretrained(mname)
-        else:
-            self.model = BlenderbotForConditionalGeneration.from_pretrained(mname)
-            self.tokenizer = BlenderbotTokenizer.from_pretrained(mname)
-
+        self.model = None
+        self.tokenizer = None
+        self.load_model(self.model_name, kwargs['local_model'])
         self.model.to(self.device)
 
-        self.model_name = mname.replace('facebook/', '')
         self.translator = ChatTranslator()
 
         self.episode_done = False
-        self.stop_tokens = ['färdig', 'slut', 'hejdå', 'done']  # TODO: Snyggare lösning krävs
+        self.persona = None
+        self.persona_length = 0
+        self.stop_tokens = ['hejdå', 'bye', 'hej då']  # TODO: More sophisticated solution
 
         self.conversation_sv = BlenderConversation(lang='sv', tokenizer=self.tokenizer)
         self.conversation_en = BlenderConversation(lang='en', tokenizer=self.tokenizer)
         self.description = 'Open dialogue with {}'.format(self.model_name)
 
         logging.basicConfig(filename='worlds.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
+
+    def load_model(self, mname, local_model):
+        """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
+        # TODO: Add some checks here for if the local model exists and if the user mistakenly adds local_model=True
+        if local_model:
+            model_dir = Path.cwd().parents[1] / 'models' / mname / 'model'
+            token_dir = Path.cwd().parents[1] / 'models' / mname / 'tokenizer'
+            assert model_dir.exists() and token_dir.exists()
+        elif 'facebook/' in mname:
+            model_dir = mname
+            token_dir = mname
+        else:
+            raise ValueError('Got local_model=False but mname didn\'t contain facebook')
+
+        if 'small' in mname:
+            self.model = BlenderbotSmallForConditionalGeneration.from_pretrained(model_dir)
+            self.tokenizer = BlenderbotSmallTokenizer.from_pretrained(token_dir)
+        else:
+            self.model = BlenderbotForConditionalGeneration.from_pretrained(model_dir)
+            self.tokenizer = BlenderbotTokenizer.from_pretrained(token_dir)
+        return
 
     def reset_conversation(self):
         self.conversation_sv.reset()
@@ -98,24 +118,22 @@ class ChatWorld:
 
 class InterviewWorld(ChatWorld):
     # Class that keeps
-    def __init__(self, job, name, mname='facebook/blenderbot-400M-distill'):
+    def __init__(self, **kwargs):
         # TODO: More sophisticated questions/greeting drawn from txt file(?) and formated with name and job
-        # TODO: init model and tokenizer from file
-        # TODO: init from opt like dictionary
-        super().__init__(mname)
+        super().__init__(**kwargs)
 
-        self.questions = [question.format(job) if format_this else question for (question, format_this) in
-                          read_questions('interview_questions.txt')]
-        random.shuffle(self.questions)
-        self.greeting = 'Hej, och välkommen till din intervju. Hur står det till, {}?'.format(name)
-
-        self.job = job
-        self.human_name = name
-        self.stop_tokens = ['färdig', 'slut', 'hejdå', 'done']  # TODO: Snyggare lösning
+        self.job = kwargs['job'].lower()
+        self.human_name = kwargs['name']
         self.max_replies = 2  # Maximum number of replies back and forth for each question
         self.nbr_replies = 0
         self.description = 'InterviewWorld\t job: {}\t name: {}\t model: {}'.format(self.job, self.human_name,
                                                                                     self.model_name)
+        # TODO: Replace the simple shuffle with something else
+        self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
+                          read_questions('interview_questions.txt')]
+        random.shuffle(self.questions)
+        # TODO: Fix greeting
+        self.greeting = 'Hej, och välkommen till din intervju. Hur står det till, {}?'.format(self.human_name)
 
         self.greet()
         self.init_context()
@@ -127,7 +145,7 @@ class InterviewWorld(ChatWorld):
         return
 
     def greet(self):
-        print(self.greeting)
+        print('Hej {} och välkommen till din intervju.'.format(self.human_name))
         return
 
     def start(self, session_id, name, job):
@@ -144,9 +162,9 @@ class InterviewWorld(ChatWorld):
         self.conversation_sv.add_user_text(user_input)
         self.conversation_en.add_user_text(translated_input)
 
-        # Set episode done if exit condtion is met.
-        if self.nbr_replies == self.max_replies and len(self.questions) == 0 or user_input.lower().replace(' ',
-                                                                                                           '') in self.stop_tokens:
+        # Set episode done if exit condition is met.
+        if self.nbr_replies == self.max_replies and len(self.questions) == 0 \
+                or user_input.lower().replace(' ', '') in self.stop_tokens:
             self.episode_done = True
 
         return
