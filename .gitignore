@@ -86,6 +86,7 @@ src/chat/*.log
 src/models/lightning_logs
 notebooks/lightning_logs
 todo.txt
+models/
 
 # Mac OS-specific storage files
 .DS_Store
