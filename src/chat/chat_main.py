@@ -37,7 +37,7 @@ if __name__ == '__main__':
                         type=str, default='Alex, ',
                         help='name of user')
     parser.add_argument('--job',
-                        type=str, default='Programmer',
+                        type=str, default='programmerare',
                         help='job user is applying for in interview')
     parser.add_argument('--model_name',
                         type=str, default='blenderbot-400M-distill',
