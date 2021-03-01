@@ -100,10 +100,10 @@ class ChatWorld:
                 output_tokens = self.model.generate(**inputs)
             reply = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
 
-            translated_reply = self.translator.translate(reply, src='en', target='sv')
-            self.conversation_sv.add_bot_text(translated_reply)
+            reply_sv = self.translator.translate(reply, src='en', target='sv')
+            self.conversation_sv.add_bot_text(reply_sv)
             self.conversation_en.add_bot_text(reply)
-            self.conversation_sv.print_dialogue()
+            print(reply_sv)
 
         else:
             self.conversation_sv.to_txt(self.description, 'chat_output/open_dialogue.txt')
@@ -126,12 +126,14 @@ class InterviewWorld(ChatWorld):
         self.human_name = kwargs['name']
         self.max_replies = 2  # Maximum number of replies back and forth for each question
         self.nbr_replies = 0
+        self.last_input_is_question = False
         self.description = 'InterviewWorld\t job: {}\t name: {}\t model: {}'.format(self.job, self.human_name,
                                                                                     self.model_name)
         # TODO: Replace the simple shuffle with something else
         self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
                           read_questions('interview_questions.txt')]
         random.shuffle(self.questions)
+
         # TODO: Fix greeting
         self.greeting = 'Hej, och välkommen till din intervju. Hur står det till, {}?'.format(self.human_name)
 
@@ -157,6 +159,8 @@ class InterviewWorld(ChatWorld):
         # TODO: Better check of input stop
         # Observe the user input, translate and update internal states.
         # We assume the user_input is always grammatically correct!
+        if '?' in user_input:
+            self.last_input_is_question = True
 
         translated_input = self.translator.translate(user_input, src='sv', target='en')
         self.conversation_sv.add_user_text(user_input)
@@ -170,14 +174,21 @@ class InterviewWorld(ChatWorld):
         return
 
     def act(self):
+        """There are four cases we can encounter that we treat differently:
+         1. No more interview questions         --> End conversation
+         2. Model has chatted freely for a bit  --> Force next interview questions
+         3. Same as last, but user has just written a question --> return reply + new question
+         4. Model is allowed to chat more
+           Code is slightly messy so the four cases are marked with 'Case X' in the code """
         # If it's time for another interview question, we don't need to pass anything through the mode
         if self.episode_done:
+            # Case 1
             self.save()
             self.reset_conversation()
             bye = 'Tack för din tid, det var trevligt att få intervjua dig!'
-            print(bye)
             return bye
-        elif self.nbr_replies == self.max_replies:
+        elif self.nbr_replies == self.max_replies and not self.last_input_is_question:
+            # Case 2
             self.nbr_replies = 0
             interview_question = self.questions.pop()
             interview_question_en = self.translator.translate(interview_question, src='sv', target='en')
@@ -204,7 +215,13 @@ class InterviewWorld(ChatWorld):
                     reply_en = 'Thank you for your time. We will keep in touch'
                     reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig!'
                     self.episode_done = True
+            elif self.nbr_replies == self.max_replies and self.last_input_is_question:
+                # Case 3 - Add new question to end of model reply
+                reply_sv = self.translator.translate(reply_en, src='en', target='sv') + ' ' + self.questions.pop()
+                reply_en = self.translator.translate(reply_sv, src='sv', target='en')
+                self.nbr_replies = 0
             else:
+                # Case 4
                 self.nbr_replies += 1
                 reply_sv = self.translator.translate(reply_en, src='en', target='sv')
             print(reply_sv)
