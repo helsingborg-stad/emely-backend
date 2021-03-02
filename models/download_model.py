@@ -2,12 +2,18 @@ from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration
     BlenderbotSmallForConditionalGeneration
 
 from pathlib import Path
+from argparse import ArgumentParser
 
-if __name__ == '__main__':
-    mname = 'facebook/blenderbot-400M-distill'
+
+def main(args):
+    mname = args.model_name
     model_name = mname.replace('facebook/', '')
-    model = BlenderbotForConditionalGeneration.from_pretrained(mname)
-    tokenizer = BlenderbotTokenizer.from_pretrained(mname)
+    if 'small' in mname:
+        model = BlenderbotSmallForConditionalGeneration.from_pretrained(mname)
+        tokenizer = BlenderbotSmallTokenizer.from_pretrained(mname)
+    else:
+        model = BlenderbotForConditionalGeneration.from_pretrained(mname)
+        tokenizer = BlenderbotTokenizer.from_pretrained(mname)
 
     model_dir = Path.cwd().joinpath(model_name + '/model')
     token_dir = Path.cwd().joinpath(model_name + '/tokenizer')
@@ -17,3 +23,10 @@ if __name__ == '__main__':
 
     model.save_pretrained(model_dir)
     tokenizer.save_pretrained(token_dir)
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('--model_name', type=str, required=True, help='Huggingface model to download')
+    args = parser.parse_args()
+    main(args)
+    
