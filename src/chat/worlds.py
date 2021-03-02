@@ -44,8 +44,8 @@ class ChatWorld:
         """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
         # TODO: Add some checks here for if the local model exists and if the user mistakenly adds local_model=True
         if local_model:
-            model_dir = Path.cwd().parents[1] / 'models' / mname / 'model'
-            token_dir = Path.cwd().parents[1] / 'models' / mname / 'tokenizer'
+            model_dir = Path(__file__).parents[2] / 'models' / mname / 'model'
+            token_dir = Path(__file__).parents[2] / 'models' / mname / 'tokenizer'
             assert model_dir.exists() and token_dir.exists()
         elif 'facebook/' in mname:
             model_dir = mname
