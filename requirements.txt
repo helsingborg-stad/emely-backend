@@ -4,6 +4,7 @@ torch==1.7.1
 transformers==4.2.2
 regex
 google-cloud-translate
+deep-translator
 six~=1.15.0
 
 # external requirements
@@ -22,5 +23,4 @@ pandas~=1.2.2
 scikit-learn~=0.24.1
 nltk~=3.5
 numpy~=1.19.2
-src~=0.1.0
 setuptools~=52.0.0
