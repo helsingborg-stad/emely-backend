@@ -1,5 +1,6 @@
-from transformers import BlenderbotSmallForConditionalGeneration, BlenderbotSmallTokenizer
-from torch.utils.data import DataLoader, TensorDataset, random_split, RandomSampler, Dataset
+from transformers import BlenderbotSmallForConditionalGeneration, BlenderbotSmallTokenizer, BlenderbotTokenizer, \
+    BlenderbotForConditionalGeneration
+from torch.utils.data import DataLoader, Dataset
 import pandas as pd
 from pathlib import Path
 from src.models.model import LitBlenderbot, encode_sentences
@@ -33,12 +34,25 @@ def token_collate_fn(batch):
     return batch
 
 
+def load_model(mname):
+    """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
+    # TODO: Add loading from checkpoint
+    model_dir = Path(__file__).parents[2] / 'models' / mname / 'model'
+    token_dir = Path(__file__).parents[2] / 'models' / mname / 'tokenizer'
+    assert model_dir.exists() and token_dir.exists()
+
+    if 'small' in mname:
+        model = BlenderbotSmallForConditionalGeneration.from_pretrained(model_dir)
+        tokenizer = BlenderbotSmallTokenizer.from_pretrained(token_dir)
+    else:
+        model = BlenderbotForConditionalGeneration.from_pretrained(model_dir)
+        tokenizer = BlenderbotTokenizer.from_pretrained(token_dir)
+    return model, tokenizer
+
+
 def main(hparams):
-    # TODO: Add option to start from checkpoint!
-    mname = 'facebook/blenderbot_small-90M'  # TODO: Add this as click
     global tokenizer  # Dirty fix for collate_fn
-    tokenizer = BlenderbotSmallTokenizer.from_pretrained(mname)
-    model = BlenderbotSmallForConditionalGeneration.from_pretrained(mname)
+    model, tokenizer = load_model(mname=hparams.model_name)  # TODO: Add option to start from checkpoint!
     lightning_model = LitBlenderbot(model=model, tokenizer=tokenizer, hparams=hparams)
 
     project_dir = Path(__file__).resolve().parents[2]
@@ -59,6 +73,8 @@ def main(hparams):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
+    parser.add_argument('--model_name', type=str, required=True,
+                        help='pretrained model to start from. will look for model in models/')
     parser.add_argument('--learning_rate', type=int, default=0.001)
     parser.add_argument('--gpus', type=int, default=1)
     parser.add_argument('--batch_size', type=int, default=4)
