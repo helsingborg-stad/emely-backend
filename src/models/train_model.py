@@ -12,6 +12,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import math
 import random
 import re
+from datetime import datetime
 from argparse import ArgumentParser
 
 
@@ -51,6 +52,7 @@ def load_model(mname):
 
 
 def main(hparams):
+    now = datetime.now()
     global tokenizer  # Dirty fix for collate_fn
     model, tokenizer = load_model(mname=hparams.model_name)  # TODO: Add option to start from checkpoint!
     lightning_model = LitBlenderbot(model=model, tokenizer=tokenizer, hparams=hparams)
@@ -58,6 +60,8 @@ def main(hparams):
     project_dir = Path(__file__).resolve().parents[2]
     train_path = project_dir / 'data' / hparams.train_set
     val_path = project_dir / 'data' / hparams.val_set
+    checkpoint_path = project_dir / 'models' / '{}@{}'.format(hparams.model_name, now.strftime("%Y_%m_%d_%H_%M"))
+    checkpoint_path.mkdir(parents=True, exist_ok=True)
 
     train_set = InterviewDataset(train_path)
     val_set = InterviewDataset(val_path)
@@ -67,7 +71,15 @@ def main(hparams):
     val_loader = DataLoader(val_set, collate_fn=token_collate_fn, batch_size=hparams.batch_size)
 
     # TODO: Saving the model checkpoints!
-    trainer = pl.Trainer.from_argparse_args(hparams)
+    checkpoint_callback = ModelCheckpoint(
+        dirpath=checkpoint_path,
+        save_top_k=1,
+        verbose=True,
+        monitor='val_loss',
+        mode='min'
+    )
+
+    trainer = pl.Trainer.from_argparse_args(hparams, checkpoint_callback=checkpoint_callback)
     trainer.fit(lightning_model, train_loader, val_loader)
 
 
