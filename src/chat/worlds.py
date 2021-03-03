@@ -90,8 +90,6 @@ class ChatWorld:
         self.conversations_sv[conversation_id].add_user_text(user_input)
         self.conversations_en[conversation_id].add_user_text(translated_input)
 
-        ############ CONTINUE HERE #################3
-
         # Set episode done if exit condition is met. TODO: Better check of input stop
         if user_input.lower().replace(' ', '') in self.stop_tokens:
             self.episode_done[conversation_id] = True
@@ -128,6 +126,7 @@ class InterviewConversation:
         self.conversation_en = BlenderConversation(lang='en', tokenizer=tokenizer)
         self.nbr_replies = 0
         self.last_input_is_question = False
+        self.episode_done = False
         self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
                           read_questions((Path(__file__).parent / 'interview_questions.txt'))]
         random.shuffle(self.questions)  # TODO:
@@ -141,7 +140,8 @@ class InterviewConversation:
         return
 
     def get_context(self):
-        raise NotImplementedError
+        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history())
+        return context
 
     def fun2(self):
         raise NotImplementedError
@@ -176,8 +176,8 @@ class InterviewWorld(ChatWorld):
         # Observe the user input, translate and update internal states.
         # Returns boolean indicating if interview episode is done
         # We assume the user_input is always grammatically correct!
-        interview = self.interviews[conversation_id]
 
+        interview = self.interviews[conversation_id]
         if '?' in user_input:
             interview.last_input_is_question = True
 
@@ -186,7 +186,7 @@ class InterviewWorld(ChatWorld):
         interview.conversation_en.add_user_text(translated_input)
 
         # Set episode done if exit condition is met.
-        if interview.conversation_id.nbr_replies == self.max_replies and len(
+        if interview.nbr_replies == self.max_replies and len(
                 interview.questions) == 0 \
                 or user_input.lower().replace(' ', '') in self.stop_tokens:
             interview.episode_done = True

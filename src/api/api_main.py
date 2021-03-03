@@ -38,7 +38,7 @@ kwargs = Namespace(name='Alex', job='programmerare',
 
 world = InterviewWorld(**vars(kwargs))
 
-@brain.post('/')
+@brain.post('/message')
 def chat(msg: Message):
     user_message, conversation_id = msg.message, msg.conversation_id
     if msg.conversation_id in world.interviews.keys():
@@ -58,7 +58,7 @@ def chat(msg: Message):
     brain_response = BrainResponse(**brain_response)
     return brain_response
 
-@brain.post('/message')
+@brain.post('/init')
 def new_chat(msg: InitChat):
     conversation_id, name, job = msg.conversation_id, msg.name, msg.job
     greeting = world.init_conversation(conversation_id, name, job)
