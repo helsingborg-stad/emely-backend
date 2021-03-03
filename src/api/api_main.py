@@ -38,25 +38,33 @@ kwargs = Namespace(name='Alex', job='programmerare',
 
 world = InterviewWorld(**vars(kwargs))
 
-
-@brain.post('/')
-def new_chat(msg: InitChat):
-    conversation_id, name, job = msg.conversation_id, msg.name, msg.job
-    greeting = world.init_conversation(conversation_id, name, job)
-    reply = {'conversation.conversation_id': msg.conversation_id,
-             'message': greeting}
-    return Message(**reply)
-
-
 @brain.post('/')
 def chat(msg: Message):
     user_message, conversation_id = msg.message, msg.conversation_id
-    episode_done = world.observe(user_message, conversation_id)
-    reply = world.act(conversation_id)
+    if msg.conversation_id in world.interviews.keys():
+        episode_done = world.observe(user_message, conversation_id)
+        reply = world.act(conversation_id)
 
-    response = {'reply': reply,
+        response = {'reply': reply,
+                    'response_code': 200,
+                    'episode_done': episode_done
+                    }
+    else:  # Conversation id doesn't exist
+        response = {'reply': '',
+                    'response_code': 404,
+                    'episode_done': True}
+    response = Response(**response)
+    brain_response = {'response': response}
+    brain_response = BrainResponse(**brain_response)
+    return brain_response
+
+@brain.post('/message')
+def new_chat(msg: InitChat):
+    conversation_id, name, job = msg.conversation_id, msg.name, msg.job
+    greeting = world.init_conversation(conversation_id, name, job)
+    response = {'reply': greeting,
                 'response_code': 200,
-                'episode_done': episode_done
+                'episode_done': False
                 }
     response = Response(**response)
     brain_response = {'response': response}
