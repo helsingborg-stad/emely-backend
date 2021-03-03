@@ -32,17 +32,18 @@ def token_collate_fn(batch):
     batch = encode_sentences(tokenizer, batch)
     return batch
 
+
 def main(hparams):
     # TODO: Add option to start from checkpoint!
     mname = 'facebook/blenderbot_small-90M'  # TODO: Add this as click
-    global tokenizer # Dirty fix for collate_fn
+    global tokenizer  # Dirty fix for collate_fn
     tokenizer = BlenderbotSmallTokenizer.from_pretrained(mname)
     model = BlenderbotSmallForConditionalGeneration.from_pretrained(mname)
     lightning_model = LitBlenderbot(model=model, tokenizer=tokenizer, hparams=hparams)
 
     project_dir = Path(__file__).resolve().parents[2]
-    train_path = project_dir.joinpath('data/processed/interview_train.csv')
-    val_path = project_dir.joinpath('data/processed/interview_val.csv')
+    train_path = project_dir / 'data' / hparams.train_set
+    val_path = project_dir / 'data' / hparams.val_set
 
     train_set = InterviewDataset(train_path)
     val_set = InterviewDataset(val_path)
@@ -62,7 +63,9 @@ if __name__ == '__main__':
     parser.add_argument('--gpus', type=int, default=1)
     parser.add_argument('--batch_size', type=int, default=4)
     parser.add_argument('--auto_scale_batch_size', type=str, default='power')
+    parser.add_argument('--train_set', type=str, required=True, help='path to train set csv relative to data/')
+    parser.add_argument('--val_set', type=str, default='processed/interview_val.csv',
+                        help='path to train set csv relative to data/')
     hparams = parser.parse_args()
 
     main(hparams)
-
