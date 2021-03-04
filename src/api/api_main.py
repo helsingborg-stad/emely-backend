@@ -32,8 +32,7 @@ class BrainResponse(BaseModel):
     # reply_to_local_message_id: str
 
 
-kwargs = Namespace(name='Alex', job='programmerare',
-                   model_name='blenderbot_small-90M', local_model=True,
+kwargs = Namespace(model_name='facebook/blenderbot_small-90M', local_model=False,
                    chat_mode='interview')
 
 world = InterviewWorld(**vars(kwargs))
