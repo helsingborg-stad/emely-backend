@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 class BlenderConversation:
 
     def __init__(self, lang, tokenizer):
@@ -79,7 +80,7 @@ class BlenderConversation:
                     break
         return history
 
-    def to_txt(self, description, file=None,  error=None):
+    def to_txt(self, description, file=None, error=None):
         # Writes the dialogue to txt file in subdirectory
         text = '####################################\n' + 'Conversation description: ' + description + '\n\n'
         if self.user_turn:
@@ -95,7 +96,6 @@ class BlenderConversation:
                 file = 'interview_sv.txt'
             else:
                 file = 'interview_en.txt'
-
 
         if error is None:
             text = text + '\n\n'
