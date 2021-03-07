@@ -6,12 +6,8 @@ from pathlib import Path
 from src.models.model import LitBlenderbot, encode_sentences
 
 import pytorch_lightning as pl
-import torch
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 
-import math
-import random
-import re
 from datetime import datetime
 from argparse import ArgumentParser
 
@@ -38,8 +34,8 @@ def token_collate_fn(batch):
 def load_model(mname):
     """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
     # TODO: Add loading from checkpoint
-    model_dir = Path(__file__).parents[2] / 'models' / mname / 'model'
-    token_dir = Path(__file__).parents[2] / 'models' / mname / 'tokenizer'
+    model_dir = Path(__file__).resolve().parents[2] / 'models' / mname / 'model'
+    token_dir = Path(__file__).resolve().parents[2] / 'models' / mname / 'tokenizer'
     assert model_dir.exists() and token_dir.exists()
 
     if 'small' in mname:
@@ -70,7 +66,7 @@ def main(hparams):
     train_loader = DataLoader(train_set, collate_fn=token_collate_fn, batch_size=hparams.batch_size)
     val_loader = DataLoader(val_set, collate_fn=token_collate_fn, batch_size=hparams.batch_size)
 
-    # TODO: Saving the model checkpoints!
+    ## Checkpoint callbacks
     checkpoint_callback = ModelCheckpoint(
         dirpath=checkpoint_path,
         save_top_k=1,
@@ -79,7 +75,21 @@ def main(hparams):
         mode='min'
     )
 
-    trainer = pl.Trainer.from_argparse_args(hparams, checkpoint_callback=checkpoint_callback)
+    ## Ealy stopping callback
+    early_stopping = EarlyStopping(
+        monitor='val_loss',
+        min_delta=0.00,
+        patience=5,
+        verbose=False,
+        mode='min'
+    )
+
+    params = {'gpus': 1,
+              'auto_scale_batch_size': False
+              }
+    trainer = pl.Trainer(**params,
+                         callbacks=[checkpoint_callback, early_stopping],
+                         default_root_dir=checkpoint_path)
     trainer.fit(lightning_model, train_loader, val_loader)
 
 
@@ -87,13 +97,12 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--model_name', type=str, required=True,
                         help='pretrained model to start from. will look for model in models/')
-    parser.add_argument('--learning_rate', type=int, default=0.001)
-    parser.add_argument('--gpus', type=int, default=1)
+    parser.add_argument('--learning_rate', type=int, default=5e-6)
     parser.add_argument('--batch_size', type=int, default=4)
-    parser.add_argument('--auto_scale_batch_size', type=str, default='power')
     parser.add_argument('--train_set', type=str, required=True, help='path to train set csv relative to data/')
     parser.add_argument('--val_set', type=str, default='processed/interview_val.csv',
                         help='path to train set csv relative to data/')
+    parser.add_argument('--acc_gradients', type=int, default=3)
     hparams = parser.parse_args()
 
     main(hparams)
