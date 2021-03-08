@@ -1,4 +1,4 @@
-from transformers import BlenderbotForConditionalGeneration, BlenderbotTokenizer
+from transformers import BlenderbotForConditionalGeneration, BlenderbotSmallForConditionalGeneration
 from torch.utils.data import DataLoader, TensorDataset, random_split, RandomSampler, Dataset
 import pandas as pd
 import numpy as np
@@ -11,13 +11,25 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 
 
 class LitBlenderbot(pl.LightningModule):
-    def __init__(self, tokenizer, model, hparams):
+    def __init__(self, tokenizer, mname, hparams):
         super().__init__()
         self.tokenizer = tokenizer
-        self.model = model
+        self.model = None
+        self._load_model(mname) # Loads model from pretrained huggingface
         self.hparams = hparams
 
         self.freeze_model_parts()
+
+    def _load_model(self, mname):
+        model_dir = Path(__file__).resolve().parents[2] / 'models' / mname / 'model'
+        assert model_dir.exists()
+
+        if 'small' in mname:
+            self.model = BlenderbotForConditionalGeneration.from_pretrained(model_dir)
+        else:
+            self.model = BlenderbotSmallForConditionalGeneration.from_pretrained(model_dir)
+
+        return
 
     def freeze_model_parts(self):
         # TODO: Add option define what is frozen here?
