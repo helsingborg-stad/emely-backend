@@ -34,8 +34,8 @@ def read_interview_files(input_filepath: Path, output_filepath: Path):
             # We get rid of 'freja: ' and 'user: ' in the lines
             new_lines = []
             for line in lines:
-                line = line.replace('freja: ', '')
-                line = line.replace('user: ', '')
+                line = line.replace('freja:', '')
+                line = line.replace('user:', '')
                 new_lines.append(line)
             for i in range(2, nbr_follow_up_questions * 2 + 1, 2):
                 target = new_lines[i]
@@ -58,9 +58,7 @@ def read_interview_files(input_filepath: Path, output_filepath: Path):
     return
 
 
-@click.command()
-@click.argument('input_filepath', type=click.Path(exists=True))
-@click.argument('output_filepath', type=click.Path())
+
 def main(input_filepath, output_filepath):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
@@ -89,4 +87,4 @@ if __name__ == '__main__':
     # find .env automagically by walking up directories until it's found, then
     # load up the .env entries as environment variables
 
-    main()
+    main(input_filepath='data/raw', output_filepath='data/processed')
