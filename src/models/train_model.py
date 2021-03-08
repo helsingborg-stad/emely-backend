@@ -75,7 +75,7 @@ def main(hparams):
         mode='min'
     )
 
-    ## Ealy stopping callback
+    ## Early stopping callback
     early_stopping = EarlyStopping(
         monitor='val_loss',
         min_delta=0.00,
@@ -84,10 +84,8 @@ def main(hparams):
         mode='min'
     )
 
-    params = {'gpus': 1,
-              'auto_scale_batch_size': False
-              }
-    trainer = pl.Trainer(**params,
+    trainer = pl.Trainer(gpus=hparams.gpus,
+                         auto_scale_batch_size=hparams.auto_scale_batch_size,
                          callbacks=[checkpoint_callback, early_stopping],
                          default_root_dir=checkpoint_path)
     trainer.fit(lightning_model, train_loader, val_loader)
@@ -99,10 +97,12 @@ if __name__ == '__main__':
                         help='pretrained model to start from. will look for model in models/')
     parser.add_argument('--learning_rate', type=int, default=5e-6)
     parser.add_argument('--batch_size', type=int, default=4)
+    parser.add_argument('--gpus', type=int, default=1)
     parser.add_argument('--train_set', type=str, required=True, help='path to train set csv relative to data/')
     parser.add_argument('--val_set', type=str, default='processed/interview_val.csv',
                         help='path to train set csv relative to data/')
     parser.add_argument('--acc_gradients', type=int, default=3)
+    parser.add_argument('--auto_scale_batch_size', action='store_true', default=False)
     hparams = parser.parse_args()
 
     main(hparams)

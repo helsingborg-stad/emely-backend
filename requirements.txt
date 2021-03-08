@@ -6,6 +6,7 @@ regex
 google-cloud-translate
 deep-translator
 six~=1.15.0
+pytorch-lightning
 
 # external requirements
 click~=7.1.2
