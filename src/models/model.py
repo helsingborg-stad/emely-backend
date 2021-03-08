@@ -15,7 +15,7 @@ class LitBlenderbot(pl.LightningModule):
         super().__init__()
         self.tokenizer = tokenizer
         self.model = None
-        self._load_model(mname) # Loads model from pretrained huggingface
+        self._load_model(mname)  # Loads model from pretrained huggingface
         self.hparams = hparams
 
         self.freeze_model_parts()

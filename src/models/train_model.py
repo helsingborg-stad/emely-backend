@@ -106,10 +106,13 @@ if __name__ == '__main__':
     parser.add_argument('--gpus', type=int, default=1)
     parser.add_argument('--val_set', type=str, default='processed/interview_val.csv',
                         help='path to train set csv relative to data/')
-    parser.add_argument('--acc_gradients', type=int, default=3)
+    parser.add_argument('--acc_gradients', type=int, default=1)
     parser.add_argument('--auto_scale_batch_size', action='store_true', default=False)
     parser.add_argument('--resume_from_checkpoint', type=str, default=None,
                         help='Dir under /models/ to resume from')
+    parser.add_argument('--auto_lr_find', action='store_true', default=False)
+    parser.add_argument('--check_val_every_n_epoch ', type=int, default=1)
+
     hparams = parser.parse_args()
 
     main(hparams)
