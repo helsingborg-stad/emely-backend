@@ -25,9 +25,9 @@ class LitBlenderbot(pl.LightningModule):
         assert model_dir.exists()
 
         if 'small' in mname:
-            self.model = BlenderbotForConditionalGeneration.from_pretrained(model_dir)
-        else:
             self.model = BlenderbotSmallForConditionalGeneration.from_pretrained(model_dir)
+        else:
+            self.model = BlenderbotForConditionalGeneration.from_pretrained(model_dir)
 
         return
 
