@@ -31,33 +31,36 @@ def token_collate_fn(batch):
     return batch
 
 
-def load_model(mname):
+def load_tokenizer(mname):
     """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
-    # TODO: Add loading from checkpoint
-    model_dir = Path(__file__).resolve().parents[2] / 'models' / mname / 'model'
     token_dir = Path(__file__).resolve().parents[2] / 'models' / mname / 'tokenizer'
-    assert model_dir.exists() and token_dir.exists()
+    assert token_dir.exists()
 
     if 'small' in mname:
-        model = BlenderbotSmallForConditionalGeneration.from_pretrained(model_dir)
         tokenizer = BlenderbotSmallTokenizer.from_pretrained(token_dir)
     else:
-        model = BlenderbotForConditionalGeneration.from_pretrained(model_dir)
         tokenizer = BlenderbotTokenizer.from_pretrained(token_dir)
-    return model, tokenizer
+    return tokenizer
 
 
 def main(hparams):
     now = datetime.now()
     global tokenizer  # Dirty fix for collate_fn
-    model, tokenizer = load_model(mname=hparams.model_name)  # TODO: Add option to start from checkpoint!
-    lightning_model = LitBlenderbot(model=model, tokenizer=tokenizer, hparams=hparams)
+    tokenizer = load_tokenizer(mname=hparams.model_name)
+    lightning_model = LitBlenderbot(mname=hparams.model_name, tokenizer=tokenizer, hparams=hparams)
 
+    # Paths
     project_dir = Path(__file__).resolve().parents[2]
     train_path = project_dir / 'data' / hparams.train_set
     val_path = project_dir / 'data' / hparams.val_set
     checkpoint_path = project_dir / 'models' / '{}@{}'.format(hparams.model_name, now.strftime("%Y_%m_%d_%H_%M"))
     checkpoint_path.mkdir(parents=True, exist_ok=True)
+
+    if hparams.resume_from_checkpoint is not None:
+        old_checkpoint = project_dir / 'models' / hparams.resume_from_checkpoint
+        assert old_checkpoint.exists(), "checkpoint directory doesn't exist"
+    else:
+        old_checkpoint = None
 
     train_set = InterviewDataset(train_path)
     val_set = InterviewDataset(val_path)
@@ -89,7 +92,8 @@ def main(hparams):
               }
     trainer = pl.Trainer(**params,
                          callbacks=[checkpoint_callback, early_stopping],
-                         default_root_dir=checkpoint_path)
+                         default_root_dir=checkpoint_path,
+                         resume_from_checkpoint=old_checkpoint)
     trainer.fit(lightning_model, train_loader, val_loader)
 
 
@@ -103,6 +107,8 @@ if __name__ == '__main__':
     parser.add_argument('--val_set', type=str, default='processed/interview_val.csv',
                         help='path to train set csv relative to data/')
     parser.add_argument('--acc_gradients', type=int, default=3)
+    parser.add_argument('--resume_from_checkpoint', type=str, default=None,
+                        help='Dir under /models/ to resume from')
     hparams = parser.parse_args()
 
     main(hparams)
