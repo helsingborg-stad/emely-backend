@@ -57,8 +57,14 @@ def main(hparams):
     checkpoint_path.mkdir(parents=True, exist_ok=True)
 
     if hparams.resume_from_checkpoint is not None:
-        old_checkpoint = project_dir / 'models' / hparams.resume_from_checkpoint
-        assert old_checkpoint.exists(), "checkpoint directory doesn't exist"
+        if 'ckpt' in hparams.resume_from_checkpoint:
+            old_checkpoint = project_dir / 'models' / hparams.resume_from_checkpoint
+            assert old_checkpoint.exists(), "checkpoint directory doesn't exist"
+        else:  # we only specify the dir so we take the latest
+            checkpoint_dir = project_dir / 'models' / hparams.resume_from_checkpoint
+            checkpoints = [file.name for file in checkpoint_dir.iterdir() if file.is_file()]
+            checkpoints = sorted(checkpoints, key=lambda x: x[6:9])
+            old_checkpoint = checkpoints[-1]
     else:
         old_checkpoint = None
 
@@ -112,7 +118,7 @@ if __name__ == '__main__':
                         help='Dir under /models/ to resume from')
     parser.add_argument('--auto_lr_find', action='store_true', default=False)
     parser.add_argument('--check_val_every_n_epoch ', type=int, default=1)
-    parser.add_argument('--max_epochs', type=int, default=1000)
+    parser.add_argument('--max_epochs', type=int, default=20)
 
     hparams = parser.parse_args()
 
