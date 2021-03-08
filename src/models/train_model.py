@@ -101,7 +101,7 @@ if __name__ == '__main__':
                         help='pretrained model to start from. will look for model in models/')
     parser.add_argument('--train_set', type=str, required=True, help='path to train set csv relative to data/')
 
-    parser.add_argument('--learning_rate', type=int, default=5e-6)
+    parser.add_argument('--learning_rate', type=float, default=5e-6)
     parser.add_argument('--batch_size', type=int, default=4)
     parser.add_argument('--gpus', type=int, default=1)
     parser.add_argument('--val_set', type=str, default='processed/interview_val.csv',
@@ -112,6 +112,7 @@ if __name__ == '__main__':
                         help='Dir under /models/ to resume from')
     parser.add_argument('--auto_lr_find', action='store_true', default=False)
     parser.add_argument('--check_val_every_n_epoch ', type=int, default=1)
+    parser.add_argument('--max_epochs', type=int, default=1000)
 
     hparams = parser.parse_args()
 
