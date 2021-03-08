@@ -1,26 +1,37 @@
 from src.models.model import LitBlenderbot
 from pathlib import Path
 from transformers import BlenderbotTokenizer, BlenderbotSmallTokenizer
-from argparse import Namespace
+from argparse import Namespace, ArgumentParser
 
 if __name__ == '__main__':
     """" Loads a lightning checkpoint and saves tokenizer and model as bin in same directory"""
+    parser = ArgumentParser()
+    parser.add_argument('--model_dir', type=str, required=True,
+                        help='directory with pytorch lightning checkpoint')
+    parser.add_argument('--checkpoint', type=str, required=False, default=None,
+                        help='Optional: checkpoint to convert to bin')
+    params = parser.parse_args()
+
     # Model run and checkpoint name
-    model_run = 'blenderbot_small-90M@2021_03_08_13_49'
-    checkpoint = 'epoch=699-step=25199.ckpt'
-
-    ###################### Start of script ##########################
-
     cwd = Path(__file__).resolve().parent
-    model_dir = cwd / model_run
+    model_dir = cwd / params.model_dir
+    assert model_dir.exists()
+
+    if params.checkpoint is None:  # We look for the latest checkpoint
+        checkpoints = [file.name for file in model_dir.iterdir() if file.is_file()]
+        checkpoints = sorted(checkpoints, key=lambda x: x[6:9])
+        checkpoint = checkpoints[-1]
+    else:
+        checkpoint = params.checkpoint
+
     checkpoint_dir = model_dir / checkpoint
 
-    if 'small' in model_run:
+    if 'small' in params.model_dir:
         mname = 'blenderbot_small-90M'
         tokenizer_dir = cwd / mname / 'tokenizer'
         tokenizer = BlenderbotSmallTokenizer.from_pretrained(tokenizer_dir)
     else:
-        mname = model_run.split('@')[0]
+        mname = params.model_dir.split('@')[0]
         tokenizer_dir = cwd / mname / 'tokenizer'
         tokenizer = BlenderbotTokenizer.from_pretrained(tokenizer_dir)
 
