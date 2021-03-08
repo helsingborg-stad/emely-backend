@@ -158,16 +158,17 @@ class InterviewWorld(ChatWorld):
 
     def init_conversation(self, conversation_id, name, job):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
+        # TODO: Better greetings
+        greeting = 'Hej, {}! Välkommen till din intervju! Hur är det med dig?'.format(name)
         if conversation_id in self.interviews:
-            return
+            self.interviews[conversation_id].reset_conversation()
+            return greeting
         else:
             self.interviews[conversation_id] = InterviewConversation(
                 name=name,
                 job=job,
                 tokenizer=self.tokenizer
             )
-            # TODO: Better greetings
-            greeting = 'Hej, {}! Välkommen till din intervju! Hur är det med dig?'.format(name)
             return greeting
 
     def observe(self, user_input, conversation_id):
