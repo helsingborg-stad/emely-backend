@@ -20,7 +20,7 @@ class InitChat(BaseModel):
     job: str
 
 
-class Response(BaseModel):
+class BaseResponse(BaseModel):
     response_code: int
     reply: str
     episode_done: bool
@@ -28,14 +28,21 @@ class Response(BaseModel):
 
 class BrainResponse(BaseModel):
     # brain_version: float
-    response: Response
+    response: BaseResponse
     # reply_to_local_message_id: str
 
 
-kwargs = Namespace(model_name='blenderbot_small-90M@8', local_model=True,
-                   chat_mode='interview')
+class SetPersona(BaseModel):
+    persona: str
 
-world = InterviewWorld(**vars(kwargs))
+
+interview_persona = Namespace(model_name='blenderbot_small-90M@8', local_model=True,
+                              chat_mode='interview')
+fika_persona = Namespace(model_name='blenderbot-400M-distill', local_model=True,
+                         chat_mode='chat')
+
+world = InterviewWorld(**vars(interview_persona))
+
 
 @brain.post('/message')
 def chat(msg: Message):
@@ -49,13 +56,14 @@ def chat(msg: Message):
                     'episode_done': episode_done
                     }
     else:  # Conversation id doesn't exist
-        response = {'reply': '',
+        response = {'reply': "The session/conversation id doesn't exist, please use init first",
                     'response_code': 404,
                     'episode_done': True}
-    response = Response(**response)
+    response = BaseResponse(**response)
     brain_response = {'response': response}
     brain_response = BrainResponse(**brain_response)
     return brain_response
+
 
 @brain.post('/init')
 def new_chat(msg: InitChat):
@@ -65,8 +73,22 @@ def new_chat(msg: InitChat):
                 'response_code': 200,
                 'episode_done': False
                 }
-    response = Response(**response)
+    response = BaseResponse(**response)
     brain_response = {'response': response}
     brain_response = BrainResponse(**brain_response)
     return brain_response
 
+
+@brain.post('/persona')
+def set_persona(msg: SetPersona):
+    if msg.persona == 'intervju' or msg.persona == 'interview':
+        if 'Interview' in type(world).__name__:
+            pass  #  Interview persona already running
+        else:
+            world = ChatWorld(**vars(fika_persona))
+
+    elif msg.persona == 'fika':
+        if 'Chat' in type(world).__name__:
+            pass  #  Already in correct mode
+
+    else:
