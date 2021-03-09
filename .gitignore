@@ -80,12 +80,12 @@ target/
 # exclude data from source control by default
 /data/
 /notebooks/01_conversation_output/
-src/chat/*.txt
 src/chat/chat_output/*.txt
 src/chat/*.log
 src/models/lightning_logs
 notebooks/lightning_logs
 todo.txt
+
 models/*/
 
 # Mac OS-specific storage files
