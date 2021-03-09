@@ -32,7 +32,7 @@ class BrainResponse(BaseModel):
     # reply_to_local_message_id: str
 
 
-kwargs = Namespace(model_name='blenderbot_small-90M@2021_03_08_22_56', local_model=True,
+kwargs = Namespace(model_name='blenderbot_small-90M@8', local_model=True,
                    chat_mode='interview')
 
 world = InterviewWorld(**vars(kwargs))
@@ -69,3 +69,4 @@ def new_chat(msg: InitChat):
     brain_response = {'response': response}
     brain_response = BrainResponse(**brain_response)
     return brain_response
+

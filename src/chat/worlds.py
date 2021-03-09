@@ -130,7 +130,7 @@ class InterviewConversation:
         self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
                           read_questions((Path(__file__).parent / 'interview_questions.txt'))]
         self.tokenizer = tokenizer
-        self.persona = 'your persona: I work in HR\nyour persona: I have worked at this company for five years'
+        self.persona = 'your persona: I work in human resources\nyour persona: I have worked at this company for five years'
         self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
 
     def reset_conversation(self):
@@ -279,15 +279,17 @@ class InterviewWorld(ChatWorld):
             if max(ratios) < 0.5:
                 keep_idx.append(i)
 
-        # Emely cannot say that she's also a {job}
-        lie = 'I am a {}'.format(interview.job)
+        # Emely cannot say that she's also a {job}, or that she 'jobbar i timme'
+        lies = ['I am a {}'.format(interview.job),
+                'I work for an hour']
         temp_idx = []
         for i in keep_idx:
-            lie_prob = SequenceMatcher(a=lie, b=sentences[i]).ratio()
-            if lie_prob < 0.75:
-                temp_idx.append(i)
-            else:
-                logging.warning('Identified lie removed: {}'.format(lie))
+            for lie in lies:
+                lie_prob = SequenceMatcher(a=lie, b=sentences[i]).ratio()
+                if lie_prob < 0.75:
+                    temp_idx.append(i)
+                else:
+                    logging.warning('Identified lie removed: {}'.format(lie))
         keep_idx = temp_idx
 
         if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
