@@ -8,6 +8,7 @@ six~=1.15.0
 fastapi
 pydantic
 uvicorn
+pytorch-lightning
 
 # external requirements
 click~=7.1.2

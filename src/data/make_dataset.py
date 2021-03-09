@@ -34,8 +34,8 @@ def read_interview_files(input_filepath: Path, output_filepath: Path):
             # We get rid of 'freja: ' and 'user: ' in the lines
             new_lines = []
             for line in lines:
-                line = line.replace('freja: ', '')
-                line = line.replace('user: ', '')
+                line = line.replace('freja:', '')
+                line = line.replace('user:', '')
                 new_lines.append(line)
             for i in range(2, nbr_follow_up_questions * 2 + 1, 2):
                 target = new_lines[i]
@@ -49,18 +49,22 @@ def read_interview_files(input_filepath: Path, output_filepath: Path):
     # Convert to DataFrame and split into test and validation sets
     src_target_df = pd.DataFrame.from_dict(src_target_dict, orient='index')
 
+    # Check for empty rows and remove them
+    src_target_df = src_target_df[(src_target_df['target'] != '')]
+    src_target_df = src_target_df[(src_target_df['src'] != '')]
+
     train_df, val_df = train_test_split(src_target_df, test_size=0.20, shuffle=True)
 
     train_csv_path = output_filepath.joinpath('interview_train.csv')
     val_csv_path = output_filepath.joinpath('interview_val.csv')
+    full_set_path = output_filepath / 'interview_full.csv'
     train_df.to_csv(train_csv_path, index_label='Name')
     val_df.to_csv(val_csv_path, index_label='Name')
+    src_target_df.to_csv(full_set_path, index_label='Name')
     return
 
 
-@click.command()
-@click.argument('input_filepath', type=click.Path(exists=True))
-@click.argument('output_filepath', type=click.Path())
+
 def main(input_filepath, output_filepath):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
@@ -89,4 +93,4 @@ if __name__ == '__main__':
     # find .env automagically by walking up directories until it's found, then
     # load up the .env entries as environment variables
 
-    main()
+    main(input_filepath='data/raw', output_filepath='data/processed')
