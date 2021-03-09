@@ -213,7 +213,7 @@ class InterviewWorld(ChatWorld):
         elif interview.nbr_replies == self.max_replies and not interview.last_input_is_question:
             # Case 2
             interview.nbr_replies = 0
-            interview_question = self.questions.pop()
+            interview_question = interview.questions.pop()
             interview_question_en = self.translator.translate(interview_question, src='sv', target='en')
             interview.conversation_sv.add_bot_text(interview_question)
             interview.conversation_en.add_bot_text(interview_question_en)
