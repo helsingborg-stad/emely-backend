@@ -129,7 +129,6 @@ class InterviewConversation:
         self.episode_done = False
         self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
                           read_questions((Path(__file__).parent / 'interview_questions.txt'))]
-        random.shuffle(self.questions)  # TODO:
         self.tokenizer = tokenizer
         self.persona = 'your persona: I work in HR\nyour persona: I want to know more about your experiences'
         self.persona_length = len(self.tokenizer(self.persona)['input_ids'])

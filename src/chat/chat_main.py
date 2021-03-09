@@ -15,20 +15,24 @@ def main(**kwargs):
     for key in kwargs.keys():
         print('{}: {}\n'.format(key, kwargs[key]))
 
-    while not world.episode_done:
-        user_input = input("\tDitt svar: ")
-        if not user_input:
+    # Initing the conversation
+    conversation_id = 123456
+    first_message = world.init_conversation(conversation_id, kwargs['name'], kwargs['job'])
+    print(first_message)
+    episode_done = False
+
+    while not episode_done:
+        user_message = input("\tDitt svar: ")
+        if not user_message:
             print('\nDu måste skriva något för att jag ska svara!')
             continue
-        elif user_input == 'reset':
+        elif user_message == 'reset':
             print('Conversation reset\n')
-            world.save()
-            world.reset_conversation()
-        elif user_input == 'save':
-            print('Conversation saved\n')
-            world.save()
+            world.reset_conversation(conversation_id)
         else:
-            world.chat(user_input)
+            episode_done = world.observe(user_message, conversation_id)
+            reply = world.act(conversation_id)
+            print(reply)
 
 
 if __name__ == '__main__':
