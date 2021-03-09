@@ -13,7 +13,7 @@ def main(**kwargs):
     # Print config
     print('Starting interaction with world using configuration: \n')
     for key in kwargs.keys():
-        print('{}: {}\n'.format(key, kwargs[key]))
+        print('{}: {}'.format(key, kwargs[key]))
 
     # Initing the conversation
     conversation_id = 123456

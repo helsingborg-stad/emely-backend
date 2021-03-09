@@ -130,7 +130,7 @@ class InterviewConversation:
         self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
                           read_questions((Path(__file__).parent / 'interview_questions.txt'))]
         self.tokenizer = tokenizer
-        self.persona = 'your persona: I work in HR\nyour persona: I want to know more about your experiences'
+        self.persona = 'your persona: I work in HR\nyour persona: I have worked at this company for five years'
         self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
 
     def reset_conversation(self):
@@ -212,7 +212,7 @@ class InterviewWorld(ChatWorld):
         elif interview.nbr_replies == self.max_replies and not interview.last_input_is_question:
             # Case 2
             interview.nbr_replies = 0
-            interview_question = interview.questions.pop()
+            interview_question = interview.questions.pop(0)
             interview_question_en = self.translator.translate(interview_question, src='sv', target='en')
             interview.conversation_sv.add_bot_text(interview_question)
             interview.conversation_en.add_bot_text(interview_question_en)
@@ -230,7 +230,7 @@ class InterviewWorld(ChatWorld):
             if len(reply_en) < 3:
                 interview.nbr_replies = 0
                 try:
-                    reply_sv = interview.questions.pop()
+                    reply_sv = interview.questions.pop(0)
                     reply_en = self.translator.translate(reply_sv, src='sv', target='en')
                 except IndexError:
                     reply_en = 'Thank you for your time. We will keep in touch'
@@ -238,7 +238,7 @@ class InterviewWorld(ChatWorld):
                     interview.episode_done = True
             elif interview.nbr_replies == self.max_replies and interview.last_input_is_question:
                 # Case 3 - Add new question to end of model reply
-                reply_sv = self.translator.translate(reply_en, src='en', target='sv') + ' ' + interview.questions.pop()
+                reply_sv = self.translator.translate(reply_en, src='en', target='sv') + ' ' + interview.questions.pop(0)
                 reply_en = self.translator.translate(reply_sv, src='sv', target='en')
                 interview.nbr_replies = 0
             else:
