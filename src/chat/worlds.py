@@ -22,11 +22,11 @@ class ChatWorld:
         # TODO: init from opt like dictionary
 
         self.model_name = kwargs['model_name']
+        self.local_model = kwargs['local_model']
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = None
         self.tokenizer = None
-        self.load_model(self.model_name, kwargs['local_model'])
-        self.model.to(self.device)
+        self.model_loaded = False
 
         self.translator = ChatTranslator()
 
@@ -44,25 +44,34 @@ class ChatWorld:
 
         logging.basicConfig(filename='worlds.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
 
-    def load_model(self, mname, local_model):
+    def load_model(self):
         """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
         # TODO: Add some checks here for if the local model exists and if the user mistakenly adds local_model=True
-        if local_model:
-            model_dir = Path(__file__).parents[2] / 'models' / mname / 'model'
-            token_dir = Path(__file__).parents[2] / 'models' / mname / 'tokenizer'
+        if self.local_model:
+            model_dir = Path(__file__).parents[2] / 'models' / self.model_name / 'model'
+            token_dir = Path(__file__).parents[2] / 'models' / self.model_name / 'tokenizer'
             assert model_dir.exists() and token_dir.exists()
-        elif 'facebook/' in mname:
-            model_dir = mname
-            token_dir = mname
+        elif 'facebook/' in self.model_name:
+            model_dir = self.model_name
+            token_dir = self.model_name
         else:
-            raise ValueError('Got local_model=False but mname didn\'t contain facebook')
+            self.model_loaded = False
 
-        if 'small' in mname:
+        if 'small' in self.model_name:
             self.model = BlenderbotSmallForConditionalGeneration.from_pretrained(model_dir)
             self.tokenizer = BlenderbotSmallTokenizer.from_pretrained(token_dir)
         else:
             self.model = BlenderbotForConditionalGeneration.from_pretrained(model_dir)
             self.tokenizer = BlenderbotTokenizer.from_pretrained(token_dir)
+
+        self.model.to(self.device)
+        self.model_loaded = True
+        return
+
+    def unload_model(self):
+        self.model = None
+        self.tokenizer = None
+        self.model_loaded = False
         return
 
     def reset_conversation(self, conversation_id):
@@ -130,7 +139,7 @@ class InterviewConversation:
         self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
                           read_questions((Path(__file__).parent / 'interview_questions.txt'))]
         self.tokenizer = tokenizer
-        self.persona = 'your persona: I work in human resources\nyour persona: I have worked at this company for five years'
+        self.persona = 'your new_persona: I work in human resources\nyour new_persona: I have worked at this company for five years'
         self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
 
     def reset_conversation(self):
