@@ -18,63 +18,70 @@ class ChatWorld:
     # Class that keeps
 
     def __init__(self, **kwargs):
-        # TODO: init model and tokenizer from file
-        # TODO: init from opt like dictionary
 
         self.model_name = kwargs['model_name']
+        self.local_model = kwargs['local_model']
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = None
         self.tokenizer = None
-        self.load_model(self.model_name, kwargs['local_model'])
-        self.model.to(self.device)
+        self.model_loaded = False
 
         self.translator = ChatTranslator()
 
-        self.episode_done = {}
-        self.persona = None
-        self.persona_length = 0
         self.stop_tokens = ['hejdå', 'bye', 'hej då']  # TODO: More sophisticated solution
 
-        self.conversations_sv = {}
-        self.conversations_en = {}
-
-        # self.conversation_sv = BlenderConversation(lang='sv', tokenizer=self.tokenizer)
-        # self.conversation_en = BlenderConversation(lang='en', tokenizer=self.tokenizer)
-        # self.description = 'Open dialogue with {}'.format(self.model_name)
+        self.dialogues = {}
 
         logging.basicConfig(filename='worlds.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
 
-    def load_model(self, mname, local_model):
+    def load_model(self):
         """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
         # TODO: Add some checks here for if the local model exists and if the user mistakenly adds local_model=True
-        if local_model:
-            model_dir = Path(__file__).parents[2] / 'models' / mname / 'model'
-            token_dir = Path(__file__).parents[2] / 'models' / mname / 'tokenizer'
+        if self.local_model:
+            model_dir = Path(__file__).parents[2] / 'models' / self.model_name / 'model'
+            token_dir = Path(__file__).parents[2] / 'models' / self.model_name / 'tokenizer'
             assert model_dir.exists() and token_dir.exists()
-        elif 'facebook/' in mname:
-            model_dir = mname
-            token_dir = mname
+        elif 'facebook/' in self.model_name:
+            model_dir = self.model_name
+            token_dir = self.model_name
         else:
-            raise ValueError('Got local_model=False but mname didn\'t contain facebook')
+            self.model_loaded = False
 
-        if 'small' in mname:
+        if 'small' in self.model_name:
             self.model = BlenderbotSmallForConditionalGeneration.from_pretrained(model_dir)
             self.tokenizer = BlenderbotSmallTokenizer.from_pretrained(token_dir)
         else:
             self.model = BlenderbotForConditionalGeneration.from_pretrained(model_dir)
             self.tokenizer = BlenderbotTokenizer.from_pretrained(token_dir)
+
+        self.model.to(self.device)
+        self.model_loaded = True
         return
+
+    def unload_model(self):
+        self.model = None
+        self.tokenizer = None
+        self.model_loaded = False
+        return
+
+    def init_conversation(self, conversation_id, name, **kwargs):
+        """Creates a new empty conversation if the conversation id doesn't already exist"""
+        # TODO: Better greetings
+        greeting = 'Hej, {}, jag heter Emely! Hur är det med dig?'.format(name)
+        if conversation_id in self.dialogues.keys():
+            self.dialogues[conversation_id].reset_conversation()
+            return greeting
+        else:
+            self.dialogues[conversation_id] = OpenConversation(
+                name=name,
+                tokenizer=self.tokenizer
+            )
+            return greeting
 
     def reset_conversation(self, conversation_id):
-        self.conversations_en[conversation_id].reset()
-        self.conversations_sv[conversation_id].reset()
+        self.dialogues[conversation_id].reset()
+        self.dialogues[conversation_id].reset()
         return
-
-    def chat(self, user_input, conversation_id):
-        self.observe(user_input, conversation_id)
-        if not self.episode_done[conversation_id]:
-            reply = self.act(conversation_id)
-        return reply
 
     # def save(self, error=None):
     #     self.conversation_sv.to_txt(self.description, 'chat_output/interview_dialogue.txt', error=error)
@@ -86,34 +93,59 @@ class ChatWorld:
         # Observe the user input, translate and update internal states
         # Check if user wants to quit/no questions left --> self.episode_done = True
 
+        dialogue = self.dialogues[conversation_id]
+
         translated_input = self.translator.translate(user_input, src='sv', target='en')
-        self.conversations_sv[conversation_id].add_user_text(user_input)
-        self.conversations_en[conversation_id].add_user_text(translated_input)
+        dialogue.conversation_sv.add_user_text(user_input)
+        dialogue.conversation_en.add_user_text(translated_input)
 
         # Set episode done if exit condition is met. TODO: Better check of input stop
         if user_input.lower().replace(' ', '') in self.stop_tokens:
-            self.episode_done[conversation_id] = True
-        return self.episode_done[conversation_id]
+            dialogue.episode_done = True
+        return dialogue.episode_done
 
     def act(self, conversation_id):
-        if not self.episode_done[conversation_id]:
+        dialogue = self.dialogues[conversation_id]
+        if not dialogue.episode_done:
             context = self._get_context(conversation_id)
             inputs = self.tokenizer([context], return_tensors='pt')
             inputs.to(self.device)
             with no_grad():
                 output_tokens = self.model.generate(**inputs)
-            reply = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
+            reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
 
-            reply_sv = self.translator.translate(reply, src='en', target='sv')
-            self.conversations_sv[conversation_id].add_bot_text(reply_sv)
-            self.conversations_en[conversation_id].add_bot_text(reply)
+            reply_sv = self.translator.translate(reply_en, src='en', target='sv')
+            dialogue.conversation_sv.add_bot_text(reply_sv)
+            dialogue.conversation_en.add_bot_text(reply_en)
             return reply_sv
 
         else:
-            return 'Kul att prata med dig! Hejdå!'
+            return 'Kul att prata med dig! Hejdå!'  # TODO: Fix flexible
 
     def _get_context(self, conversation_id):
-        context = self.conversations_en[conversation_id].get_dialogue_history()
+        dialogue = self.dialogues[conversation_id]
+        context = dialogue.conversation_en.get_dialogue_history()
+        return context
+
+
+class OpenConversation:
+
+    def __init__(self, name, tokenizer):
+        self.name = name
+        self.conversation_sv = BlenderConversation(lang='sv', tokenizer=tokenizer)
+        self.conversation_en = BlenderConversation(lang='en', tokenizer=tokenizer)
+        self.episode_done = False
+        self.tokenizer = tokenizer
+        self.persona = 'your persona: my name is Emely'
+        self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
+
+    def reset_conversation(self):
+        self.conversation_sv.reset()
+        self.conversation_en.reset()
+        return
+
+    def get_context(self):
+        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history())
         return context
 
 
@@ -130,7 +162,7 @@ class InterviewConversation:
         self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
                           read_questions((Path(__file__).parent / 'interview_questions.txt'))]
         self.tokenizer = tokenizer
-        self.persona = 'your persona: I work in HR\nyour persona: I have worked at this company for five years'
+        self.persona = 'your persona: I work in human resources\nyour persona: I have worked at this company for five years'
         self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
 
     def reset_conversation(self):
@@ -142,9 +174,6 @@ class InterviewConversation:
         context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history())
         return context
 
-    def fun2(self):
-        raise NotImplementedError
-
 
 class InterviewWorld(ChatWorld):
     # Class that keeps
@@ -155,11 +184,12 @@ class InterviewWorld(ChatWorld):
         self.interviews = {}
         self.max_replies = 2  # Maximum number of replies back and forth for each question
 
-    def init_conversation(self, conversation_id, name, job):
+    def init_conversation(self, conversation_id, name, **kwargs):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
         # TODO: Better greetings
+        job = kwargs['job']
         greeting = 'Hej, {}! Välkommen till din intervju! Hur är det med dig?'.format(name)
-        if conversation_id in self.interviews:
+        if conversation_id in self.interviews.keys():
             self.interviews[conversation_id].reset_conversation()
             return greeting
         else:
@@ -279,15 +309,17 @@ class InterviewWorld(ChatWorld):
             if max(ratios) < 0.5:
                 keep_idx.append(i)
 
-        # Emely cannot say that she's also a {job}
-        lie = 'I am a {}'.format(interview.job)
+        # Emely cannot say that she's also a {job}, add
+        lies = ['I am a {}'.format(interview.job),
+                'do you have any hobbies?']
         temp_idx = []
         for i in keep_idx:
-            lie_prob = SequenceMatcher(a=lie, b=sentences[i]).ratio()
-            if lie_prob < 0.75:
-                temp_idx.append(i)
-            else:
-                logging.warning('Identified lie removed: {}'.format(lie))
+            for lie in lies:
+                lie_prob = SequenceMatcher(a=lie, b=sentences[i]).ratio()
+                if lie_prob < 0.75:
+                    temp_idx.append(i)
+                else:
+                    logging.warning('Identified lie removed: {}'.format(lie))
         keep_idx = temp_idx
 
         if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
