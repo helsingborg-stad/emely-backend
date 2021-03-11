@@ -8,8 +8,11 @@ Emely
 4. run $python setup.py develop 
 
 ## Running the brain app
-To run the fastAPI app on 127.0.0.1:
-$uvicorn path/to/file/api_main:brain 
+To run the fastAPI app on 127.0.0.1:8000
+1. from models/ $python download_model.py --model_name facebook/blenderbot_small-90M
+2. from src/api $uvicorn api_main:brain 
+
+Check the docs and try the http requests at 127.0.0.1:8000/docs
 
 Project Organization
 ------------
