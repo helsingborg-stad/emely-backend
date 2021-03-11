@@ -3,9 +3,13 @@ Emely
 
 ## Get started
 1. create a new virtual environment
-2. Install pytorch separately
+2. Install pytorch separately via https://pytorch.org/get-started/locally/
 3. run $pip install -r requirements.txt
 4. run $python setup.py develop 
+
+## Running the brain app
+To run the fastAPI app on 127.0.0.1:
+$uvicorn path/to/file/api_main:brain 
 
 Project Organization
 ------------
