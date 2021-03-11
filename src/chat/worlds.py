@@ -127,6 +127,12 @@ class ChatWorld:
         context = dialogue.conversation_en.get_dialogue_history()
         return context
 
+    def save(self, conversation_id):
+        dialogue = self.dialogues[conversation_id]
+        description = self.model_name
+        file_path =
+        dialogue.conversation_sv.
+
 
 class OpenConversation:
 

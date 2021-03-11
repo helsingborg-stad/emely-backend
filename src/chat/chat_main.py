@@ -17,7 +17,7 @@ def main(**kwargs):
 
     # Initing the conversation
     conversation_id = 123456
-    first_message = world.init_conversation(conversation_id, kwargs['name'], kwargs['job'])
+    first_message = world.init_conversation(conversation_id, **kwargs)
     print(first_message)
     episode_done = False
 
@@ -29,6 +29,8 @@ def main(**kwargs):
         elif user_message == 'reset':
             print('Conversation reset\n')
             world.reset_conversation(conversation_id)
+        elif user_message == 'save':
+            world.save(conversation_id)
         else:
             episode_done = world.observe(user_message, conversation_id)
             reply = world.act(conversation_id)
