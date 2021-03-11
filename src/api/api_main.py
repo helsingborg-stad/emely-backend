@@ -5,10 +5,12 @@ from argparse import Namespace
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from typing import Optional
+from collections import defaultdict
 
 
 class Message(BaseModel):
     # Defines regular message during chat
+    persona: str
     conversation_id: int
     message: str
 
@@ -32,12 +34,8 @@ class BrainResponse(BaseModel):
     # reply_to_local_message_id: str
 
 
-class SetPersona(BaseModel):
-    new_persona: str
-
-
 brain = FastAPI()
-conversation_id_to_persona = {}
+conversations = defaultdict(dict)
 
 interview_persona = Namespace(model_name='blenderbot_small-90M', local_model=True,
                               chat_mode='interview')
@@ -62,8 +60,7 @@ brain.add_event_handler("startup", init_config)
 
 @brain.post('/message')
 def chat(msg: Message, response: Response):
-    conversation_id, message = msg.conversation_id, msg.message
-    persona = conversation_id_to_persona[conversation_id]
+    conversation_id, message, persona = msg.conversation_id, msg.message, msg.persona
     if persona == 'fika':
         world = fika_world
     elif persona == 'intervju':
@@ -87,7 +84,7 @@ def chat(msg: Message, response: Response):
 
 @brain.post('/init', status_code=201)
 def new_chat(msg: InitChat, response: Response):
-    persona = msg.persona
+    persona, conversation_id = msg.persona, msg.conversation_id
     if persona == 'fika':
         world = fika_world
     elif persona == 'intervju':
@@ -99,7 +96,9 @@ def new_chat(msg: InitChat, response: Response):
     else:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return response
-    conversation_id_to_persona[msg.conversation_id] = persona
+    if conversation_id not in conversations.keys():
+        conversations[conversation_id] = {'fika': False, 'intervju': False}
+    conversations[conversation_id][persona] = True
     greeting = world.init_conversation(**msg.dict())
     response = {'reply': greeting,
                 'episode_done': False
@@ -108,6 +107,12 @@ def new_chat(msg: InitChat, response: Response):
     brain_response = {'response': response}
     brain_response = BrainResponse(**brain_response)
     return brain_response
+
+
+@brain.get('/dialogues')
+def get_dialogues():
+    json_compatible_item_data = jsonable_encoder(conversations)
+    return JSONResponse(content=json_compatible_item_data)
 
 #
 # @brain.get('/init', status_code=200)
