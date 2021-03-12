@@ -10,6 +10,8 @@ def main(**kwargs):
     else:
         raise ValueError()
 
+    world.load_model()
+
     # Print config
     print('Starting interaction with world using configuration: \n')
     for key in kwargs.keys():
@@ -35,6 +37,7 @@ def main(**kwargs):
             episode_done = world.observe(user_message, conversation_id)
             reply = world.act(conversation_id)
             print(reply)
+    world.save(conversation_id)
 
 
 if __name__ == '__main__':

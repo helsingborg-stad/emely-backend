@@ -2,8 +2,7 @@ from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration
     BlenderbotSmallForConditionalGeneration
 from torch import no_grad
 import torch
-import random
-from src.chat.conversation import BlenderConversation
+from src.chat.conversation import OpenConversation, InterviewConversation
 from src.chat.translate import ChatTranslator
 
 import re
@@ -130,55 +129,9 @@ class ChatWorld:
     def save(self, conversation_id):
         dialogue = self.dialogues[conversation_id]
         description = self.model_name
-        file_path =
-        dialogue.conversation_sv.
-
-
-class OpenConversation:
-
-    def __init__(self, name, tokenizer):
-        self.name = name
-        self.conversation_sv = BlenderConversation(lang='sv', tokenizer=tokenizer)
-        self.conversation_en = BlenderConversation(lang='en', tokenizer=tokenizer)
-        self.episode_done = False
-        self.tokenizer = tokenizer
-        self.persona = 'your persona: my name is Emely'
-        self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
-
-    def reset_conversation(self):
-        self.conversation_sv.reset()
-        self.conversation_en.reset()
+        file_path = Path(__file__).parents[2] / 'models' / self.model_name / 'chat_conversation.txt'
+        dialogue.conversation_sv.to_txt(description, file=file_path)
         return
-
-    def get_context(self):
-        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history())
-        return context
-
-
-class InterviewConversation:
-
-    def __init__(self, name, job, tokenizer):
-        self.name = name
-        self.job = job.lower()
-        self.conversation_sv = BlenderConversation(lang='sv', tokenizer=tokenizer)
-        self.conversation_en = BlenderConversation(lang='en', tokenizer=tokenizer)
-        self.nbr_replies = 0
-        self.last_input_is_question = False
-        self.episode_done = False
-        self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
-                          read_questions((Path(__file__).parent / 'interview_questions.txt'))]
-        self.tokenizer = tokenizer
-        self.persona = 'your persona: I work in human resources\nyour persona: I have worked at this company for five years'
-        self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
-
-    def reset_conversation(self):
-        self.conversation_sv.reset()
-        self.conversation_en.reset()
-        return
-
-    def get_context(self):
-        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history())
-        return context
 
 
 class InterviewWorld(ChatWorld):
@@ -341,10 +294,9 @@ class InterviewWorld(ChatWorld):
                 logging.warning('Corrected: {} \n to: {}'.format(reply, new_reply))
             return new_reply
 
-
-def read_questions(file_path):
-    # Reads interview questions from a text file, one question per line. '{}' in place where job should be inserted
-    with open(file_path, 'r') as f:
-        questions = f.readlines()
-    format_this = [True if '{}' in question else False for question in questions]
-    return zip(questions, format_this)
+    def save(self, conversation_id):
+        dialogue = self.interviews[conversation_id]
+        description = self.model_name
+        file_path = Path(__file__).parents[2] / 'models' / self.model_name / 'interview_conversation.txt'
+        dialogue.conversation_sv.to_txt(description, file_path)
+        return

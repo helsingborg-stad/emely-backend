@@ -1,6 +1,53 @@
 from pathlib import Path
 
 
+class OpenConversation:
+
+    def __init__(self, name, tokenizer):
+        self.name = name
+        self.conversation_sv = BlenderConversation(lang='sv', tokenizer=tokenizer)
+        self.conversation_en = BlenderConversation(lang='en', tokenizer=tokenizer)
+        self.episode_done = False
+        self.tokenizer = tokenizer
+        self.persona = 'your persona: my name is Emely'
+        self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
+
+    def reset_conversation(self):
+        self.conversation_sv.reset()
+        self.conversation_en.reset()
+        return
+
+    def get_context(self):
+        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history())
+        return context
+
+
+class InterviewConversation:
+
+    def __init__(self, name, job, tokenizer):
+        self.name = name
+        self.job = job.lower()
+        self.conversation_sv = BlenderConversation(lang='sv', tokenizer=tokenizer)
+        self.conversation_en = BlenderConversation(lang='en', tokenizer=tokenizer)
+        self.nbr_replies = 0
+        self.last_input_is_question = False
+        self.episode_done = False
+        self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
+                          read_questions((Path(__file__).parent / 'interview_questions.txt'))]
+        self.tokenizer = tokenizer
+        self.persona = 'your persona: I work in human resources\nyour persona: I have worked at this company for five years'
+        self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
+
+    def reset_conversation(self):
+        self.conversation_sv.reset()
+        self.conversation_en.reset()
+        return
+
+    def get_context(self):
+        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history())
+        return context
+
+
 class BlenderConversation:
 
     def __init__(self, lang, tokenizer):
@@ -80,7 +127,7 @@ class BlenderConversation:
                     break
         return history
 
-    def to_txt(self, description, file=None, error=None):
+    def to_txt(self, description, file_path, error=None):
         # Writes the dialogue to txt file in subdirectory
         text = '####################################\n' + 'Conversation description: ' + description + '\n\n'
         if self.user_turn:
@@ -91,17 +138,11 @@ class BlenderConversation:
                 text = text + 'User>>> ' + self.user_text[i] + '\n Bot>>> ' + self.bot_text[i] + '\n'
             text = text + 'User>>> ' + self.user_text[-1]
 
-        if file is None:
-            if self.lang == 'sv':
-                file = 'interview_sv.txt'
-            else:
-                file = 'interview_en.txt'
-
         if error is None:
             text = text + '\n\n'
         else:
             text = text + '\n' + 'Terminated due to {}'.format(error) + '\n\n'
-        file_path = file
+
         with open(file_path, 'a') as f:
             f.write(text)
         return
@@ -119,3 +160,11 @@ class BlenderConversation:
 
             print(text)
         return
+
+
+def read_questions(file_path):
+    # Reads interview questions from a text file, one question per line. '{}' in place where job should be inserted
+    with open(file_path, 'r') as f:
+        questions = f.readlines()
+    format_this = [True if '{}' in question else False for question in questions]
+    return zip(questions, format_this)
