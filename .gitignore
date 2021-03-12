@@ -78,7 +78,6 @@ target/
 .ipynb_checkpoints/
 
 # exclude data from source control by default
-/data/
 /notebooks/01_conversation_output/
 src/chat/*.txt
 src/chat/chat_output/*.txt
