@@ -117,8 +117,10 @@ if __name__ == '__main__':
     parser.add_argument('--resume_from_checkpoint', type=str, default=None,
                         help='Dir under /models/ to resume from')
     parser.add_argument('--auto_lr_find', action='store_true', default=False)
-    parser.add_argument('--check_val_every_n_epoch ', type=int, default=1)
     parser.add_argument('--max_epochs', type=int, default=20)
+    parser.add_argument('--checkpoint_every_n', type=int, default=5)
+    parser.add_argument('--unfreeze decoder', type=int, default=False)
+
 
     hparams = parser.parse_args()
 

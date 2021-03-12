@@ -18,7 +18,7 @@ class LitBlenderbot(pl.LightningModule):
         self._load_model(mname)  # Loads model from pretrained huggingface
         self.hparams = hparams
 
-        self.freeze_model_parts()
+        self.freeze_model_parts(hparams.freeze_decoder)
 
     def _load_model(self, mname):
         model_dir = Path(__file__).resolve().parents[2] / 'models' / mname / 'model'
@@ -31,10 +31,12 @@ class LitBlenderbot(pl.LightningModule):
 
         return
 
-    def freeze_model_parts(self):
+    def freeze_model_parts(self, unfreeze_decoder):
         # TODO: Add option define what is frozen here?
         freeze_params(self.model)
         unfreeze_params(self.model.lm_head)
+        if unfreeze_decoder:
+            unfreeze_params(self.model.model.decoder)
         return
 
     def forward(self, x):
