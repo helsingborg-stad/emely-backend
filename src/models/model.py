@@ -18,7 +18,7 @@ class LitBlenderbot(pl.LightningModule):
         self._load_model(mname)  # Loads model from pretrained huggingface
         self.hparams = hparams
 
-        self.freeze_model_parts(hparams.freeze_decoder)
+        self.freeze_model_parts(hparams.unfreeze_decoder)
 
     def _load_model(self, mname):
         model_dir = Path(__file__).resolve().parents[2] / 'models' / mname / 'model'

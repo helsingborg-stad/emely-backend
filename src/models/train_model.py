@@ -76,13 +76,20 @@ def main(hparams):
     val_loader = DataLoader(val_set, collate_fn=token_collate_fn, batch_size=hparams.batch_size)
 
     ## Checkpoint callbacks
-    checkpoint_callback = ModelCheckpoint(
-        dirpath=checkpoint_path,
-        save_top_k=1,
-        verbose=True,
-        monitor='val_loss',
-        mode='min'
-    )
+    if hparams.checkpoint_every_n_epochs is not None:
+        checkpoint_callback = ModelCheckpoint(
+            dirpath=checkpoint_path,
+            verbose=True,
+            period=hparams.checkpoint_every_n_epochs # Period will be deprecated for every_n_val_epochs in 1.3 or 1.5
+        )
+    else:
+        checkpoint_callback = ModelCheckpoint(
+            dirpath=checkpoint_path,
+            save_top_k=1,
+            verbose=True,
+            monitor='val_loss',
+            mode='min'
+        )
 
     ## Early stopping callback
     early_stopping = EarlyStopping(
@@ -93,11 +100,14 @@ def main(hparams):
         mode='min'
     )
 
-    trainer = pl.Trainer(gpus=hparams.gpus,
-                         auto_scale_batch_size=hparams.auto_scale_batch_size,
-                         callbacks=[checkpoint_callback, early_stopping],
+    trainer = pl.Trainer(callbacks=[checkpoint_callback, early_stopping],
                          default_root_dir=checkpoint_path,
-                         resume_from_checkpoint=old_checkpoint)
+                         resume_from_checkpoint=old_checkpoint,
+                         gpus=hparams.gpus,
+                         auto_scale_batch_size=hparams.auto_scale_batch_size,
+                         max_epochs=hparams.max_epochs,
+                         accumulate_grad_batches=hparams.acc_gradients
+                         )
     trainer.fit(lightning_model, train_loader, val_loader)
 
 
@@ -113,14 +123,20 @@ if __name__ == '__main__':
     parser.add_argument('--val_set', type=str, default='processed/interview_val.csv',
                         help='path to train set csv relative to data/')
     parser.add_argument('--acc_gradients', type=int, default=1)
-    parser.add_argument('--auto_scale_batch_size', action='store_true', default=False)
     parser.add_argument('--resume_from_checkpoint', type=str, default=None,
                         help='Dir under /models/ to resume from')
-    parser.add_argument('--auto_lr_find', action='store_true', default=False)
     parser.add_argument('--max_epochs', type=int, default=20)
-    parser.add_argument('--checkpoint_every_n', type=int, default=5)
-    parser.add_argument('--unfreeze decoder', type=int, default=False)
+    parser.add_argument('--checkpoint_every_n_epochs', type=int, default=None)
 
+    # Booleans
+    parser.add_argument('--auto_scale_batch_size', dest='auto_scale_batch_size', action='store_true')
+    parser.add_argument('--auto_lr_find', dest='auto_lr_find', action='store_true')
+    parser.add_argument('--unfreeze_decoder', dest='unfreeze_decoder', action='store_true')
+
+    parser.set_defaults(auto_scale_batch_size=False,
+                        auto_lr_find=False,
+                        unfreeze_decoder=False,
+                        )
 
     hparams = parser.parse_args()
 
