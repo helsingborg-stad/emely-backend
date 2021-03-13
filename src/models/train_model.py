@@ -53,7 +53,7 @@ def main(hparams):
     project_dir = Path(__file__).resolve().parents[2]
     train_path = project_dir / 'data' / hparams.train_set
     val_path = project_dir / 'data' / hparams.val_set
-    checkpoint_path = project_dir / 'models' / '{}@{}'.format(hparams.model_name, now.strftime("%Y_%m_%d_%H_%M"))
+    checkpoint_path = project_dir / 'models' / '{}@{}'.format(hparams.model_name, now.strftime("%d_%H_%M"))
     checkpoint_path.mkdir(parents=True, exist_ok=True)
 
     if hparams.resume_from_checkpoint is not None:
