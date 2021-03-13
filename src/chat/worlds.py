@@ -139,7 +139,7 @@ class InterviewWorld(ChatWorld):
     def __init__(self, **kwargs):
         # TODO: More sophisticated questions/greeting drawn from txt file(?) and formated with name and job
         super().__init__(**kwargs)
-
+        self.no_correction = kwargs['no_correction']
         self.interviews = {}
         self.max_replies = 2  # Maximum number of replies back and forth for each question
 
@@ -214,7 +214,10 @@ class InterviewWorld(ChatWorld):
                 output_tokens = self.model.generate(**inputs)
                 reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
 
-            reply_en = self._correct_reply(reply_en, conversation_id)
+            if self.no_correction:
+                pass
+            else:
+                reply_en = self._correct_reply(reply_en, conversation_id)
             # _correct_reply can return empty string -> force new question
             if len(reply_en) < 3:
                 interview.nbr_replies = 0

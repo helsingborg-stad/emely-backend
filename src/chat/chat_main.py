@@ -60,6 +60,8 @@ if __name__ == '__main__':
     parser.add_argument('--chat_mode',
                         type=str, choices=['interview', 'chat'], default='interview',
                         help='Chat mode to use. interview or open chat available')
-    parser.set_defaults(local_model=True)
+    parser.add_argument('--no_correction', action='store_true', dest='no_correction')
+    parser.set_defaults(local_model=True,
+                        no_correction=False)
     args = parser.parse_args()
     main(**vars(args))
