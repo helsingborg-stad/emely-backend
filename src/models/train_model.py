@@ -64,7 +64,8 @@ def main(hparams):
             checkpoint_dir = project_dir / 'models' / hparams.resume_from_checkpoint
             checkpoints = [file.name for file in checkpoint_dir.iterdir() if file.is_file()]
             checkpoints = sorted(checkpoints, key=lambda x: x[6:9])
-            old_checkpoint = checkpoints[-1]
+            old_checkpoint = project_dir / 'models' / hparams.resume_from_checkpoint / checkpoints[-1]
+
     else:
         old_checkpoint = None
 
