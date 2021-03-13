@@ -35,7 +35,7 @@ if __name__ == '__main__':
         tokenizer_dir = cwd / mname / 'tokenizer'
         tokenizer = BlenderbotTokenizer.from_pretrained(tokenizer_dir)
 
-    kwargs = {'mname': mname, 'tokenizer': tokenizer, 'hparams': Namespace()}
+    kwargs = {'mname': mname, 'tokenizer': tokenizer, 'hparams': Namespace(unfreeze_decoder=False)}
     litmodel = LitBlenderbot.load_from_checkpoint(checkpoint_path=checkpoint_dir, **kwargs)
     litmodel.model.save_pretrained(model_dir / 'model')
     litmodel.tokenizer.save_pretrained(model_dir / 'tokenizer')
