@@ -32,7 +32,7 @@ def token_collate_fn(batch):
 
 
 def load_tokenizer(mname):
-    """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
+    """Loads model locally. Works with both BlenderbotSmall and regular"""
     token_dir = Path(__file__).resolve().parents[2] / 'models' / mname / 'tokenizer'
     assert token_dir.exists()
 
@@ -53,7 +53,8 @@ def main(hparams):
     project_dir = Path(__file__).resolve().parents[2]
     train_path = project_dir / 'data' / hparams.train_set
     val_path = project_dir / 'data' / hparams.val_set
-    checkpoint_path = project_dir / 'models' / '{}@{}'.format(hparams.model_name, now.strftime("%Y_%m_%d_%H_%M"))
+    model_type = hparams.model_name.strip('blenderbot_')
+    checkpoint_path = project_dir / 'models' / '{}@{}'.format(hparams.model_name, now.strftime("%d_%H_%M"))
     checkpoint_path.mkdir(parents=True, exist_ok=True)
 
     if hparams.resume_from_checkpoint is not None:

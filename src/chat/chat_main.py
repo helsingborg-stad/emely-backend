@@ -10,6 +10,8 @@ def main(**kwargs):
     else:
         raise ValueError()
 
+    world.load_model()
+
     # Print config
     print('Starting interaction with world using configuration: \n')
     for key in kwargs.keys():
@@ -17,7 +19,7 @@ def main(**kwargs):
 
     # Initing the conversation
     conversation_id = 123456
-    first_message = world.init_conversation(conversation_id, kwargs['name'], kwargs['job'])
+    first_message = world.init_conversation(conversation_id, **kwargs)
     print(first_message)
     episode_done = False
 
@@ -29,10 +31,13 @@ def main(**kwargs):
         elif user_message == 'reset':
             print('Conversation reset\n')
             world.reset_conversation(conversation_id)
+        elif user_message == 'save':
+            world.save(conversation_id)
         else:
             episode_done = world.observe(user_message, conversation_id)
             reply = world.act(conversation_id)
             print(reply)
+    world.save(conversation_id)
 
 
 if __name__ == '__main__':
@@ -55,6 +60,8 @@ if __name__ == '__main__':
     parser.add_argument('--chat_mode',
                         type=str, choices=['interview', 'chat'], default='interview',
                         help='Chat mode to use. interview or open chat available')
-    parser.set_defaults(local_model=True)
+    parser.add_argument('--no_correction', action='store_true', dest='no_correction')
+    parser.set_defaults(local_model=True,
+                        no_correction=False)
     args = parser.parse_args()
     main(**vars(args))

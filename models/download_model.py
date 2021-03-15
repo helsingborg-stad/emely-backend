@@ -15,8 +15,8 @@ def main(args):
         model = BlenderbotForConditionalGeneration.from_pretrained(mname)
         tokenizer = BlenderbotTokenizer.from_pretrained(mname)
 
-    model_dir = Path(__file__).joinpath(model_name + '/model')
-    token_dir = Path(__file__).joinpath(model_name + '/tokenizer')
+    model_dir = Path(__file__).resolve().parent.joinpath(model_name + '/model')
+    token_dir = Path(__file__).resolve().parent.joinpath(model_name + '/tokenizer')
 
     model_dir.mkdir(parents=True, exist_ok=True)
     token_dir.mkdir(parents=True, exist_ok=True)
