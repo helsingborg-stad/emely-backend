@@ -6,6 +6,9 @@ import difflib
 
 from translator import TextTranslator
 from argparse import ArgumentParser
+from googletrans import Translator
+
+from src.chat.translate import ChatTranslator
 # This function provides all Langugages that are supported by the deep_translate library.
 # langs_list = GoogleTranslator.get_supported_languages(as_dict=True)
 
@@ -14,6 +17,7 @@ from argparse import ArgumentParser
 languages = ["en", "de", "fr", "es", "it"]
 
 text_translator = TextTranslator(languages)
+gtrans_translator = Translator()
 
 # Define a list of languages that can be used for the translation
 
@@ -33,7 +37,10 @@ def translate_to_different_languages(text, src_language):
             # Check so that the text is not a false statement.
             if text_trans:
                 output[dest] = text_trans
-
+            else:  # Deep translator didn't work, try googletrans
+                alt_translation = gtrans_translator.translate(text, src=src_language, dest=dest)
+                if text not in alt_translation:
+                    output[dest] = alt_translation
         else:
             output[src_language] = text
     return output
@@ -135,8 +142,6 @@ def main(input_path: Path, output_path: Path):
     # Check if the path exists.
     p = Path(output_path)
     # If not, create the path.
-    if not p.exists():
-        Path(output_path).mkdir(parents=True, exist_ok=True)
 
     data_frame = pd.read_csv(input_path)
 
@@ -149,19 +154,28 @@ def main(input_path: Path, output_path: Path):
         print("Working on text: {0}".format(k))
         # Extract source and targets texts.
         src = data_frame.iloc[k]["src"]
+        target = data_frame.iloc[k]["target"]
 
         # Find the user text in the src
         unmodified_src, user_text = src.rsplit('\n', 1)
+        if user_text == '':
+            unmodified_src, user_text = unmodified_src.rsplit('\n', 1)
+            #
+            # output_dict[index] = {"src": src, "target": target}
+            # continue
 
         user_aug = run_augmentation(user_text)
 
-        # Create a new src with the augmented user text
         src_aug = []
-        for aug in user_aug:
-            new_src = unmodified_src + '\n' + aug
-            src_aug.append(new_src)
-
-        target = data_frame.iloc[k]["target"]
+        # Sometimes there are no translation variations
+        if len(user_aug) == 1:
+            print('did not translate: {}'.format(user_aug))
+            src_aug.append(src)
+        else:
+        # Create a new src with the augmented user text
+            for aug in user_aug:
+                new_src = unmodified_src + '\n' + aug
+                src_aug.append(new_src)
 
         # Combine the different answers in order to create a unique set of data.
         # All these samples are unique.
