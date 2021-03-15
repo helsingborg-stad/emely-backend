@@ -53,7 +53,10 @@ def main(hparams):
     project_dir = Path(__file__).resolve().parents[2]
     train_path = project_dir / 'data' / hparams.train_set
     val_path = project_dir / 'data' / hparams.val_set
-    checkpoint_path = project_dir / 'models' / '{}@{}'.format(hparams.model_name, now.strftime("%d_%H_%M"))
+    if hparams.checkpoint_dir is None:
+        checkpoint_path = project_dir / 'models' / '{}@{}'.format(hparams.model_name, now.strftime("%d_%H_%M"))
+    else:
+        checkpoint_path = project_dir / 'models' / '{}@{}'.format(hparams.model_name, hparams.checkpoint_dir)
     checkpoint_path.mkdir(parents=True, exist_ok=True)
 
     if hparams.resume_from_checkpoint is not None:
@@ -128,11 +131,13 @@ if __name__ == '__main__':
                         help='Dir under /models/ to resume from')
     parser.add_argument('--max_epochs', type=int, default=20)
     parser.add_argument('--checkpoint_every_n_epochs', type=int, default=None)
+    parser.add_argument('--checkpoint_dir', type=str, default=None)
 
     # Booleans
     parser.add_argument('--auto_scale_batch_size', dest='auto_scale_batch_size', action='store_true')
     parser.add_argument('--auto_lr_find', dest='auto_lr_find', action='store_true')
     parser.add_argument('--unfreeze_decoder', dest='unfreeze_decoder', action='store_true')
+
 
     parser.set_defaults(auto_scale_batch_size=False,
                         auto_lr_find=False,
