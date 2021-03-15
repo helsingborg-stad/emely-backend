@@ -130,7 +130,7 @@ class ChatWorld:
 
     def _get_context(self, conversation_id):
         dialogue = self.dialogues[conversation_id]
-        context = dialogue.conversation_en.get_dialogue_history()
+        context = dialogue.conversation_en.get_dialogue_history(20)
         return context
 
     def save(self, conversation_id):
