@@ -66,16 +66,23 @@ class ChatWorld:
     def init_conversation(self, conversation_id, name, **kwargs):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
         # TODO: Better greetings
-        greeting = 'Hej, {}, jag heter Emely! Hur är det med dig?'.format(name)
+        name = name.capitalize()
+        greeting = 'Hej {}, jag heter Emely! Hur är det med dig?'.format(name)
+        greeting_en = 'Hi {}, my name is Emely. How are you today?'.format(name)
         if conversation_id in self.dialogues.keys():
             self.dialogues[conversation_id].reset_conversation()
-            return greeting
+            self.dialogues[conversation_id].conversation_en.add_bot_text(greeting_en)
+            self.dialogues[conversation_id].conversation_sv.add_bot_text(greeting)
         else:
-            self.dialogues[conversation_id] = OpenConversation(
+            new_conversation = OpenConversation(
                 name=name,
                 tokenizer=self.tokenizer
             )
-            return greeting
+            new_conversation.conversation_en.add_bot_text(greeting_en)
+            new_conversation.conversation_sv.add_bot_text(greeting)
+            self.dialogues[conversation_id] = new_conversation
+
+        return greeting
 
     def reset_conversation(self, conversation_id):
         self.dialogues[conversation_id].reset()
@@ -147,16 +154,23 @@ class InterviewWorld(ChatWorld):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
         # TODO: Better greetings
         job = kwargs['job']
+        name = name.capitalize()
         greeting = 'Hej, {}! Välkommen till din intervju! Hur är det med dig?'.format(name)
+        greeting_en = 'Hello, {}! Welcome to your interview! How are you?'.format(name)
         if conversation_id in self.interviews.keys():
             self.interviews[conversation_id].reset_conversation()
+            self.interviews[conversation_id].conversation_sv.add_bot_text(greeting)
+            self.interviews[conversation_id].conversation_en.add_bot_text(greeting)
             return greeting
         else:
-            self.interviews[conversation_id] = InterviewConversation(
+            new_interview = InterviewConversation(
                 name=name,
                 job=job,
                 tokenizer=self.tokenizer
             )
+            new_interview.conversation_sv.add_bot_text(greeting)
+            new_interview.conversation_en.add_bot_text(greeting_en)
+            self.interviews[conversation_id] = new_interview
             return greeting
 
     def observe(self, user_input, conversation_id):
@@ -276,12 +290,12 @@ class InterviewWorld(ChatWorld):
                 'do you have any hobbies?']
         temp_idx = []
         for i in keep_idx:
-            for lie in lies:
-                lie_prob = SequenceMatcher(a=lie, b=sentences[i]).ratio()
-                if lie_prob < 0.75:
-                    temp_idx.append(i)
-                else:
-                    logging.warning('Identified lie removed: {}'.format(lie))
+            combos = list(product([sentences[i]], lies))
+            lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
+            if max(lie_probabilities) < 0.75:
+                temp_idx.append(i)
+            else:
+                logging.warning('Identified lie removed')
         keep_idx = temp_idx
 
         if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
