@@ -114,20 +114,19 @@ def run_augmentation(text, src_language="en"):
     return text_english
 
 
-def combine_source_and_target(data_dict, source_list, target_list, index):
+def combine_source_and_target(data_dict, source_list, target, index):
     """
     Combines all the different sentences of source and target
     :param data_dict: The dict that is used to store the resulting data
     :param source_list: A list with the source texts
-    :param target_list: A list with the target texts
+    :param target: the target
     :param index:
     :return:
     """
 
     for src_m in range(len(source_list)):
-        for target_m in range(len(target_list)):
-            data_dict[index] = {"src": source_list[src_m], "target": target_list[target_m]}
-            index += 1
+        data_dict[index] = {"src": source_list[src_m], "target": target}
+        index += 1
     return index
 
 
