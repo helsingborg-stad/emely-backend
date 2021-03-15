@@ -54,7 +54,7 @@ class BlenderConversation:
         self.lang = lang
         self.bot_text = []
         self.user_text = []
-        self.user_turn = True
+        self.user_turn = None
         self.tokenizer = tokenizer
 
     def reset(self):
@@ -63,7 +63,7 @@ class BlenderConversation:
         self.user_turn = True
 
     def add_user_text(self, text):
-        if self.user_turn:
+        if self.user_turn or self.user_turn is None:
             self.user_text.append(text)
             self.user_turn = False
         else:
@@ -71,7 +71,7 @@ class BlenderConversation:
         return
 
     def add_bot_text(self, text):
-        if not self.user_turn:
+        if not self.user_turn or self.user_turn is None:
             self.bot_text.append(text)
             self.user_turn = True
         else:
