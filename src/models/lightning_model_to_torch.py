@@ -13,9 +13,9 @@ if __name__ == '__main__':
     params = parser.parse_args()
 
     # Model run and checkpoint name
-    cwd = Path(__file__).resolve().parent
-    model_dir = cwd / params.model_dir
-    assert model_dir.exists()
+    model_zoo_dir = Path(__file__).resolve().parents[2] / 'models'
+    model_dir = model_zoo_dir / params.model_dir
+    assert model_dir.exists(), model_dir
 
     if params.checkpoint is None:  # We look for the latest checkpoint
         checkpoints = [file.name for file in model_dir.iterdir() if file.is_file()]
@@ -28,11 +28,11 @@ if __name__ == '__main__':
 
     if 'small' in params.model_dir:
         mname = 'blenderbot_small-90M'
-        tokenizer_dir = cwd / mname / 'tokenizer'
+        tokenizer_dir = model_zoo_dir / mname / 'tokenizer'
         tokenizer = BlenderbotSmallTokenizer.from_pretrained(tokenizer_dir)
     else:
         mname = params.model_dir.split('@')[0]
-        tokenizer_dir = cwd / mname / 'tokenizer'
+        tokenizer_dir = model_zoo_dir / mname / 'tokenizer'
         tokenizer = BlenderbotTokenizer.from_pretrained(tokenizer_dir)
 
     kwargs = {'mname': mname, 'tokenizer': tokenizer, 'hparams': Namespace(unfreeze_decoder=False)}
