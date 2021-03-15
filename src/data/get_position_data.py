@@ -1,8 +1,6 @@
 import pandas as pd
 from pathlib import Path
-
-
-
+from argparse import ArgumentParser
 
 
 def extact_data(line_list):
@@ -26,8 +24,8 @@ def extact_data(line_list):
         elif "user" in l:
             source += l.replace("user: ", "")
 
-def run_data_extraction(lines, output_path):
 
+def run_data_extraction(lines, output_path):
     current_lines = []
 
     output = {}
@@ -52,23 +50,28 @@ def run_data_extraction(lines, output_path):
 
     src_target_df = pd.DataFrame.from_dict(output, orient='index')
 
-    src_target_df.to_csv(output_path + "position_data.csv", index_label='Name')
-    print("The data has been stored at: {0}".format(output_path + "position_data.csv"))
+    src_target_df.to_csv(output_path, index_label='Name')
+    print("The data has been stored at: {0}".format(output_path))
 
-def main():
+
+def main(input_file, output_file):
     # The path for the rawdata must be here.
-    path = "..\\..\\data\\raw\\position_data.txt"
+    data_dir = Path(__file__).resolve().parents[2].joinpath('data')
+    input_path = data_dir / 'raw' / Path(input_file)
+    output_path = data_dir / 'processed' / Path(output_file)
+
     # Read the lines.
-    with open(path) as fp:
+    with open(input_path) as fp:
         lines = fp.readlines()
     # Check if the output path exsits.
-    output_path = "..\\..\\data\\processed\\"
-    p = Path(output_path)
+
     # If not, create the path.
-    if not p.exists():
-        Path(output_path).mkdir(parents=True, exist_ok=True)
     run_data_extraction(lines, output_path)
 
 
 if __name__ == "__main__":
-    main()
+    parser = ArgumentParser()
+    parser.add_argument('--input_file', type=str, required=True)
+    parser.add_argument('--output_file', type=str, required=True)
+    args = parser.parse_args()
+    main(args.input_file, args.output_file)
