@@ -8,6 +8,7 @@ from src.chat.translate import ChatTranslator
 import re
 from itertools import product
 from difflib import SequenceMatcher
+import random
 
 import logging
 from pathlib import Path
@@ -28,6 +29,9 @@ class ChatWorld:
         self.translator = ChatTranslator()
 
         self.stop_tokens = ['hejdå', 'bye', 'hej då']  # TODO: More sophisticated solution
+        self.greetings = ['Hej {}, jag heter Emely! Hur är det med dig?',
+                          'Hej {}! Mitt namn är Emely. Vad vill du prata om idag?',
+                          'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!']
 
         self.dialogues = {}
 
@@ -67,7 +71,7 @@ class ChatWorld:
         """Creates a new empty conversation if the conversation id doesn't already exist"""
         # TODO: Better greetings
         name = name.capitalize()
-        greeting = 'Hej {}, jag heter Emely! Hur är det med dig?'.format(name)
+        greeting = random.choice(self.greetings).format(name)
         greeting_en = 'Hi {}, my name is Emely. How are you today?'.format(name)
         if conversation_id in self.dialogues.keys():
             self.dialogues[conversation_id].reset_conversation()
@@ -149,13 +153,17 @@ class InterviewWorld(ChatWorld):
         self.no_correction = kwargs['no_correction']
         self.interviews = {}
         self.max_replies = 2  # Maximum number of replies back and forth for each question
+        self.greetings = ['Hej, {}! Välkommen till din intervju! Hur är det med dig?',
+                          'Hej {}, Emely heter jag och det är jag som ska intervjua dig. Hur är det med dig idag?',
+                          'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?'
+                          ]
 
     def init_conversation(self, conversation_id, name, **kwargs):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
         # TODO: Better greetings
         job = kwargs['job']
         name = name.capitalize()
-        greeting = 'Hej, {}! Välkommen till din intervju! Hur är det med dig?'.format(name)
+        greeting = random.choice(self.greetings).format(name)
         greeting_en = 'Hello, {}! Welcome to your interview! How are you?'.format(name)
         if conversation_id in self.interviews.keys():
             self.interviews[conversation_id].reset_conversation()
