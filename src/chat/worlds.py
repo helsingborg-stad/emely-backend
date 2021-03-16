@@ -114,7 +114,7 @@ class ChatWorld:
     def act(self, conversation_id):
         dialogue = self.dialogues[conversation_id]
         if not dialogue.episode_done:
-            context = self._get_context(conversation_id)
+            context = dialogue.get_context()
             inputs = self.tokenizer([context], return_tensors='pt')
             inputs.to(self.device)
             with no_grad():
@@ -128,11 +128,6 @@ class ChatWorld:
 
         else:
             return 'Kul att prata med dig! Hejdå!'  # TODO: Fix flexible
-
-    def _get_context(self, conversation_id):
-        dialogue = self.dialogues[conversation_id]
-        context = dialogue.conversation_en.get_dialogue_history(20)
-        return context
 
     def save(self, conversation_id):
         dialogue = self.dialogues[conversation_id]

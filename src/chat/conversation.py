@@ -18,7 +18,7 @@ class OpenConversation:
         return
 
     def get_context(self):
-        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history())
+        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history(30))
         return context
 
 
@@ -44,7 +44,7 @@ class InterviewConversation:
         return
 
     def get_context(self):
-        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history())
+        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history(40))
         return context
 
 
