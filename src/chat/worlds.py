@@ -160,6 +160,7 @@ class InterviewWorld(ChatWorld):
             self.interviews[conversation_id].reset_conversation()
             self.interviews[conversation_id].conversation_sv.add_bot_text(greeting)
             self.interviews[conversation_id].conversation_en.add_bot_text(greeting)
+            self.interviews[conversation_id].nbr_replies = 1
             return greeting
         else:
             new_interview = InterviewConversation(
@@ -169,6 +170,7 @@ class InterviewWorld(ChatWorld):
             )
             new_interview.conversation_sv.add_bot_text(greeting)
             new_interview.conversation_en.add_bot_text(greeting_en)
+            new_interview.nbr_replies = 1
             self.interviews[conversation_id] = new_interview
             return greeting
 

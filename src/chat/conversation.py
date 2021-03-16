@@ -1,4 +1,5 @@
 from pathlib import Path
+from collections import deque
 
 
 class OpenConversation:
@@ -44,7 +45,8 @@ class InterviewConversation:
         return
 
     def get_context(self):
-        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history(40))
+        # context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history(40))
+        context = self.conversation_en.get_nbr_interactions(self.nbr_replies)
         return context
 
 
@@ -118,7 +120,7 @@ class BlenderConversation:
                 bot_text = self.bot_text[i]
                 user_text = self.user_text[i]
                 nbr_tokens = len(self.tokenizer(bot_text)['input_ids']) + len(self.tokenizer(user_text)['input_ids'])
-                if nbr_tokens < tokens_left:  # This is not fool proof as the model tokenizer tokenizes differently
+                if nbr_tokens < tokens_left:
                     history = user_text + '\n' + bot_text + '\n' + history
                     tokens_left -= (nbr_tokens + 2)
                 else:
@@ -158,6 +160,23 @@ class BlenderConversation:
 
             print(text)
         return
+
+    def get_nbr_interactions(self, nbr):
+        """Retrieves only the last nbr interactions in the conversation as a string formatted with \n separators"""
+        if nbr == 0:
+            return ''
+        lines = deque()
+        assert not self.user_turn  #  Needs to be bots turn for this method to be used
+        for i in range(nbr):
+            backindex = -1 - i
+            lines.appendleft(self.user_text[backindex])
+            lines.appendleft(self.bot_text[backindex])
+        context = ''
+        for line in lines:
+            context = context + line + '\n'
+        context = context.rsplit('\n', 1)[0]
+        return context
+
 
 
 def read_questions(file_path):
