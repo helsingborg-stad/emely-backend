@@ -38,9 +38,9 @@ brain = FastAPI()
 conversations = defaultdict(dict)
 
 interview_persona = Namespace(model_name='blenderbot_small-90M', local_model=True,
-                              chat_mode='interview')
+                              chat_mode='interview', no_correction=False)
 fika_persona = Namespace(model_name='blenderbot_small-90M', local_model=True,
-                         chat_mode='chat')
+                         chat_mode='chat', no_correction=False)
 
 interview_world = InterviewWorld(**vars(interview_persona))
 fika_world = ChatWorld(**vars(fika_persona))
