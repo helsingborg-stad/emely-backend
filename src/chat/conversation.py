@@ -35,7 +35,7 @@ class InterviewConversation:
         self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
                           read_questions((Path(__file__).parent / 'interview_questions.txt'))]
         self.tokenizer = tokenizer
-        self.persona = 'your persona: I work in human resources\nyour persona: I have worked at this company for five years'
+        self.persona = 'your persona: My name is Emely and I am an AI interviewer'
         self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
 
     def reset_conversation(self):
