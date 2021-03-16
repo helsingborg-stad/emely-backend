@@ -127,7 +127,7 @@ class BlenderConversation:
                     break
         return history
 
-    def to_txt(self, description, file_path, error=None):
+    def to_txt(self, description, file, error=None):
         # Writes the dialogue to txt file in subdirectory
         text = '####################################\n' + 'Conversation description: ' + description + '\n\n'
         if self.user_turn:
@@ -143,7 +143,7 @@ class BlenderConversation:
         else:
             text = text + '\n' + 'Terminated due to {}'.format(error) + '\n\n'
 
-        with open(file_path, 'a') as f:
+        with open(file, 'a') as f:
             f.write(text)
         return
 
