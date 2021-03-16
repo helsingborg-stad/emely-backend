@@ -163,11 +163,9 @@ class BlenderConversation:
 
     def get_nbr_interactions(self, nbr):
         """Retrieves only the last nbr interactions in the conversation as a string formatted with \n separators"""
-        if nbr == 0:
-            return ''
         lines = deque()
         assert not self.user_turn  #  Needs to be bots turn for this method to be used
-        for i in range(nbr):
+        for i in range(nbr + 1):
             backindex = -1 - i
             lines.appendleft(self.user_text[backindex])
             lines.appendleft(self.bot_text[backindex])
