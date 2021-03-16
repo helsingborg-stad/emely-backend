@@ -28,7 +28,7 @@ class ChatWorld:
 
         self.translator = ChatTranslator()
 
-        self.stop_tokens = ['hejdå', 'bye', 'hej då']  # TODO: More sophisticated solution
+        self.stop_tokens = ['hejdå', 'bye', 'hej då']
         self.greetings = ['Hej {}, jag heter Emely! Hur är det med dig?',
                           'Hej {}! Mitt namn är Emely. Vad vill du prata om idag?',
                           'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!']
@@ -39,7 +39,6 @@ class ChatWorld:
 
     def load_model(self):
         """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
-        # TODO: Add some checks here for if the local model exists and if the user mistakenly adds local_model=True
         if self.local_model:
             model_dir = Path(__file__).parents[2] / 'models' / self.model_name / 'model'
             token_dir = Path(__file__).parents[2] / 'models' / self.model_name / 'tokenizer'
@@ -69,7 +68,6 @@ class ChatWorld:
 
     def init_conversation(self, conversation_id, name, **kwargs):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
-        # TODO: Better greetings
         name = name.capitalize()
         greeting = random.choice(self.greetings).format(name)
         greeting_en = 'Hi {}, my name is Emely. How are you today?'.format(name)
@@ -99,7 +97,6 @@ class ChatWorld:
     #     return
 
     def observe(self, user_input, conversation_id):
-        # TODO: Add spell check/grammar check here
         # Observe the user input, translate and update internal states
         # Check if user wants to quit/no questions left --> self.episode_done = True
 
@@ -109,7 +106,7 @@ class ChatWorld:
         dialogue.conversation_sv.add_user_text(user_input)
         dialogue.conversation_en.add_user_text(translated_input)
 
-        # Set episode done if exit condition is met. TODO: Better check of input stop
+        # Set episode done if exit condition is met.
         if user_input.lower().replace(' ', '') in self.stop_tokens:
             dialogue.episode_done = True
         return dialogue.episode_done
@@ -160,7 +157,6 @@ class InterviewWorld(ChatWorld):
 
     def init_conversation(self, conversation_id, name, **kwargs):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
-        # TODO: Better greetings
         job = kwargs['job']
         name = name.capitalize()
         greeting = random.choice(self.greetings).format(name)
@@ -182,8 +178,6 @@ class InterviewWorld(ChatWorld):
             return greeting
 
     def observe(self, user_input, conversation_id):
-        # TODO: Is question? We don't want to reply to a question with a question. if is_question: reply model_answer + interview_question
-        # TODO: Better check of input stop
         # Observe the user input, translate and update internal states.
         # Returns boolean indicating if interview episode is done
         # We assume the user_input is always grammatically correct!

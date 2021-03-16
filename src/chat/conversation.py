@@ -88,11 +88,9 @@ class BlenderConversation:
         return
 
     def get_bot_replies(self):
-        # TODO: Option to return string instead of list?
         return self.bot_text
 
     def get_user_replies(self):
-        # TODO: Option to return string instead of list?
         return self.user_text
 
     def get_dialogue_history(self, max_len=120):
