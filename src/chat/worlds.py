@@ -180,6 +180,8 @@ class InterviewWorld(ChatWorld):
         interview = self.interviews[conversation_id]
         if '?' in user_input:
             interview.last_input_is_question = True
+        else:
+            interview.last_input_is_question = False
 
         translated_input = self.translator.translate(user_input, src='sv', target='en')
         interview.conversation_sv.add_user_text(user_input)
