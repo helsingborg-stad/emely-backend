@@ -51,6 +51,7 @@ class InterviewConversation:
         self.conversation_sv.pop()
         self.conversation_en.pop()
         self.conversation_en.pop()
+        self.nbr_replies -= 1
         return self.conversation_sv.bot_text[-1]
 
     def reset_conversation(self):
@@ -178,7 +179,7 @@ class BlenderConversation:
     def get_nbr_interactions(self, nbr):
         """Retrieves only the last nbr interactions in the conversation as a string formatted with \n separators"""
         lines = deque()
-        assert not self.user_turn  #  Needs to be bots turn for this method to be used
+        assert not self.user_turn  # Needs to be bots turn for this method to be used
         for i in range(nbr + 1):
             backindex = -1 - i
             lines.appendleft(self.user_text[backindex])
@@ -188,7 +189,6 @@ class BlenderConversation:
             context = context + line + '\n'
         context = context.rsplit('\n', 1)[0]
         return context
-
 
 
 def read_questions(file_path):
