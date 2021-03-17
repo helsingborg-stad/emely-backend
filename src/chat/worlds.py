@@ -136,6 +136,10 @@ class ChatWorld:
         dialogue.conversation_sv.to_txt(description, file=file_path)
         return
 
+    def one_step_back(self, conversation_id):
+        last_reply = self.interviews[conversation_id].interview.one_step_back()
+        return last_reply
+
 
 class InterviewWorld(ChatWorld):
     # Class that keeps
@@ -309,6 +313,10 @@ class InterviewWorld(ChatWorld):
             if len(new_reply) > 3:
                 logging.warning('Corrected: {} \n to: {}'.format(reply, new_reply))
             return new_reply
+
+    def one_step_back(self, conversation_id):
+        last_reply = self.interviews[conversation_id].one_step_back()
+        return last_reply
 
     def save(self, conversation_id):
         dialogue = self.interviews[conversation_id]

@@ -13,6 +13,13 @@ class OpenConversation:
         self.persona = 'your persona: my name is Emely'
         self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
 
+    def one_step_back(self):
+        self.conversation_sv.pop()
+        self.conversation_sv.pop()
+        self.conversation_en.pop()
+        self.conversation_en.pop()
+        return self.conversation_sv.bot_text[-1]
+
     def reset_conversation(self):
         self.conversation_sv.reset()
         self.conversation_en.reset()
@@ -38,6 +45,13 @@ class InterviewConversation:
         self.tokenizer = tokenizer
         self.persona = 'your persona: My name is Emely and I am an AI interviewer'
         self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
+
+    def one_step_back(self):
+        self.conversation_sv.pop()
+        self.conversation_sv.pop()
+        self.conversation_en.pop()
+        self.conversation_en.pop()
+        return self.conversation_sv.bot_text[-1]
 
     def reset_conversation(self):
         self.conversation_sv.reset()
