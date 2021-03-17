@@ -33,6 +33,9 @@ def main(**kwargs):
             world.reset_conversation(conversation_id)
         elif user_message == 'save':
             world.save(conversation_id)
+        elif user_message == 'go_back':
+            last_reply = world.one_step_back(conversation_id)
+            print(last_reply)
         else:
             episode_done = world.observe(user_message, conversation_id)
             reply = world.act(conversation_id)

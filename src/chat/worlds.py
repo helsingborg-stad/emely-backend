@@ -136,6 +136,10 @@ class ChatWorld:
         dialogue.conversation_sv.to_txt(description, file=file_path)
         return
 
+    def one_step_back(self, conversation_id):
+        last_reply = self.interviews[conversation_id].interview.one_step_back()
+        return last_reply
+
 
 class InterviewWorld(ChatWorld):
     # Class that keeps
@@ -149,6 +153,11 @@ class InterviewWorld(ChatWorld):
                           'Hej {}, Emely heter jag och det är jag som ska intervjua dig. Hur är det med dig idag?',
                           'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?'
                           ]
+        self.more_information = ['Kan du ge mig lite mer information om det?',
+                                 'Kan du berätta mer om det?',
+                                 'Berätta lite mer om det!',
+                                 'Jag vill höra mer om det!',
+                                 'Jag förstår. Kan du berätta lite mer om det?']
 
     def init_conversation(self, conversation_id, name, **kwargs):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
@@ -231,16 +240,21 @@ class InterviewWorld(ChatWorld):
                 pass
             else:
                 reply_en = self._correct_reply(reply_en, conversation_id)
-            # _correct_reply can return empty string -> force new question
+            # _correct_reply can return empty string -> force 'more info reply' (commented force new question)
             if len(reply_en) < 3:
-                interview.nbr_replies = 0
-                try:
+                #interview.nbr_replies = 0
+                #reply_sv = interview.questions.pop(0)
+                if len(interview.questions) == 5:
                     reply_sv = interview.questions.pop(0)
                     reply_en = self.translator.translate(reply_sv, src='sv', target='en')
-                except IndexError:
-                    reply_en = 'Thank you for your time. We will keep in touch'
-                    reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig!'
-                    interview.episode_done = True
+                    interview.nbr_replies = 0
+                else:
+                    try:
+                        reply_sv = self.more_information.pop()
+                    except IndexError:
+                        reply_sv = 'Jag förstår. Kan du berätta lite mer om det?'
+                    reply_en = self.translator.translate(reply_sv, src='sv', target='en')
+                    interview.nbr_replies += 1
             elif interview.nbr_replies == self.max_replies and interview.last_input_is_question:
                 # Case 3 - Add new question to end of model reply
                 reply_sv = self.translator.translate(reply_en, src='en', target='sv') + ' ' + interview.questions.pop(0)
@@ -309,6 +323,10 @@ class InterviewWorld(ChatWorld):
             if len(new_reply) > 3:
                 logging.warning('Corrected: {} \n to: {}'.format(reply, new_reply))
             return new_reply
+
+    def one_step_back(self, conversation_id):
+        last_reply = self.interviews[conversation_id].one_step_back()
+        return last_reply
 
     def save(self, conversation_id):
         dialogue = self.interviews[conversation_id]
