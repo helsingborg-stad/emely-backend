@@ -1,13 +1,11 @@
-FROM huggingface/transformers-pytorch-gpu
+FROM python:3.7
+ENV PYTHONUNBUFFERED 1
+EXPOSE 4000
+COPY ./requirements.txt /requirements.txt
 
-WORKDIR /code/
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY requirements.txt /code/requirements.txt
+COPY . .
 
-COPY notebooks/. /code/notebooks/.
 
-RUN pip3 install -r requirements.txt
-
-RUN pip3 install jupyter
-
-CMD ["jupyter", "notebook", "--port=8888", "--ip=0.0.0.0", "--allow-root"]
+CMD [“uvicorn”, “src.api.api_main:brain”, “--host”, “0.0.0.0"]
