@@ -18,9 +18,10 @@ class ChatWorld:
     # Class that keeps
 
     def __init__(self, **kwargs):
-
+        # Attributes common for both ChatWorld and InterviewWorld
         self.model_name = kwargs['model_name']
         self.local_model = kwargs['local_model']
+        self.no_correction = kwargs['no_correction']
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = None
         self.tokenizer = None
@@ -32,6 +33,8 @@ class ChatWorld:
         self.greetings = ['Hej {}, jag heter Emely! Hur är det med dig?',
                           'Hej {}! Mitt namn är Emely. Vad vill du prata om idag?',
                           'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!']
+        self.change_subject = ['Berätta något annat om dig själv!',
+                               'Nu tycker jag att vi ska prata om något annat!']
 
         self.dialogues = {}
 
@@ -107,7 +110,7 @@ class ChatWorld:
         dialogue.conversation_en.add_user_text(translated_input)
 
         # Set episode done if exit condition is met.
-        if user_input.lower().replace(' ', '') in self.stop_tokens:
+        if user_input.lower().replace(' ', '') in self.stop_tokens or len(self.change_subject) == 0:
             dialogue.episode_done = True
         return dialogue.episode_done
 
@@ -120,14 +123,78 @@ class ChatWorld:
             with no_grad():
                 output_tokens = self.model.generate(**inputs)
             reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
+            if not self.no_correction:  # Removes repetitive statements
+                reply_en = self._correct_reply(reply_en, conversation_id)
+                if len(reply_en) < 3:  # TODO: Move the popping and length check into correct reply
+                    reply_sv = self.change_subject.pop(0)
+                    reply_en = self.translator.translate(reply_sv, src='sv', target='en')
+                else:
+                    reply_sv = self.translator.translate(reply_en, src='en', target='sv')
+            else:
+                reply_sv = self.translator.translate(reply_en, src='en', target='sv')
 
-            reply_sv = self.translator.translate(reply_en, src='en', target='sv')
             dialogue.conversation_sv.add_bot_text(reply_sv)
             dialogue.conversation_en.add_bot_text(reply_en)
             return reply_sv
 
         else:
             return 'Kul att prata med dig! Hejdå!'  # TODO: Fix flexible
+
+    def _correct_reply(self, reply, conversation_id):
+        # For every bot reply, check what sentences are repetitive and remove that part only.
+        # Current check will discard a sentence where she asks something new but with a little detail
+        dialogue = self.dialogues[conversation_id]
+        previous_replies = dialogue.conversation_en.get_bot_replies()
+
+        if len(previous_replies) == 0:
+            return reply
+        previous_sentences = []
+
+        # Split sentences and keep separators
+        sentence_splits = re.split('([.?!])', reply)
+        if sentence_splits[-1] == '':
+            del sentence_splits[-1]
+        sentences = [sep for i, sep in enumerate(sentence_splits) if i % 2 == 0]
+        separators = [sep for i, sep in enumerate(sentence_splits) if i % 2 != 0]
+
+        for old_reply in previous_replies:
+            raw_splits = re.split('[.?!]', old_reply)
+            splits = [s for s in raw_splits if len(s) > 2]
+            previous_sentences.extend(splits)
+
+        keep_idx = []
+        # For each part/sentence of the new reply, save it if it's not close to something said before
+        for i in range(len(sentences)):
+            combos = list(product([sentences[i]], previous_sentences))
+            ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
+            if max(ratios) < 0.5:
+                keep_idx.append(i)
+
+        # Emely cannot say that she's also a {job}, add
+        lies = ['I am Emely',
+                'My name is Emely']
+        temp_idx = []
+        for i in keep_idx:
+            combos = list(product([sentences[i]], lies))
+            lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
+            if max(lie_probabilities) < 0.75:
+                temp_idx.append(i)
+            else:
+                logging.warning('Identified lie removed')
+        keep_idx = temp_idx
+
+        if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
+            return reply
+        else:
+            new_reply = ''
+            for i in keep_idx:
+                try:
+                    new_reply = new_reply + sentences[i] + separators[i] + ' '
+                except IndexError:
+                    new_reply = new_reply + sentences[i]
+            if len(new_reply) > 3:
+                logging.warning('Corrected: {} \n to: {}'.format(reply, new_reply))
+            return new_reply
 
     def save(self, conversation_id):
         dialogue = self.dialogues[conversation_id]
@@ -137,7 +204,7 @@ class ChatWorld:
         return
 
     def one_step_back(self, conversation_id):
-        last_reply = self.interviews[conversation_id].interview.one_step_back()
+        last_reply = self.dialogues[conversation_id].interview.one_step_back()
         return last_reply
 
 
@@ -146,7 +213,6 @@ class InterviewWorld(ChatWorld):
     def __init__(self, **kwargs):
         # TODO: More sophisticated questions/greeting drawn from txt file(?) and formated with name and job
         super().__init__(**kwargs)
-        self.no_correction = kwargs['no_correction']
         self.interviews = {}
         self.max_replies = 2  # Maximum number of replies back and forth for each question
         self.greetings = ['Hej, {}! Välkommen till din intervju! Hur är det med dig?',
@@ -242,8 +308,8 @@ class InterviewWorld(ChatWorld):
                 reply_en = self._correct_reply(reply_en, conversation_id)
             # _correct_reply can return empty string -> force 'more info reply' (commented force new question)
             if len(reply_en) < 3:
-                #interview.nbr_replies = 0
-                #reply_sv = interview.questions.pop(0)
+                # interview.nbr_replies = 0
+                # reply_sv = interview.questions.pop(0)
                 if len(interview.questions) == 5:
                     reply_sv = interview.questions.pop(0)
                     reply_en = self.translator.translate(reply_sv, src='sv', target='en')

@@ -10,8 +10,8 @@ class OpenConversation:
         self.conversation_en = BlenderConversation(lang='en', tokenizer=tokenizer)
         self.episode_done = False
         self.tokenizer = tokenizer
-        self.persona = 'your persona: my name is Emely'
-        self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
+        self.persona = ''
+        self.persona_length = 0  # len(self.tokenizer(self.persona)['input_ids'])
 
     def one_step_back(self):
         self.conversation_sv.pop()
