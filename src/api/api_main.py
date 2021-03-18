@@ -37,7 +37,7 @@ class BrainResponse(BaseModel):
 brain = FastAPI()
 conversations = defaultdict(dict)
 
-interview_persona = Namespace(model_name='blenderbot_small-90M', local_model=True,
+interview_persona = Namespace(model_name='blenderbot_small-90M@f70_v2_acc20', local_model=True,
                               chat_mode='interview', no_correction=False)
 fika_persona = Namespace(model_name='blenderbot_small-90M', local_model=True,
                          chat_mode='chat', no_correction=False)
