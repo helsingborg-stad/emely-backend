@@ -12,6 +12,9 @@ class OpenConversation:
         self.tokenizer = tokenizer
         self.persona = ''
         self.persona_length = 0  # len(self.tokenizer(self.persona)['input_ids'])
+        self.change_subject = ['Berätta något annat om dig själv!',
+                               'Nu tycker jag att vi ska prata om något annat!',
+                               'Vill du prata om något annat kanske']
 
     def one_step_back(self):
         self.conversation_sv.pop()
@@ -45,6 +48,11 @@ class InterviewConversation:
         self.tokenizer = tokenizer
         self.persona = 'your persona: My name is Emely and I am an AI interviewer'
         self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
+        self.more_information = ['Kan du ge mig lite mer information om det?',
+                                 'Kan du berätta mer om det?',
+                                 'Berätta lite mer om det!',
+                                 'Jag vill höra mer om det!',
+                                 'Jag förstår. Kan du berätta lite mer om det?']
 
     def one_step_back(self):
         self.conversation_sv.pop()

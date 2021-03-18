@@ -33,8 +33,7 @@ class ChatWorld:
         self.greetings = ['Hej {}, jag heter Emely! Hur är det med dig?',
                           'Hej {}! Mitt namn är Emely. Vad vill du prata om idag?',
                           'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!']
-        self.change_subject = ['Berätta något annat om dig själv!',
-                               'Nu tycker jag att vi ska prata om något annat!']
+
 
         self.dialogues = {}
 
@@ -110,7 +109,7 @@ class ChatWorld:
         dialogue.conversation_en.add_user_text(translated_input)
 
         # Set episode done if exit condition is met.
-        if user_input.lower().replace(' ', '') in self.stop_tokens or len(self.change_subject) == 0:
+        if user_input.lower().replace(' ', '') in self.stop_tokens:
             dialogue.episode_done = True
         return dialogue.episode_done
 
@@ -126,8 +125,12 @@ class ChatWorld:
             if not self.no_correction:  # Removes repetitive statements
                 reply_en = self._correct_reply(reply_en, conversation_id)
                 if len(reply_en) < 3:  # TODO: Move the popping and length check into correct reply
-                    reply_sv = self.change_subject.pop(0)
-                    reply_en = self.translator.translate(reply_sv, src='sv', target='en')
+                    try:
+                        reply_sv = dialogue.change_subject.pop(0)
+                        reply_en = self.translator.translate(reply_sv, src='sv', target='en')
+                    except IndexError:
+                        dialogue.episode_done = True
+                        return 'Nu måste jag gå. Det var kul att prata med dig! Hejdå!'
                 else:
                     reply_sv = self.translator.translate(reply_en, src='en', target='sv')
             else:
@@ -138,7 +141,7 @@ class ChatWorld:
             return reply_sv
 
         else:
-            return 'Kul att prata med dig! Hejdå!'  # TODO: Fix flexible
+            return 'Nu måste jag gå. Det var kul att prata med dig! Hejdå!'  # TODO: Fix flexible
 
     def _correct_reply(self, reply, conversation_id):
         # For every bot reply, check what sentences are repetitive and remove that part only.
@@ -219,11 +222,7 @@ class InterviewWorld(ChatWorld):
                           'Hej {}, Emely heter jag och det är jag som ska intervjua dig. Hur är det med dig idag?',
                           'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?'
                           ]
-        self.more_information = ['Kan du ge mig lite mer information om det?',
-                                 'Kan du berätta mer om det?',
-                                 'Berätta lite mer om det!',
-                                 'Jag vill höra mer om det!',
-                                 'Jag förstår. Kan du berätta lite mer om det?']
+
 
     def init_conversation(self, conversation_id, name, **kwargs):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
@@ -316,7 +315,7 @@ class InterviewWorld(ChatWorld):
                     interview.nbr_replies = 0
                 else:
                     try:
-                        reply_sv = self.more_information.pop()
+                        reply_sv = interview.more_information.pop()
                     except IndexError:
                         reply_sv = 'Jag förstår. Kan du berätta lite mer om det?'
                     reply_en = self.translator.translate(reply_sv, src='sv', target='en')
