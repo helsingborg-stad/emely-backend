@@ -9,6 +9,7 @@ fastapi
 pydantic
 uvicorn
 pytorch-lightning
+numpy
 
 # external requirements
 click~=7.1.2
