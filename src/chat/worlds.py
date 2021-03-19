@@ -180,7 +180,7 @@ class ChatWorld:
         for i in keep_idx:
             combos = list(product([sentences[i]], lies))
             lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(lie_probabilities) < 0.75:
+            if max(lie_probabilities) < 0.65:
                 temp_idx.append(i)
             else:
                 logging.warning('Identified lie removed')
