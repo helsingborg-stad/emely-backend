@@ -6,6 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from typing import Optional
 from collections import defaultdict
+from src.models.models_from_bucket import download_models
 
 
 class Message(BaseModel):
@@ -50,6 +51,8 @@ world = None
 # Models aren't loaded
 async def init_config():
     global interview_world, fika_world
+    models = ['blenderbot_small-90M', 'blenderbot_small-90M@f70_v2_acc20']
+    download_models(models)
     interview_world.load_model()
     fika_world.load_model()
     return
