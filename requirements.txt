@@ -3,6 +3,7 @@ tokenizers==0.9.4
 transformers==4.2.2
 regex
 google-cloud-translate
+google-cloud-storage
 deep-translator
 six~=1.15.0
 fastapi
