@@ -1,7 +1,18 @@
-freja
+Emely
 ==============================
 
-freja - our chat bot
+## Get started
+1. create a new virtual environment
+2. Install pytorch separately via https://pytorch.org/get-started/locally/
+3. run $pip install -r requirements.txt
+4. run $python setup.py develop 
+
+## Running the brain app
+To run the fastAPI app on 127.0.0.1:8000
+1. from models/ $python download_model.py --model_name facebook/blenderbot_small-90M
+2. from src/api $uvicorn api_main:brain 
+
+Check the docs and try the http requests at 127.0.0.1:8000/docs
 
 Project Organization
 ------------
