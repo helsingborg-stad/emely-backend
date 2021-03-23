@@ -18,7 +18,7 @@ class LitBlenderbot(pl.LightningModule):
         self._load_model(mname)  # Loads model from pretrained huggingface
         self.hparams = hparams
 
-        self.freeze_model_parts()
+        self.freeze_model_parts(hparams.unfreeze_decoder)
 
     def _load_model(self, mname):
         model_dir = Path(__file__).resolve().parents[2] / 'models' / mname / 'model'
@@ -31,10 +31,12 @@ class LitBlenderbot(pl.LightningModule):
 
         return
 
-    def freeze_model_parts(self):
+    def freeze_model_parts(self, unfreeze_decoder):
         # TODO: Add option define what is frozen here?
         freeze_params(self.model)
         unfreeze_params(self.model.lm_head)
+        if unfreeze_decoder:
+            unfreeze_params(self.model.model.decoder)
         return
 
     def forward(self, x):
@@ -106,7 +108,7 @@ def encode_sentences(tokenizer, batch, max_length=127, pad_to_max_length=True):
     target_ids = []
     tokenized_sentences = {}
 
-    # TODO: One step instead of looping for dynamic padding
+    # TODO: One step instead of looping for dynamic padding?
     for sentence in source_sentences:
         encoded_dict = tokenizer(
             sentence,
@@ -121,7 +123,7 @@ def encode_sentences(tokenizer, batch, max_length=127, pad_to_max_length=True):
     input_ids = torch.cat(input_ids, dim=0)
     attention_masks = torch.cat(attention_masks, dim=0)
 
-    # TODO: One step instead of looping for dynamic padding
+    # TODO: One step instead of looping for dynamic padding?
     for sentence in target_sentences:
         encoded_dict = tokenizer(
             sentence,
@@ -146,7 +148,6 @@ def encode_sentences(tokenizer, batch, max_length=127, pad_to_max_length=True):
 
 
 def shift_tokens_right(input_ids, pad_token_id):
-    # TODO: Make sure this boy is alright. Should it add an <\s> at the start?
     prev_output_tokens = input_ids.clone()
     index_of_eos = (input_ids.ne(pad_token_id).sum(dim=1) - 1).unsqueeze(-1)
     prev_output_tokens[:, 0] = input_ids.gather(1, index_of_eos).squeeze()
