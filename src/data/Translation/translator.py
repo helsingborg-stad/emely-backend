@@ -15,8 +15,8 @@ class TextTranslator():
         translators = dict()
         for l1 in languages:
             for l2 in languages:
-                #if l1 != l2:
-                translators[l1 + l2] = GoogleTranslator(source=l1, target=l2)
+                if l1 != l2:
+                    translators[l1 + l2] = GoogleTranslator(source=l1, target=l2)
         return translators
 
 
