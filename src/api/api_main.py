@@ -52,7 +52,7 @@ world = None
 async def init_config():
     global interview_world, fika_world
     models = ['blenderbot_small-90M', 'blenderbot_small-90M@f70_v2_acc20']
-    # download_models(models)  # Uncomment this to download models from gcp bucket on application start
+    download_models(models)  # Uncomment this to download models from gcp bucket on application start
     interview_world.load_model()
     fika_world.load_model()
     return
