@@ -2,44 +2,115 @@ from pathlib import Path
 from collections import deque
 
 
+class InterviewFirestore(object):
+
+    def __init__(self):
+        self
+
+
+class FikaFirestore(object):
+    def __init__(self, conversation_id, name, episode_done=False, bot_text_sv=[], user_text_sv=[],
+                 bot_text_en=[], user_text_en=[], change_subject=None
+                 ):
+        self.conversation_id = conversation_id
+        self.name = name
+        self.episode_done = episode_done
+        self.bot_text_sv = bot_text_sv
+        self.user_text_sv = user_text_sv
+        self.bot_text_en = bot_text_en
+        self.user_text_en = user_text_en
+        if change_subject is None:
+            self.change_subject = ['Berätta något annat om dig själv!',
+                                   'Nu tycker jag att vi ska prata om något annat!',
+                                   'Vill du prata om något annat kanske']
+        else:
+            self.change_subject = change_subject
+        # self.archived = False
+
+    @staticmethod
+    def from_dict(source):
+        fika_firestore = FikaFirestore(conversation_id=source['conversation_id'],
+                                       name=source['name'],
+                                       episode_done=source['episode_done'],
+                                       bot_text_sv=source['bot_text_sv'],
+                                       user_text_sv=source['user_text_sv'],
+                                       bot_text_en=source['bot_text_en'],
+                                       user_text_en=source['user_text_en'],
+                                       change_subject=source['change_subject'])
+        return fika_firestore
+
+    def to_dict(self):
+        return {'conversation_id': self.conversation_id,
+                'name': self.name,
+                'bot_text_sv': self.bot_text_sv,
+                'user_text_sv': self.user_text_sv,
+                'bot_text_en': self.bot_text_en,
+                'user_text_en': self.user_text_en,
+                'episode_done': self.episode_done,
+                'change_subject': self.change_subject}
+
+    def __repr__(self):
+        return (
+            f'FikaFirestore(\
+                        name={self.name}, \
+                        conversation_id={self.conversation_id}, \
+                        bot_text_sv={self.bot_text_sv}, \
+                        user_text_sv={self.user_text_sv}, \
+                        bot_text_en={self.bot_text_en}, \
+                        user_text_en={self.user_text_en}, \
+                        episode_done={self.episode_done}, \
+                        change_subject={self.change_subject}\
+                    )'
+        )
+
+
 class OpenConversation:
 
-    def __init__(self, name, tokenizer):
-        self.name = name
-        self.conversation_sv = BlenderConversation(lang='sv', tokenizer=tokenizer)
-        self.conversation_en = BlenderConversation(lang='en', tokenizer=tokenizer)
-        self.episode_done = False
+    def __init__(self, fire: FikaFirestore, tokenizer):
+        self.fire = fire
+        self.name = fire.name
+        self.conversation_id = fire.conversation_id
+
+        self.conversation_sv = BlenderConversation(user_text=fire.user_text_sv, bot_text=fire.bot_text_sv,
+                                                   tokenizer=tokenizer)
+        self.conversation_en = BlenderConversation(user_text=fire.user_text_en, bot_text=fire.bot_text_en,
+                                                   tokenizer=tokenizer)
+
+        self.episode_done = fire.episode_done
+        self.change_subject = fire.change_subject
+
+        # Non fire params
         self.tokenizer = tokenizer
         self.persona = ''
         self.persona_length = 0  # len(self.tokenizer(self.persona)['input_ids'])
-        self.change_subject = ['Berätta något annat om dig själv!',
-                               'Nu tycker jag att vi ska prata om något annat!',
-                               'Vill du prata om något annat kanske']
-
-    def one_step_back(self):
-        self.conversation_sv.pop()
-        self.conversation_sv.pop()
-        self.conversation_en.pop()
-        self.conversation_en.pop()
-        return self.conversation_sv.bot_text[-1]
-
-    def reset_conversation(self):
-        self.conversation_sv.reset()
-        self.conversation_en.reset()
-        return
 
     def get_context(self):
         context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history(30))
         return context
 
+    def get_fire_object(self):
+        fika_firestore = FikaFirestore(conversation_id=self.fire.conversation_id,
+                                       name=self.name,
+                                       episode_done=self.episode_done,
+                                       bot_text_sv=self.conversation_sv.bot_text,
+                                       user_text_sv=self.conversation_sv.user_text,
+                                       bot_text_en=self.conversation_en.bot_text,
+                                       user_text_en=self.conversation_en.user_text,
+                                       change_subject=self.change_subject)
+        return fika_firestore
+
 
 class InterviewConversation:
 
-    def __init__(self, name, job, tokenizer):
-        self.name = name
-        self.job = job.lower()
-        self.conversation_sv = BlenderConversation(lang='sv', tokenizer=tokenizer)
-        self.conversation_en = BlenderConversation(lang='en', tokenizer=tokenizer)
+    def __init__(self, fire: InterviewFirestore, tokenizer):
+        self.fire = fire
+        self.name = fire.name
+        self.job = fire.job
+
+        self.conversation_sv = BlenderConversation(user_text=fire.user_text_sv, bot_text=fire.bot_text_sv,
+                                                   tokenizer=tokenizer)
+        self.conversation_en = BlenderConversation(user_text=fire.user_text_en, bot_text=fire.bot_text_en,
+                                                   tokenizer=tokenizer)
         self.nbr_replies = 0
         self.last_input_is_question = False
         self.episode_done = False
@@ -62,11 +133,6 @@ class InterviewConversation:
         self.nbr_replies -= 1
         return self.conversation_sv.bot_text[-1]
 
-    def reset_conversation(self):
-        self.conversation_sv.reset()
-        self.conversation_en.reset()
-        return
-
     def get_context(self):
         # context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history(40))
         context = self.conversation_en.get_nbr_interactions(self.nbr_replies)
@@ -75,17 +141,11 @@ class InterviewConversation:
 
 class BlenderConversation:
 
-    def __init__(self, lang, tokenizer):
-        self.lang = lang
-        self.bot_text = []
-        self.user_text = []
+    def __init__(self, bot_text, user_text, tokenizer):
+        self.bot_text = bot_text
+        self.user_text = user_text
         self.user_turn = None
         self.tokenizer = tokenizer
-
-    def reset(self):
-        self.bot_text = []
-        self.user_text = []
-        self.user_turn = True
 
     def add_user_text(self, text):
         if self.user_turn or self.user_turn is None:
@@ -111,12 +171,6 @@ class BlenderConversation:
             self.user_text.pop()
             self.user_turn = True
         return
-
-    def get_bot_replies(self):
-        return self.bot_text
-
-    def get_user_replies(self):
-        return self.user_text
 
     def get_dialogue_history(self, max_len=120):
         # Returns string of the dialogue history with bot and user inputs separated with '\n'

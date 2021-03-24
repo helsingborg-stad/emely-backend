@@ -4,6 +4,7 @@ transformers==4.2.2
 regex
 google-cloud-translate
 google-cloud-storage
+firebase_admin
 deep-translator
 six~=1.15.0
 fastapi
@@ -11,6 +12,7 @@ pydantic
 uvicorn
 pytorch-lightning
 numpy
+
 
 # external requirements
 click~=7.1.2

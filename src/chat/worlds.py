@@ -2,7 +2,7 @@ from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration
     BlenderbotSmallForConditionalGeneration
 from torch import no_grad
 import torch
-from src.chat.conversation import OpenConversation, InterviewConversation
+from src.chat.conversation import OpenConversation, InterviewConversation, FikaFirestore, InterviewFirestore
 from src.chat.translate import ChatTranslator
 
 import re
@@ -12,6 +12,11 @@ import random
 
 import logging
 from pathlib import Path
+
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+from google.oauth2 import service_account
 
 
 class ChatWorld:
@@ -27,6 +32,23 @@ class ChatWorld:
         self.tokenizer = None
         self.model_loaded = False
 
+        if False: # TODO
+            cred = credentials.ApplicationDefault()
+            firebase_admin.initialize_app(cred, {
+                'projectId': 'emelybrainapi',
+            })
+
+            db = firestore.client()
+            self.db = db.collection(u'fika')
+        else:
+            # Use a service account
+            cred = credentials.Certificate(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
+            #cred = service_account.Credentials.from_service_account_file(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
+            firebase_admin.initialize_app(cred)
+
+            db = firestore.client()
+            self.db = db.collection(u'fika')
+
         self.translator = ChatTranslator()
 
         self.stop_tokens = ['hejdå', 'bye', 'hej då']
@@ -35,7 +57,6 @@ class ChatWorld:
                           'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!']
 
 
-        self.dialogues = {}
 
         logging.basicConfig(filename='worlds.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
 
@@ -73,25 +94,20 @@ class ChatWorld:
         name = name.capitalize()
         greeting = random.choice(self.greetings).format(name)
         greeting_en = 'Hi {}, my name is Emely. How are you today?'.format(name)
-        if conversation_id in self.dialogues.keys():
-            self.dialogues[conversation_id].reset_conversation()
-            self.dialogues[conversation_id].conversation_en.add_bot_text(greeting_en)
-            self.dialogues[conversation_id].conversation_sv.add_bot_text(greeting)
-        else:
-            new_conversation = OpenConversation(
-                name=name,
-                tokenizer=self.tokenizer
-            )
-            new_conversation.conversation_en.add_bot_text(greeting_en)
-            new_conversation.conversation_sv.add_bot_text(greeting)
-            self.dialogues[conversation_id] = new_conversation
+
+        # Create new fire object
+        fika_fire = FikaFirestore(conversation_id=conversation_id, name=name)
+        new_conversation = OpenConversation(fire=fika_fire, tokenizer=self.tokenizer)
+        new_conversation.conversation_en.add_bot_text(greeting_en)
+        new_conversation.conversation_sv.add_bot_text(greeting)
+
+        # Get updated fire object and push it to firestore
+        fika_fire = new_conversation.get_fire_object()
+        doc_ref = self.db.document(str(conversation_id))
+        doc_ref.set(fika_fire.to_dict())
 
         return greeting
 
-    def reset_conversation(self, conversation_id):
-        self.dialogues[conversation_id].reset()
-        self.dialogues[conversation_id].reset()
-        return
 
     # def save(self, error=None):
     #     self.conversation_sv.to_txt(self.description, 'chat_output/interview_dialogue.txt', error=error)
@@ -102,7 +118,10 @@ class ChatWorld:
         # Observe the user input, translate and update internal states
         # Check if user wants to quit/no questions left --> self.episode_done = True
 
-        dialogue = self.dialogues[conversation_id]
+        doc = self.db.document(str(conversation_id)).get()
+        fika = FikaFirestore.from_dict(doc.to_dict())
+
+        dialogue = OpenConversation(fire=fika, tokenizer=self.tokenizer)
 
         translated_input = self.translator.translate(user_input, src='sv', target='en')
         dialogue.conversation_sv.add_user_text(user_input)
@@ -111,10 +130,9 @@ class ChatWorld:
         # Set episode done if exit condition is met.
         if user_input.lower().replace(' ', '') in self.stop_tokens:
             dialogue.episode_done = True
-        return dialogue.episode_done
+        return dialogue.episode_done, dialogue
 
-    def act(self, conversation_id):
-        dialogue = self.dialogues[conversation_id]
+    def act(self, dialogue):
         if not dialogue.episode_done:
             context = dialogue.get_context()
             inputs = self.tokenizer([context], return_tensors='pt')
@@ -123,7 +141,7 @@ class ChatWorld:
                 output_tokens = self.model.generate(**inputs)
             reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
             if not self.no_correction:  # Removes repetitive statements
-                reply_en = self._correct_reply(reply_en, conversation_id)
+                reply_en = self._correct_reply(reply_en, dialogue)
                 if len(reply_en) < 3:  # TODO: Move the popping and length check into correct reply
                     try:
                         reply_sv = dialogue.change_subject.pop(0)
@@ -138,15 +156,21 @@ class ChatWorld:
 
             dialogue.conversation_sv.add_bot_text(reply_sv)
             dialogue.conversation_en.add_bot_text(reply_en)
+
+            # Update firestore
+            fika_fire = dialogue.get_fire_object()
+            doc_ref = self.db.document(str(dialogue.conversation_id))
+            doc_ref.set(fika_fire.to_dict())
+
             return reply_sv
 
         else:
             return 'Nu måste jag gå. Det var kul att prata med dig! Hejdå!'  # TODO: Fix flexible
 
-    def _correct_reply(self, reply, conversation_id):
+    def _correct_reply(self, reply, dialogue):
         # For every bot reply, check what sentences are repetitive and remove that part only.
         # Current check will discard a sentence where she asks something new but with a little detail
-        dialogue = self.dialogues[conversation_id]
+
         previous_replies = dialogue.conversation_en.get_bot_replies()
 
         if len(previous_replies) == 0:

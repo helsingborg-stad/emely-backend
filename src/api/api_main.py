@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional
 from collections import defaultdict
 from src.models.models_from_bucket import download_models
+import os
 
 
 class Message(BaseModel):
@@ -52,7 +53,8 @@ world = None
 async def init_config():
     global interview_world, fika_world
     models = ['blenderbot_small-90M', 'blenderbot_small-90M@f70_v2_acc20']
-    download_models(models)  # Uncomment this to download models from gcp bucket on application start
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r"C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-7fe03b6e672c.json"
+    # download_models(models)  # Uncomment this to download models from gcp bucket on application start
     interview_world.load_model()
     fika_world.load_model()
     return
@@ -73,8 +75,8 @@ def chat(msg: Message, response: Response):
         return response
 
     try:
-        episode_done = world.observe(message, conversation_id)
-        reply = world.act(conversation_id)
+        episode_done, dialogue = world.observe(message, conversation_id)
+        reply = world.act(dialogue)
         response.status_code = status.HTTP_200_OK
     except KeyError:
         response.status_code = status.HTTP_404_NOT_FOUND
