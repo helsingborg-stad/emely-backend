@@ -14,4 +14,4 @@ COPY ./src /src
 COPY ./emelybrainapi-7fe03b6e672c.json /emelybrainapi-7fe03b6e672c.json
 
 
-CMD ["uvicorn", "src.api.api_main:brain", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "src.api.api_main:brain", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
