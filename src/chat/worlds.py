@@ -44,7 +44,7 @@ class ChatWorld:
             # Use a service account
             if not firebase_admin._apps:
                 cred = credentials.Certificate(
-                    r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
+                    r'..\..\emelybrainapi-33194bec3069.json')
                 # cred = service_account.Credentials.from_service_account_file(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
                 firebase_admin.initialize_app(cred)
 
