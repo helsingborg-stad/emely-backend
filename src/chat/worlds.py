@@ -32,9 +32,9 @@ class ChatWorld:
         self.tokenizer = None
         self.model_loaded = False
 
-        if False:  # TODO: automatically with gcp?
+        if True:  # TODO: automatically with gcp?
             cred = credentials.ApplicationDefault()
-            firebase_app = (cred, {
+            firebase_admin.initialize_app(cred, {
                 'projectId': 'emelybrainapi',
             })
 
@@ -249,9 +249,9 @@ class InterviewWorld(ChatWorld):
                           'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?'
                           ]
 
-        if False:  # TODO: automatically with gcp?
+        if True:  # TODO: automatically with gcp?
             cred = credentials.ApplicationDefault()
-            firebase_app = (cred, {
+            firebase_admin.initialize_app(cred, {
                 'projectId': 'emelybrainapi',
             })
 
