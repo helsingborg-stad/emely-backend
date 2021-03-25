@@ -32,7 +32,7 @@ class ChatWorld:
         self.tokenizer = None
         self.model_loaded = False
 
-        if False: # TODO
+        if False:  # TODO: automatically with gcp?
             cred = credentials.ApplicationDefault()
             firebase_app = (cred, {
                 'projectId': 'emelybrainapi',
@@ -43,8 +43,9 @@ class ChatWorld:
         else:
             # Use a service account
             if not firebase_admin._apps:
-                cred = credentials.Certificate(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
-                #cred = service_account.Credentials.from_service_account_file(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
+                cred = credentials.Certificate(
+                    r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
+                # cred = service_account.Credentials.from_service_account_file(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
                 firebase_admin.initialize_app(cred)
 
             db = firestore.client()
@@ -56,8 +57,6 @@ class ChatWorld:
         self.greetings = ['Hej {}, jag heter Emely! Hur är det med dig?',
                           'Hej {}! Mitt namn är Emely. Vad vill du prata om idag?',
                           'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!']
-
-
 
         logging.basicConfig(filename='worlds.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
 
@@ -109,7 +108,6 @@ class ChatWorld:
 
         return greeting
 
-
     # def save(self, error=None):
     #     self.conversation_sv.to_txt(self.description, 'chat_output/interview_dialogue.txt', error=error)
     #     self.conversation_en.to_txt('English ' + self.description, 'chat_output/interview_dialogue.txt', error=error)
@@ -121,6 +119,9 @@ class ChatWorld:
 
         doc = self.db.document(str(conversation_id)).get()
         fika = FikaFirestore.from_dict(doc.to_dict())
+        print('Observing: {}'.format(str(conversation_id)))
+        print(doc.to_dict())
+
 
         dialogue = OpenConversation(fire=fika, tokenizer=self.tokenizer)
 
@@ -166,6 +167,7 @@ class ChatWorld:
             return reply_sv
 
         else:
+            self.db.document(str(dialogue.conversation_id)).delete()
             return 'Nu måste jag gå. Det var kul att prata med dig! Hejdå!'  # TODO: Fix flexible
 
     def _correct_reply(self, reply, dialogue):
@@ -241,13 +243,30 @@ class InterviewWorld(ChatWorld):
     def __init__(self, **kwargs):
         # TODO: More sophisticated questions/greeting drawn from txt file(?) and formated with name and job
         super().__init__(**kwargs)
-        self.interviews = {}
         self.max_replies = 2  # Maximum number of replies back and forth for each question
         self.greetings = ['Hej, {}! Välkommen till din intervju! Hur är det med dig?',
                           'Hej {}, Emely heter jag och det är jag som ska intervjua dig. Hur är det med dig idag?',
                           'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?'
                           ]
 
+        if False:  # TODO: automatically with gcp?
+            cred = credentials.ApplicationDefault()
+            firebase_app = (cred, {
+                'projectId': 'emelybrainapi',
+            })
+
+            db = firestore.client()
+            self.db = db.collection(u'intervju')
+        else:
+            # Use a service account
+            if not firebase_admin._apps:
+                cred = credentials.Certificate(
+                    r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
+                # cred = service_account.Credentials.from_service_account_file(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
+                firebase_admin.initialize_app(cred)
+
+            db = firestore.client()
+            self.db = db.collection(u'intervju')
 
     def init_conversation(self, conversation_id, name, **kwargs):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
@@ -255,28 +274,30 @@ class InterviewWorld(ChatWorld):
         name = name.capitalize()
         greeting = random.choice(self.greetings).format(name)
         greeting_en = 'Hello, {}! Welcome to your interview! How are you?'.format(name)
-        if conversation_id in self.interviews.keys():
-            self.interviews[conversation_id].reset_conversation()
-            self.interviews[conversation_id].conversation_sv.add_bot_text(greeting)
-            self.interviews[conversation_id].conversation_en.add_bot_text(greeting)
-            return greeting
-        else:
-            new_interview = InterviewConversation(
-                name=name,
-                job=job,
-                tokenizer=self.tokenizer
-            )
-            new_interview.conversation_sv.add_bot_text(greeting)
-            new_interview.conversation_en.add_bot_text(greeting_en)
-            self.interviews[conversation_id] = new_interview
-            return greeting
+
+        # Create new fire object
+        interview_fire = InterviewFirestore(conversation_id=conversation_id, name=name, job=job)
+        new_interview = InterviewConversation(fire=interview_fire, tokenizer=self.tokenizer)
+        new_interview.conversation_en.add_bot_text(greeting_en)
+        new_interview.conversation_sv.add_bot_text(greeting)
+
+        # Get updated fire object and push it to firestore
+        interview_fire = new_interview.get_fire_object()
+        doc_ref = self.db.document(str(conversation_id))
+        doc_ref.set(interview_fire.to_dict())
+
+        return greeting
 
     def observe(self, user_input, conversation_id):
         # Observe the user input, translate and update internal states.
         # Returns boolean indicating if interview episode is done
         # We assume the user_input is always grammatically correct!
 
-        interview = self.interviews[conversation_id]
+        doc = self.db.document(str(conversation_id)).get()
+        fire_interview = InterviewFirestore.from_dict(doc.to_dict())
+
+        interview = InterviewConversation(fire=fire_interview, tokenizer=self.tokenizer)
+
         if '?' in user_input:
             interview.last_input_is_question = True
         else:
@@ -292,9 +313,9 @@ class InterviewWorld(ChatWorld):
                 or user_input.lower().replace(' ', '') in self.stop_tokens:
             interview.episode_done = True
 
-        return interview.episode_done
+        return interview.episode_done, interview
 
-    def act(self, conversation_id):
+    def act(self, interview):
         """There are four cases we can encounter that we treat differently:
          1. No more interview questions         --> End conversation
          2. Model has chatted freely for a bit  --> Force next interview questions
@@ -302,12 +323,11 @@ class InterviewWorld(ChatWorld):
          4. Model is allowed to chat more
            Code is slightly messy so the four cases are marked with 'Case X' in the code """
         # If it's time for another interview question, we don't need to pass anything through the mode
-        interview = self.interviews[conversation_id]
 
         if interview.episode_done:
             # Case 1
             # interview.save()
-            interview.reset_conversation()
+            self.db.document(str(interview.conversation_id)).delete()
             bye = 'Tack för din tid, det var trevligt att få intervjua dig!'
             return bye
         elif interview.nbr_replies == self.max_replies and not interview.last_input_is_question:
@@ -317,6 +337,11 @@ class InterviewWorld(ChatWorld):
             interview_question_en = self.translator.translate(interview_question, src='sv', target='en')
             interview.conversation_sv.add_bot_text(interview_question)
             interview.conversation_en.add_bot_text(interview_question_en)
+
+            # Update firestore
+            interview_fire = interview.get_fire_object()
+            doc_ref = self.db.document(str(interview.conversation_id))
+            doc_ref.set(interview_fire.to_dict())
             return interview_question
         else:
             context = interview.get_context()
@@ -329,7 +354,7 @@ class InterviewWorld(ChatWorld):
             if self.no_correction:
                 pass
             else:
-                reply_en = self._correct_reply(reply_en, conversation_id)
+                reply_en = self._correct_reply(reply_en, interview)
             # _correct_reply can return empty string -> force 'more info reply' (commented force new question)
             if len(reply_en) < 3:
                 # interview.nbr_replies = 0
@@ -356,12 +381,16 @@ class InterviewWorld(ChatWorld):
                 reply_sv = self.translator.translate(reply_en, src='en', target='sv')
             interview.conversation_sv.add_bot_text(reply_sv)
             interview.conversation_en.add_bot_text(reply_en)
+
+            # Update firestore
+            interview_fire = interview.get_fire_object()
+            doc_ref = self.db.document(str(interview.conversation_id))
+            doc_ref.set(interview_fire.to_dict())
             return reply_sv
 
-    def _correct_reply(self, reply, conversation_id):
+    def _correct_reply(self, reply, interview):
         # For every bot reply, check what sentences are repetitive and remove that part only.
         # Current check will discard a sentence where she asks something new but with a little detail
-        interview = self.interviews[conversation_id]
         previous_replies = interview.conversation_en.get_bot_replies()
 
         if len(previous_replies) == 0:
@@ -414,13 +443,14 @@ class InterviewWorld(ChatWorld):
                 logging.warning('Corrected: {} \n to: {}'.format(reply, new_reply))
             return new_reply
 
-    def one_step_back(self, conversation_id):
-        last_reply = self.interviews[conversation_id].one_step_back()
-        return last_reply
+    # Deprecated because ouf firestore situation
+    # def one_step_back(self, conversation_id):
+    #     last_reply = self.interviews[conversation_id].one_step_back()
+    #     return last_reply
 
-    def save(self, conversation_id):
-        dialogue = self.interviews[conversation_id]
-        description = self.model_name
-        file_path = Path(__file__).parents[2] / 'models' / self.model_name / 'interview_conversation.txt'
-        dialogue.conversation_sv.to_txt(description, file_path)
-        return
+    # def save(self, conversation_id):
+    #     dialogue = self.interviews[conversation_id]
+    #     description = self.model_name
+    #     file_path = Path(__file__).parents[2] / 'models' / self.model_name / 'interview_conversation.txt'
+    #     dialogue.conversation_sv.to_txt(description, file_path)
+    #     return

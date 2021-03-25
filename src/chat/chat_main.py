@@ -37,8 +37,8 @@ def main(**kwargs):
             last_reply = world.one_step_back(conversation_id)
             print(last_reply)
         else:
-            episode_done = world.observe(user_message, conversation_id)
-            reply = world.act(conversation_id)
+            episode_done, dialogue = world.observe(user_message, conversation_id)
+            reply = world.act(dialogue)
             print(reply)
     world.save(conversation_id)
 

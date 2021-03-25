@@ -4,8 +4,67 @@ from collections import deque
 
 class InterviewFirestore(object):
 
-    def __init__(self):
-        self
+    def __init__(self, conversation_id, name, job, episode_done=False, bot_text_sv=[], user_text_sv=[],
+                 bot_text_en=[], user_text_en=[], more_information=None, questions=None, last_input_is_question=False,
+                 nbr_replies=0
+                 ):
+        self.conversation_id = conversation_id
+        self.name = name
+        self.job = job
+
+        self.bot_text_sv = bot_text_sv
+        self.user_text_sv = user_text_sv
+        self.bot_text_en = bot_text_en
+        self.user_text_en = user_text_en
+
+        self.nbr_replies = nbr_replies
+        self.last_input_is_question = last_input_is_question
+        self.episode_done = episode_done
+
+        if questions is None:
+            self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
+                              read_questions((Path(__file__).parent / 'interview_questions.txt'))]
+        else:
+            self.questions = questions
+        if more_information is None:
+            self.more_information = ['Kan du ge mig lite mer information om det?',
+                                     'Kan du berätta mer om det?',
+                                     'Berätta lite mer om det!',
+                                     'Jag vill höra mer om det!',
+                                     'Jag förstår. Kan du berätta lite mer om det?']
+        else:
+            self.more_information = more_information
+
+    @staticmethod
+    def from_dict(source):
+        interview_firestore = InterviewFirestore(conversation_id=source['conversation_id'],
+                                                 name=source['name'],
+                                                 job=source['job'])
+        for k, v in source.items():
+            setattr(interview_firestore, k, v)
+        return interview_firestore
+
+    def to_dict(self):
+        attribute_dict = self.__dict__
+        return attribute_dict
+
+    def __repr__(self):
+        return (
+            f'InterviewFirestore(\
+                        name={self.name}, \
+                        conversation_id={self.conversation_id}, \
+                        job={self.job}, \
+                        bot_text_sv={self.bot_text_sv}, \
+                        user_text_sv={self.user_text_sv}, \
+                        bot_text_en={self.bot_text_en}, \
+                        user_text_en={self.user_text_en}, \
+                        episode_done={self.episode_done}, \
+                        nbr_replies = {self.nbr_replies}, \
+                        last_input_is_question = {self.last_input_is_question}, \
+                        questions = {self.questions}, \
+                        more_information = {self.more_information} \
+                    )'
+        )
 
 
 class FikaFirestore(object):
@@ -25,29 +84,18 @@ class FikaFirestore(object):
                                    'Vill du prata om något annat kanske']
         else:
             self.change_subject = change_subject
-        # self.archived = False
 
     @staticmethod
     def from_dict(source):
         fika_firestore = FikaFirestore(conversation_id=source['conversation_id'],
-                                       name=source['name'],
-                                       episode_done=source['episode_done'],
-                                       bot_text_sv=source['bot_text_sv'],
-                                       user_text_sv=source['user_text_sv'],
-                                       bot_text_en=source['bot_text_en'],
-                                       user_text_en=source['user_text_en'],
-                                       change_subject=source['change_subject'])
+                                       name=source['name'])
+        for k, v in source.items():
+            setattr(fika_firestore, k, v)
         return fika_firestore
 
     def to_dict(self):
-        return {'conversation_id': self.conversation_id,
-                'name': self.name,
-                'bot_text_sv': self.bot_text_sv,
-                'user_text_sv': self.user_text_sv,
-                'bot_text_en': self.bot_text_en,
-                'user_text_en': self.user_text_en,
-                'episode_done': self.episode_done,
-                'change_subject': self.change_subject}
+        attribute_dict = self.__dict__
+        return attribute_dict
 
     def __repr__(self):
         return (
@@ -104,6 +152,7 @@ class InterviewConversation:
 
     def __init__(self, fire: InterviewFirestore, tokenizer):
         self.fire = fire
+        self.conversation_id = fire.conversation_id
         self.name = fire.name
         self.job = fire.job
 
@@ -111,19 +160,15 @@ class InterviewConversation:
                                                    tokenizer=tokenizer)
         self.conversation_en = BlenderConversation(user_text=fire.user_text_en, bot_text=fire.bot_text_en,
                                                    tokenizer=tokenizer)
-        self.nbr_replies = 0
-        self.last_input_is_question = False
-        self.episode_done = False
-        self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
-                          read_questions((Path(__file__).parent / 'interview_questions.txt'))]
+
+        self.nbr_replies = fire.nbr_replies
+        self.last_input_is_question = fire.last_input_is_question
+        self.episode_done = fire.episode_done
+        self.questions = fire.questions
         self.tokenizer = tokenizer
         self.persona = 'your persona: My name is Emely and I am an AI interviewer'
         self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
-        self.more_information = ['Kan du ge mig lite mer information om det?',
-                                 'Kan du berätta mer om det?',
-                                 'Berätta lite mer om det!',
-                                 'Jag vill höra mer om det!',
-                                 'Jag förstår. Kan du berätta lite mer om det?']
+        self.more_information = fire.more_information
 
     def one_step_back(self):
         self.conversation_sv.pop()
@@ -137,6 +182,22 @@ class InterviewConversation:
         # context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history(40))
         context = self.conversation_en.get_nbr_interactions(self.nbr_replies)
         return context
+
+    def get_fire_object(self):
+        interview_firestore = InterviewFirestore(conversation_id=self.fire.conversation_id,
+                                                 name=self.name,
+                                                 job=self.job,
+                                                 episode_done=self.episode_done,
+                                                 bot_text_sv=self.conversation_sv.bot_text,
+                                                 user_text_sv=self.conversation_sv.user_text,
+                                                 bot_text_en=self.conversation_en.bot_text,
+                                                 user_text_en=self.conversation_en.user_text,
+                                                 more_information=self.more_information,
+                                                 questions=self.questions,
+                                                 last_input_is_question=self.last_input_is_question,
+                                                 nbr_replies=self.nbr_replies
+                                                 )
+        return interview_firestore
 
 
 class BlenderConversation:
