@@ -12,8 +12,8 @@ class ChatTranslator:
 
     def __init__(self, default_translator='googletrans'):
         # Set this to your google api key location
-        json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = json_path.as_posix()
+        # json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
+        # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = json_path.as_posix()
 
         # Translator objects
         self.default = default_translator
@@ -21,7 +21,7 @@ class ChatTranslator:
         self.deeptranslator_sv_to_en = GoogleTranslator(source='sv', target='en')
         self.gtrans_translator = Translator()
         # credentials = Credentials(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-7fe03b6e672c.json')
-        #self.gcloud_translator = translate.Client(credentials=credentials)
+        # self.gcloud_translator = translate.Client(credentials=credentials)
         self.gcloud_translator = translate.Client()
         logging.basicConfig(filename='translate.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
         self.nbr_translation = 0
