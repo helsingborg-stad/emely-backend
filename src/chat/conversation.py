@@ -252,6 +252,12 @@ class BlenderConversation:
         context = context.rsplit('\n', 1)[0]
         return context
 
+    def get_bot_replies(self):
+        return self.bot_text
+
+    def get_user_replies(self):
+        return self.user_text
+
 
 def read_questions(file_path):
     # Reads interview questions from a text file, one question per line. '{}' in place where job should be inserted
