@@ -6,7 +6,7 @@ from google.cloud import translate_v2 as translate
 import logging
 import os
 from pathlib import Path
-
+from google.oauth2.credentials import Credentials
 
 class ChatTranslator:
 
@@ -19,7 +19,9 @@ class ChatTranslator:
         self.deeptranslator_en_to_sv = GoogleTranslator(source='en', target='sv')
         self.deeptranslator_sv_to_en = GoogleTranslator(source='sv', target='en')
         self.gtrans_translator = Translator()
-        self.gcloud_translator = translate.Client()
+        credentials = Credentials(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-7fe03b6e672c.json')
+        self.gcloud_translator = translate.Client(credentials=credentials)
+        #self.gcloud_translator = translate.Client()
         logging.basicConfig(filename='translate.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
         self.nbr_translation = 0
 

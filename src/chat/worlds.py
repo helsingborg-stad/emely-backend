@@ -34,7 +34,7 @@ class ChatWorld:
 
         if False: # TODO
             cred = credentials.ApplicationDefault()
-            firebase_admin.initialize_app(cred, {
+            firebase_app = (cred, {
                 'projectId': 'emelybrainapi',
             })
 
@@ -42,9 +42,10 @@ class ChatWorld:
             self.db = db.collection(u'fika')
         else:
             # Use a service account
-            cred = credentials.Certificate(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
-            #cred = service_account.Credentials.from_service_account_file(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
-            firebase_admin.initialize_app(cred)
+            if not firebase_admin._apps:
+                cred = credentials.Certificate(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
+                #cred = service_account.Credentials.from_service_account_file(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
+                firebase_admin.initialize_app(cred)
 
             db = firestore.client()
             self.db = db.collection(u'fika')
