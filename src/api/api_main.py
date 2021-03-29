@@ -132,10 +132,6 @@ def new_chat(msg: InitChat, response: Response):
     return brain_response
 
 
-@brain.get('/dialogues')
-def get_dialogues():
-    json_compatible_item_data = jsonable_encoder(conversations)
-    return JSONResponse(content=json_compatible_item_data)
 
 #
 # @brain.get('/init', status_code=200)
