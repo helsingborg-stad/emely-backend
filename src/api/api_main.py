@@ -6,6 +6,8 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from typing import Optional
 from collections import defaultdict
+from firebase_admin import credentials
+from pathlib import Path
 from src.models.models_from_bucket import download_models
 import os
 
@@ -53,8 +55,10 @@ world = None
 async def init_config():
     global interview_world, fika_world
     models = ['blenderbot_small-90M', 'blenderbot_small-90M@f70_v2_acc20']
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r"C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-7fe03b6e672c.json"
-    # download_models(models)  # Uncomment this to download models from gcp bucket on application start
+    # json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
+    # cred = credentials.Certificate(json_path.as_posix())
+    # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r"C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-7fe03b6e672c.json"
+    download_models(models)  # Uncomment this to download models from gcp bucket on application start
     interview_world.load_model()
     fika_world.load_model()
     return

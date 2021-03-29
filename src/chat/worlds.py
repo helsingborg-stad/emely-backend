@@ -32,11 +32,12 @@ class ChatWorld:
         self.tokenizer = None
         self.model_loaded = False
 
-        if False:  # TODO: automatically with gcp?
-            cred = credentials.ApplicationDefault()
-            firebase_app = (cred, {
-                'projectId': 'emelybrainapi',
-            })
+        if True:  # TODO: automatically with gcp?
+            if not firebase_admin._apps:
+                cred = credentials.ApplicationDefault()
+                firebase_admin.initialize_app(cred, {
+                    'projectId': 'emelybrainapi',
+                })
 
             db = firestore.client()
             self.db = db.collection(u'fika')
@@ -249,19 +250,20 @@ class InterviewWorld(ChatWorld):
                           'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?'
                           ]
 
-        if False:  # TODO: automatically with gcp?
-            cred = credentials.ApplicationDefault()
-            firebase_app = (cred, {
-                'projectId': 'emelybrainapi',
-            })
+        if True:  # TODO: automatically with gcp?
+            if not firebase_admin._apps:
+                cred = credentials.ApplicationDefault()
+                firebase_admin.initialize_app(cred, {
+                    'projectId': 'emelybrainapi',
+                })
 
             db = firestore.client()
             self.db = db.collection(u'intervju')
         else:
             # Use a service account
             if not firebase_admin._apps:
-                cred = credentials.Certificate(
-                    r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
+                json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
+                cred = credentials.Certificate(json_path.as_posix())
                 # cred = service_account.Credentials.from_service_account_file(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
                 firebase_admin.initialize_app(cred)
 
