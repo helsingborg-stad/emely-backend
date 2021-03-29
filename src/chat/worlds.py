@@ -16,7 +16,9 @@ from pathlib import Path
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+from src.api.utils import is_gcp_instance
 import os
+
 
 class ChatWorld:
     # Class that keeps
@@ -31,7 +33,7 @@ class ChatWorld:
         self.tokenizer = None
         self.model_loaded = False
 
-        if os.environ['ON_GCP'] == 'true':
+        if is_gcp_instance():
             if not firebase_admin._apps:
                 cred = credentials.ApplicationDefault()
                 firebase_admin.initialize_app(cred, {
@@ -45,7 +47,6 @@ class ChatWorld:
             if not firebase_admin._apps:
                 json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
                 cred = credentials.Certificate(json_path.as_posix())
-                # cred = service_account.Credentials.from_service_account_file(r'C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-33194bec3069.json')
                 firebase_admin.initialize_app(cred)
 
             db = firestore.client()
@@ -121,7 +122,6 @@ class ChatWorld:
         fika = FikaFirestore.from_dict(doc.to_dict())
         print('Observing: {}'.format(str(conversation_id)))
         print(doc.to_dict())
-
 
         dialogue = OpenConversation(fire=fika, tokenizer=self.tokenizer)
 
@@ -249,7 +249,7 @@ class InterviewWorld(ChatWorld):
                           'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?'
                           ]
 
-        if os.environ['ON_GCP'] == 'true':
+        if is_gcp_instance():
             if not firebase_admin._apps:
                 cred = credentials.ApplicationDefault()
                 firebase_admin.initialize_app(cred, {

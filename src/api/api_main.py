@@ -6,18 +6,22 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from typing import Optional
 from collections import defaultdict
-from firebase_admin import credentials
-from pathlib import Path
-from src.models.models_from_bucket import download_models
-import os
-import socket
-
+from src.api.models_from_bucket import download_models
+from src.api.utils import is_gcp_instance
 
 class Message(BaseModel):
     # Defines regular message during chat
     persona: str
     conversation_id: int
     message: str
+    class Config:
+        schema_extra = {
+            "example": {
+                "persona": "Foo",
+                "conversation_id": "string",
+                "message": 'Hej det är bra med mig! Hur är det med dig?'
+            }
+        }
 
 
 class InitChat(BaseModel):
@@ -26,6 +30,15 @@ class InitChat(BaseModel):
     conversation_id: int
     name: str
     job: Optional[str] = None
+    class Config:
+        schema_extra = {
+            "example": {
+                "persona": "intervju",
+                "conversation_id": "test_id",
+                "name": "Swagger docs test",
+                "job": "snickare"
+            }
+        }
 
 
 class BaseResponse(BaseModel):
@@ -37,16 +50,6 @@ class BrainResponse(BaseModel):
     # brain_version: float
     response: BaseResponse
     # reply_to_local_message_id: str
-
-
-def is_gcp_instance():
-    """Check if it's GCE instance via DNS lookup to metadata server.
-    """
-    try:
-        socket.getaddrinfo('metadata.google.internal', 80)
-    except socket.gaierror:
-        return False
-    return True
 
 
 brain = FastAPI()
@@ -64,15 +67,12 @@ world = None
 
 # Models aren't loaded
 async def init_config():
-    global interview_world, fika_world
     models = ['blenderbot_small-90M', 'blenderbot_small-90M@f70_v2_acc20']
-    # json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
-    # cred = credentials.Certificate(json_path.as_posix())
     if is_gcp_instance():
-        os.environ['ON_GCP'] = 'true'
-        download_models(models)  # Uncomment this to download models from gcp bucket on application start
-    else:
-        os.environ['ON_GCP'] = 'false'
+        download_models(models)
+        print('Downloading models from bucket')
+
+    global interview_world, fika_world
     interview_world.load_model()
     fika_world.load_model()
     return
