@@ -10,6 +10,7 @@ from firebase_admin import credentials
 from pathlib import Path
 from src.models.models_from_bucket import download_models
 import os
+import socket
 
 
 class Message(BaseModel):
@@ -38,6 +39,16 @@ class BrainResponse(BaseModel):
     # reply_to_local_message_id: str
 
 
+def is_gcp_instance():
+    """Check if it's GCE instance via DNS lookup to metadata server.
+    """
+    try:
+        socket.getaddrinfo('metadata.google.internal', 80)
+    except socket.gaierror:
+        return False
+    return True
+
+
 brain = FastAPI()
 conversations = defaultdict(dict)
 
@@ -57,8 +68,11 @@ async def init_config():
     models = ['blenderbot_small-90M', 'blenderbot_small-90M@f70_v2_acc20']
     # json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
     # cred = credentials.Certificate(json_path.as_posix())
-    # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r"C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-7fe03b6e672c.json"
-    download_models(models)  # Uncomment this to download models from gcp bucket on application start
+    if is_gcp_instance():
+        os.environ['ON_GCP'] = 'true'
+        download_models(models)  # Uncomment this to download models from gcp bucket on application start
+    else:
+        os.environ['ON_GCP'] = 'false'
     interview_world.load_model()
     fika_world.load_model()
     return
