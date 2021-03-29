@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "emelybrainapi",
+  "private_key_id": "7fe03b6e672c59119eaa8a84af2f3230c250494c",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDWMdkRJMbiIbux\n3q+EPaiXfn7Gf72HK259kFcArwOyrs2qTcSgEU8ECu8t1BQCHSPitCcgSHJT4nyH\nfBt0/iESxLfYfhbKB5GeV3OG9imjeQnCmDRdLMeRdAL0iOSvBAOY/6oGBLfo8Yip\nHGKgYoo4mVeJ1k8uU9IZvQvStKPEazClDP5/uRtkCx13wubzIPnZnTa0Ipw00KJ4\nCD7RIdCaIKCzDXh7XcKTMGck9qpAAdF0NgKj5mhn2MzBw9nbk7QqziiV9NXeK0rj\n0FWaCARGybZ7U2c21HvaDe/1vxX+4OsQOKoQAX2EZb9cc+P0T1DibPi6K/lgFrA3\nnUL/9JC3AgMBAAECggEAUiK9VUigB1jeK7/z2Cb4vlcgcCfN2sZ50SaHZli2d092\nyEaYDrV0cl1rCEzZ+1GHUEi69DMzvB0OmbmqobtNnW/X++ml/YTXfzuTrn44y1n/\ntyI8ejpQsOMmuvS/lKlaY9IuNa6bg3UTbZ3X6B7BWCDdI5sNs/sqhvoqTXs9jXTF\nk65Hrcs6qzpsXqhpaFaDrlOWS5gW/5q54H1Y8debMXBsrXNCN+6Bz2OebmW0zLsA\n6JmsIhGaZZ1cG9UeOKpbVBdOZePX/4dhaDcR/zm2y8rlfxDIU5Jt/qA0SdWY1OnO\nLnrsi9soonDchKxqG8pAaPY4aFTvL3X2lYwk7mC7KQKBgQDraPjnkVEFSWw1SgJd\nvTuDx8cr60qBY4ZFDRWpEsy1BQwABOs7z8ZtVsxcNvUuREFuEW1PmWVPW9jpFoCU\n6PBTU7GPbMPcXbDagO7BrrlUtrsOfnxpcAj28OG7tiMvgEUWQKCR9+yNRlFNps0T\nrtwi4zc0uPs2i61NpeXWJnXNgwKBgQDo7di/s9WeTf2tXD799kLkiPdGVW0BuyMs\nDRssmGG1TuYNoJ3itdTc3zBjXqsewEDizd65vxhs8RGQ4V8uHJIU2oxfAOP8OmP1\nMYByOp+T2ZZhO1T3HGKu0Wpagk/pXKurp2/3/44vT9xTlRC3RW+h+CzBxKXcdybQ\npAEXCDwdvQKBgCOrMhuULxyH9XdVkWo2o+/hs1H6Qr28ILoRs3h8uruq2hiepi3X\n247xmeFXCmtKOEe/KDrpWSpfFkyq9iyZ5uAZTEwZBMw8/fD9nC+Ik9g8H7egfqVT\nLmiMMwfIHyixXMZ0YF/9msAFKYiEf4o98mju2IyKgrXPECE1w89g4HSVAoGAPrEd\ngGM/oI7vMwS785CfanEu1KBTaX7btZSFdthAnBLzOkG7nPRBqXzswiINvoYSMLkm\nNCopwdCUYME34+pOqwwzcbKEqjNxCeJb5uK+ZoXOwra8ZJIgQVsd2+Rs66tEjTvQ\nmBgRRcyhyWE6kYk/xYFNUo3B8nejW854eKF/xKUCgYEAkOjyEbo3OQQ0gXYU9u6s\nQ5olBIk+gI/b/WwrTo3p0sOTeIz+cHPIGdujg2Epxll7nbU/ERvJ1NAJDxi1wKqp\nzfPKH9CrHp/15hDPTiC+5JM41oK1r6cvK5OW2avpphnZ3SSYWISnmhfw2uyhwfqH\nAJMm9vMBQ2aitbO2mnOR/js=\n-----END PRIVATE KEY-----\n",
+  "client_email": "emelybrainapi@appspot.gserviceaccount.com",
+  "client_id": "105669977196197298322",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/emelybrainapi%40appspot.gserviceaccount.com"
+}

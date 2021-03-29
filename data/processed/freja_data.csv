@@ -1,0 +1,510 @@
+Name,src,target
+000000,"
+What do you think seems fun about this job?
+I like working with and getting to know new people!",I take it you're very social then?
+000001,"
+What do you think seems fun about this job?
+I am eager to learn more about marketing and you have some very talented people here.",Yes we really do. what are you eager to learn specifically?
+000002,"
+What do you think seems fun about this job?
+It's exiting to be part of such a big company. i have only worked at smaller firms before.",And how do you think it will be to work in a bigger company?
+000003,"
+What do you think seems fun about this job?
+I think it sounds like an exiting project. i really like to dig in to something new.",That's good. do you ever get bored of repetetive tasks?
+000004,"
+What do you think seems fun about this job?
+The location is really good. i live only five minutes away.",Yes it's a good location. where do you live?
+000005,"
+What do you think seems fun about this job?
+The job description said it included a lot of variety. i think that sounds good",Is variety in your job important to you?
+000006,"
+What do you think seems fun about this job?
+The job description said it included travelling. i like seeing new places and being on the move.",Yes you would travel quite a lot during parts of the year.
+000007,"
+What do you think seems fun about this job?
+I like taking care of people. it makes me feel important!","I see, that sounds like a good quality for this job!"
+000008,"
+What do you think seems fun about this job?
+It seems like a challening project.",Yes that's why we are looking for new competence. what is your experience with working in a team?
+000009,"
+You've applied for the job as fireman. what do you think is fun about this job?
+It makes me feel important to help people in difficult situations. ",And how would you feel if you fail on a mission?
+000010,"
+You've applied for the job as clerk here. what do you think is fun about this job?
+I like to help people who are looking to buy something. it's very fun to recommend products to customers.",Have you worked as a clerk before?
+000011,"
+You've applied for the job as taxi driver. what do you think is fun about this job?
+I've always liked driving cars, and getting somewhere is a fun puzzle to solve.",And are you good at talking to customers? would you describe yourself as social?
+000012,"
+You've applied for the job as nurse. what do you think is fun about this job?
+It's a job where a lot of things happen and i like always having something to do and not being passive.
+And have you worked as a nurse before?
+Yes, for five years before my maternity leave.",Okay and when can you start working?
+000013,"
+What's your best experience from your previous jobs?
+I used to work at a small firm where we had a very tight team. it felt like a group of friends who happened to work together.","I understand, because that's how i feel about working here!"
+000014,"
+What's your best experience from your previous jobs?
+In my second job at ikea i had a really nice manager that i clicked with.",Tell me a little more about what was good about that.
+000015,"
+What's your best experience from your previous jobs?
+In my last job i had a very experienced senior who taught me a lot about programming.",Did you work closely together with this person for a long time? what was the most valuably lesson they taught you?
+000016,"
+What's your best experience from your previous jobs?
+I worked in a place where i had a lot of freedom in my working hours. i liked being able to set my own schedule sometimes.","That sounds nice, but i'm not sure we can offer that flexibility here."
+000017,"
+What's your best experience from your previous jobs?
+I recently had a temporary position as event organiser which i thought was super fun, although challenging at times.",What made it challenging? and what did you learn? 
+000018,"
+What's your best experience from your previous jobs?
+I don't know
+Okay, i see. what about your best colleague?
+I worked with a really cool girl in my last job. ",What about her was cool?
+000019,"
+What's your best experience from your previous jobs?
+When i worked for a political party when i was young. 
+What made it a good experience?
+It felt like a community and it was very meaningful for me to work there.",That sounds inspirational!
+000020,"
+What's your best experience from your previous jobs?
+I worked with software testing of an app when i was a student. it was my first real job experience and i learnt a lot.",What kind of sofware did you test? what was the app called?
+000021,"
+What's your best experience from your previous jobs?
+I had a part time job when i finished my studies, and it was really nice to get a foot into the job market before i was actually finished.",What kind of a part time job was it?
+000022,"
+What's your best experience from your previous jobs?
+When i lived in canada, i worked as a cleaner at a small family business. everyone was very friendly and it was always fun to go to work.",Would you say that you felt at home there?
+000023,"
+What makes you fit well as a police?
+I think that i am very good at talking to people in difficult situations. i am good at being calm even though i am in a pressed situation.","Okay, can you describe a situation where you had to stay calm?"
+000024,"
+What makes you fit well as a construction worker?
+I've always been good at working physically. i think it's fun.",What about it makes it fun? are you also good at working with others?
+000025,"
+What makes you a good shop clerk?
+I am organised and have a good memory, so i am good at helping customers find what they are looking for.
+That sounds good. and how are you with people?
+In what way?",I am wondering if you think of yourself as a social person?
+000026,"
+What makes you fit well as a taxi driver?
+I'm good at driving cars. ","Okay, for how long have you had your license?"
+000027,"
+What makes you fit well as a nurse?
+I am friendly with people, and am very good at calming sick people.
+How do you handle someone who isn't calm?
+I carefully explain what is going on and explain the medical procedure.",And if that does not work?
+000028,"
+What makes you fit well as a teacher?
+I find value in teaching others.",Do you ever have any problem when people don't want to learn?
+000029,"
+What makes you fit well as a doctor?
+I'm very intelligent and to cure sick people is what drives me. it's something i've dreamed of since i was a child.",So you take a lot of pride in your work?
+000030,"
+What makes you fit well as a chef?
+I have always loved cooking food. ",For how long have you worked in the kitchen? 
+000031,"
+What makes you fit well as a waiter?
+I have fast reflexes and like when things are fast paced.",And how do you handle stress when things are hectic for a long time?
+000032,"
+You have applied for the job as receptionist. what makes you a good fit?
+I like to talk to people and i'm always nice and pragmatic.",I see. can you give an example of a situation where it was difficult to do so?
+000033,"
+Is there anything you want to ask about this job?
+How do you like your collegues?",I like my colleagues. anything else you're wondering?
+000034,"
+You have applied for the job as waiter. what makes you a good fit?
+I am observant and have a good memory
+I see. can you give an example of a situation where it was difficult to do so?
+Once i had a customer that changed his order, and forgot that the order was changed. he was very upset that he did not remember that. i managed to remember him about the change.
+Is there anything you want to ask about this job?
+Is there a need for working overtime? i have small children and can have difficulties with that.",Only occasionally. anything else?
+000035,"
+You have applied for the job as manager for our warehouse. what makes you suitable for this position?
+I am good at organizing both people and administration.",I understand. can you give an example of a situation where it was difficult to do so?
+000036,"
+What is the most important for you in a management position?
+That responsabilites and authorities correspond.
+Yes you will have a proper job description. anything else?
+Is overtime financially compensated or do you offer an extra week of vacation?",You will have an extra week of vacation 
+000037,"
+You have applied for the job as cleaner of our office. what about you as a person makes you a good cleaner?
+I like to clean and tidy up and i am very careful and efficent.",I see. can you give an example of a situation where it was difficult to do so?
+000038,"
+Is there anything you want to ask about this job?
+Will i be the only cleaner in the office?
+No, there's another person you will work with.
+During my vacation who will do the cleaning?",We will hire a temp to take care of it. any other questions?
+000039,"
+You have applied for the job as controller. what makes you a good fit?
+I like figures and am well organised. i always deliver on time.",I see. can you give an example of a situation where it was difficult to do so?
+000040,"
+Is there anything you want to ask about this job?
+To whom will i report?
+Your manager will be the cfo. anything else?
+How many people work in finance?","There's five people in finance right now, but we might hire more people soon."
+000041,"
+You have applied for the job as finance assistant. what makes you a good fit?
+I am good at reading figures and am detail oriented. and i always deliver on time.",Can you explain more about how you are detail oriented?
+000042,"
+You have applied for the job as it-support of our office. what makes you a good fit?
+I like to clean and fix computers and i am very careful and efficent.",I see. can you give an example of a situation where it was difficult to do so?
+000043,"
+Is there anything you want to ask about this job?
+Will i be the only one in it-support in the office?
+I like my colleagues. anything else?
+During my vacation who will do the support?",We will hire a student to cover for you during your vacation. 
+000044,"
+You have applied for the job as controller. what makes you a good fit?
+I like figures and is well organised. i always deliver on time.",I see. can you give an example of a situation where it was difficult to do so?
+000045,"
+Is there anything you want to ask about this job?
+How many employees work in this office?",There's 65 people who work in this office. any other questions? 
+000046,"
+You have applied for the job as finance assistent. what makes you a good fit?
+I am good at reading figures and is detailoriented. i always deliver on time.",I see. can you give an example of a situation where it was difficult to do so?
+000047,"
+You have applied for the job as it-support of our office. what makes you a good fit?
+I like to clean and fix computers and i am very careful and efficent.",I see. can you give an example of a situation where it was difficult to do so?
+000048,"
+Is there anything you want to ask about this job?
+Will i be the only one in it-support in the office?
+No we've got a team of four people working already.
+That's nice
+You have applied for the job as manager for our customer support. what makes you a good fit?
+I am good at organizing, communicating with people and administration.",Describe a situation where it was difficult to do so.
+000049,"
+You have applied for the job as manager. what makes you a good fit?
+I am very motivated and have skills to lead people.",I see. can you give an example of a situation where it was difficult to do so?
+000050,"
+You have applied for the job as carpenter. what makes you a good fit?
+I am good at working with many different tools.","Okay, and for how long have you been working as a carpenter?"
+000051,"
+What is most important for you in a this position?
+To have a guiding manager who can teach me in the beginning",You will work close to your manager. she will take good care of you! anything else?
+000052,"
+You have applied for the job as receptionist. what makes you a good fit?
+I like to talk to people and i'm always nice and pragmatic.",I see. can you give an example of a situation where it was difficult to do so?
+000053,"
+Is there anything you want to ask about this job?
+How do you like your collegues?
+I like my colleagues. anything else?
+What is the salary?",25000 
+000054,"
+You have applied for the job as waiter. what makes you a good fit?
+I am observant and have a good memory
+I see. can you give an example of a situation where it was difficult to do so?
+Once i had a customer that changed his order, and forgot that the order was changed. he was very upset that he did not remember that. i managed to remember him about the change.
+Is there anything you want to ask about this job?
+Is there a need for working overtime? i have small children and can have difficulties with that.",Only occasionally. we try to keep it to a minimum! anything else?
+000055,"
+You have applied for the job as manager for our warehouse. what makes you suitable for this position?
+I am good at organizing both people and administration.",I understand. can you give an example of a situation where it was difficult to do so?
+000056,"
+What is the most important for you in a management position?
+That responsabilites and authorities correspond.
+Yes you will have a proper job description. anything else?
+Is overtime financially compensated or do you offer an extra week of vacation?",You will always be compensated for overtime when you work here.
+000057,"
+You have applied for the job as cleaner of our office. what about you as a person makes you a good cleaner?
+I like to clean and tidy up and i am very careful and efficient.",I see. can you give an example of a situation where it was difficult to do so?
+000058,"
+Is there anything you want to ask about this job?
+Will i be the only cleaner in the office?
+No, there's another person you will work with. her name is maria.
+During my vacation who will do the cleaning?",We will hire a temp.
+000059,"
+You have applied for the job as controller. what makes you a good fit?
+I like figures and am well organised. i always deliver on time.",I see. can you give an example of a situation where it was difficult to do so?
+000060,"
+Is there anything you want to ask about this job?
+To whom will i report?
+Your manager will be the cfo. anything else?
+How many people work in finance?","There's five people in finance right now, but we might hire more people soon."
+000061,"
+You have applied for the job as finance assistant. what makes you a good fit?
+I am good at reading figures and am detail oriented. and i always deliver on time.",Can you explain more about how you are detail oriented?
+000062,"
+You have applied for the job as it-support of our office. what makes you a good fit?
+I like to clean and fix computers and i am very careful and efficent.",I see. can you give an example of a situation where it was difficult to do so?
+000063,"
+Is there anything you want to ask about this job?
+Will i be the only one in it-support in the office?
+I like my colleagues. anything else?
+During my vacation who will do the support?",We will hire a computer science student who will cover for you. 
+000064,"
+You have applied for the job as manager for our customer support. what makes you a good fit?
+I am good at organizing and communication with people and administration.",I see. can you give describe a situation where it was difficult to do so?
+000065,"
+You have applied for the job as manager for the marketing division. what makes you a good fit?
+I have a long experince in marketing in the distribution area
+I see. can you give an example of a situation where it was difficult to do so?
+When the market for newpapers went down i did not know what way to direct my employees",That sounds like a difficult situation. how did it go?
+000066,"
+You have applied for the job as manager for the administration. what makes you a good fit?
+I have motivation for and skills for administration.
+I see. can you give an example of a situation where it was difficult to do so?
+When i hired the wrong person for the reception.
+Why was it the wrong person?
+The person did not take responsibility over their job.",What did you do about the situation?
+000067,"
+You have applied for the job as controller. what makes you a good fit?
+I like figures and i am well organised. i always deliver on time.
+I see. can you give an example of a situation where it was difficult to do so?
+Once i did not recieve material in time from one of the employees and managed to explain in a nice way how important it was for the company to deliver reports on deadline.
+Is there anything you want to ask about this job?
+To whom will i report?",Your manager will the cfo. anything else?
+000068,"
+You have applied for the job as finance assistant. what makes you a good fit?
+I am good at reading figures and i am detail oriented. ",I see. can you give an example of a situation where it was difficult to do a good job?
+000069,"
+You have applied for the job as it-support of our office. what makes you a good fit?
+I like to clean and fix computers and i am very careful and efficent.
+I see. can you give an example of a situation where it was difficult to do so?
+Once i was denied access to a computer and had to ask the person to finish his job to make it possible for me to fix the problem.
+Is there anything you want to ask about this job?
+Will i be the only one in it-support in the office?
+No we've got a team of four people working already and you would be our fifth.
+That's nice
+You have applied for the job as manager for our customer support. what makes you a good fit?
+I am good at organizing, communicating with people and administration.",Describe a situation where it was difficult to do so.
+000070,"
+You have applied for the job as manager. what makes you a good fit?
+I am very motivated and have skills to lead people.",I see. can you give an example of a situation where it was difficult to do so?
+000071,"
+You have applied for the job as carpenter. what makes you a good fit?
+I am good at working with many different tools.","Okay, and for how long have you been working as a carpenter?"
+000072,"
+What is most important for you in a this position?
+To have a guiding manager
+You will work close to your manager. anything else?
+What will be my conditions if you employ me",We follow the conditions by the union
+000073,"
+We would like to know what you think about working in a rehabilitation company
+I am a positive person and believe in people's own possibilites and respect for integrity
+Tell me about your education?
+I have an education in sociologi
+What do you know about us?
+I know you as a company with a positive attitude to employees",When can you start?
+000074,"
+Why are you applying for this job?
+I am unemployed.
+What have you been doing before?
+I have been working as secretary
+Do you have an education for administration?
+No, but i learn quickly",What are your strongest characteristics?
+000075,"
+What makes you interested in working in a nursery school?
+I like children an i am very patient
+Do you have any experience from working with children
+No but i always had to take care of my brothers and sisters",Do you  have any references that can prove your personality?
+000076,"
+You want to work as laboratory assistant. is that correct?
+Yes it has always been my dream to analyse specimen
+Do you have education for this job and experience?
+I just got my diploma after examination but have no practical experience","We belong to a union, are you member of a union?"
+000077,"
+I see you have applied for a job as car mechanic
+Yes i always loved to cars.
+Have you any experience since before?
+My father is a mechanical working in his own garage, and i have often helped him
+Are you updated with the latest technology for cars?
+Quite well",How would you describe yourself?
+000078,"
+I see you have long experience of working in hospitals. how do you describe your personality?
+I am kind and caring. i am considerate towards patients and detail oriented.
+This job can be quite heavy, are you physically prepared for this?
+Yes i am strong but i presume i will work together with a colleague.",Are you prepared to work full time or part time?
+000079,"
+What make you think you will be a good fireman?
+I have a good physique and i have no problems working night shifts.
+Do you have a family?
+Yes a wife and two children
+Have you any experience before?
+Yes, but not from this area",Will you accept a trial period of 6 months?
+000080,"
+You have applied to a position as police man? what makes you think you could work as a police man
+I have the education and has worked 4 years in another town.
+Are you aware of the working hours in this position?
+Yes.
+Describe your strongest personality trait
+I am calm and have a strong mind",And you weak sides?
+000081,"
+You are looking for a job as contrution worker. why are you applying this job?
+I have heard you have a code of conduct that would fit me
+How would you descibe a perfect manager?
+A person who is strict and fair
+In what area of construction have you worked before?
+Both house building as a brick layer",How long did you do brick laying for? and are you used to working overtime?
+000082,"
+You have applied for the job as receptionist. what makes you a good fit?
+I like to talk to people and i'm always nice and pragmatic.",I see. can you give an example of a situation where it was difficult to do so?
+000083,"
+Is there anything you want to ask about this job?
+How do you like your collegues?
+I like my colleagues. anything else?
+What is the salary?",25000 
+000084,"
+What makes you a good fit as a car mechanic?
+I am very good at fixing cars.",What kind of cars have you worked with?
+000085,"
+You have applied for the job as janitor. what do you think seems fun about this job?
+I like when things are clean, and i enjoy doing physical work. ",Have you worked as a janitor before?
+000086,"
+You have applied for the job as teacher. what do you think seems fun about this job?
+I really love teaching kids. i gives me joy each morning when i go to work. ",What are the school subjects that you have taught the most?
+000087,"
+You have applied for the job as secretary. what do you think seems fun about this job?
+I really like to work with other people, and by working as a secretary i will come in contact with a lot of different people.",What would your perfect work day look like?
+000088,"
+If you are going to work as a janitor, it is good if you have experience from working with others. can you tell me a little if you have such experience?
+When i was high school i would often do projects with the other students in my school. ",What types of problems would you usually do?
+000089,"
+If you are going to work as a medical doctor, it is good if you have experience from working with others. can you tell me a little if you have such experience?
+I volunteered as an assistant for doctors without borders when i started medical school. ",Where did you volunteer?
+000090,"
+If you are going to work as an engineer, it is good if you have experience from working with others. can you tell me a little if you have such experience?
+I have been working in several open source coding projects, where multiple programmers have to work together to get the code to run efficient. ","I see, so what type of open source projects have you worked on?"
+000091,"
+What is your best experience from your previous jobs?
+I have always liked to get to know my collegues. it is so much fun to talk to new people. ",Are there any old collegues that you are still friends with?
+000092,"
+What is your best experience from your previous jobs?
+I like helping people, so when i worked as a nurse in the hospital i really felt that i made a difference in the world. ",What type of work did you do in the hospital?
+000093,"
+What is your best experience from your previous jobs?
+I think that was when i worked as a teacher and i got to see the kids in my class understand a new subject. that was the best experince that i have ever had.",What kind of teaching did you do?
+000094,"
+What is your best experience from your previous jobs?
+I don't know, it is hard to tell. there is not necessarily only one thing that i have enjoyed more than anything else. ","But if you had to choose one thing, what would it be?"
+000095,"
+What makes you fit well as a taxi driver?
+I love to drive, and i like to talk to people. i am also very good at remebering street names. ",Are you a good driver?
+000096,"
+What makes you fit well as a chasier?
+I am friendly, i like to help people and i am quick at making simple calculations. ",Is there anything related to being a chasier that you are not so good at?
+000097,"
+What makes you fit well as a nurse?
+I am kind, and i like the field of medicine.",Have you any experince outisde of medicine that you think would be valuable when working as a nurse?
+000098,"
+What makes you fit well as a baby sitter?
+I enjoy to play, epescially to lay puzzles. ",Do you have any younger siblings that you have taken care of before?
+000099,"
+Is there anything you want to ask about this job?
+I wonder what the pay is?","We pay 25.000 sek each month. if you work overtime, you will get compensated for that as well. "
+000100,"
+Is there anything you want to ask about this job?
+Can i drive my taxi car with me in the evening?
+We do not allow our employees to bring home their cars in the evening. is there anything else you would like to know?
+Do you give me a uniform for my shifts?",Yes. 
+000101,"
+Is there anything you want to ask about this job?
+No i do not think so. ","Great, we will let you know as soon as we have interviewed the other candidates as well"
+000102,"
+What is your best experience from your previous jobs?
+I really liked my work tasks, they gave me meaning. ",Which work task did you enjoy the most?
+000103,"
+What makes you fit well as a cook?
+I love food, and i like to prepare food. ",What is your favourite meal to prepare?
+000104,"
+What is your best experience from your previous jobs?
+Talking to new clients.",Where were your clients from?
+000105,"
+What makes you fit well as a construction worker?
+I like details, and i am quite strong. ",Do you have any other characteristics that would be suitable for the job?
+000106,"
+You have applied for the job as construction worker. what do you think seems fun about this job?
+In general, i like to build things. being a part of that process really makes me want to perform. ",Have you have any other experince in construction?
+000107,"
+If you are going to work as a mail man, it is good if you have experience from working with others. can you tell me a little if you have such experience?
+I often organise parties in my neighbourhood. we are often 3 to 4 people who plan everything from the food to the music. ",What is your role in those planning sessions?
+000108,"
+You have applied for the job as lead developer. what do you think seems fun about this job?
+I love to program and i love even more to tell other people what to do. ",Do you think that you are a good leader?
+000109,"
+If you are going to work as a police officer, it is good if you have experience from working with others. can you tell me a little if you have such experience?
+I worked in an office when i was 20. we did projects together all the time. ",What kind of projects did you do?
+000110,"
+You have applied for the job as kindergarden teacher. what do you think seems fun about this job?
+I enjoy working with kids and i love to teach. ",Do you have any children yourself?
+000111,"
+If you are going to work as a firefighter, it is good if you have experience from working with others. can you tell me a little if you have such experience?
+I have worked as a firefighter before and we used to work in a team. ",How many were you in your team?
+000112,"
+What makes you fit well as a manager?
+I believe that i have a good overview of things and i think that i can get the best out of employees.",Do you have any management skills?
+000113,"
+Is there anything you want to ask about this job?
+When can i start?",We are going through candidates but we hope that that the person we choose can start at the beginning of next month. 
+000114,"
+What is your experience with working with sales?
+I have worked in a fashion store selling clothes. i was responsible for opening and closing the store as well as the cashier. when i was younger, i also worked with telemarketing.
+For how long did you work with telemarketing?
+3 months",What did you learn by working with telemarketing?
+000115,"
+There is a hole in your resume around the year 2014. what happened then?
+I was on maternity leave and after that i did not find a job immediately.",I see. 
+000116,"
+Tell me a bit about yourself.
+I am 45 years old, married with two kids. i am currently unemployed but i am very motivated to work.
+How long have you been unemployed.
+Two years",I see. what was the last job you had.
+000117,"
+What made you apply to this particular job?
+I always liked to work with sales as i consider myself good at dealing with people.
+Great. tell me more about your experience of working with sales and people relations.
+I worked for 5 years at an office supply company with internal and external sales.",What were your responsibilites at this company?
+000118,"
+How do you cope with working under stress?
+I am fine with that. i am used to working under stress.",Great. could you give me an example of a job you have had where you had to handle stress?
+000119,"
+What did your last employer like most about you?
+They liked that i was very organized in my work, positive, and reliable.",Do you take pride in being organized in your work?
+000120,"
+Where do you see yourself in 5 years
+I am aiming at becoming a manager of this branch
+Do you have any work experience of being a manager?
+No, not yet.",Do you have any study background in terms of leadership and organization?
+000121,"
+You have applied for a position in customer support. what kind of skills do you have that make you a good fit?
+I am very friendly with people and like to make customers satisfied. ",How do you make customers satisfied?
+000122,"
+You have applied for a teaching position. what kind of skills do you have that make you a good teacher?
+I am good at explaining things and making learning fun!","That sounds interesting, can you talk a little more about how you make learning fun?"
+000123,"
+What’s your best experience from your previous jobs?
+I worked with a nice manager in my second job. it was great.",What made your manager nice to work with?
+000124,"
+What’s your best experience from your previous jobs?
+I worked with a nice manager in my second job. it was great.",What made your manager nice to work with?
+000125,"
+Welcome to this interview!
+Thank you very much.
+How was your trip? was it hard to find your way here?
+No, not at all. i am familiar with this part of town since before.",That is great to hear. would you like a cup of coffee before we start?
+000126,"
+Welcome to this interview!
+Thank you very much.
+How was your trip? was it hard to find your way here?
+No, not at all. i am familiar with this part of town since before.
+That is great to hear. would you like a cup of coffee before we start?
+No thank you, i am fine.",A glass of water then?
+000127,"
+Welcome to this interview!
+Thank you very much.
+How was your trip? was it hard to find your way here?
+I had some troubles yes, but i managed to find my way just in time.","Yes i can imagine, it is a rather unknown neighbourhood. anyhow, would you like a cup of coffee before we start?"
+000128,"
+Welcome to this interview!
+Thank you very much.
+How was your trip? was it hard to find your way here?
+I had some troubles yes, but i managed to find my way just in time.
+Yes i can imagine, it is a rather unknown neighbourhood. anyhow, would you like a cup of coffee before we start?
+No thank you, but i would like a cup of tea. i am actually not a big fan of coffee.","Of course, i will get you a cup of tea."
+000129,"
+So, can you tell me a bit about yourself?
+Sure. i am 27 years old and i have worked mostly within construction before. i got laid off due to economical reasons, where the company went bankrupt.
+Oh, that must have been quite dramatic. were there any specific reason they went bankrupt?
+I am not sure, i think it was a mix of bad luck and a recess in economy.","I see, and now you are thinking of moving to another industry?"
+000130,"
+What makes you want to change career paths at this time?
+Well, sometimes you come to a certain point in life where you feel that you are ready for new challenges, and a new day to day life.","I see, and what interests you the most about this job?"

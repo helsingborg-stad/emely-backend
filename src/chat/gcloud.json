@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "imposing-ratio-277208",
+  "private_key_id": "4042cb8ce9e11cd420d0813d18f3838653c76321",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDS93mvFVc5EBC9\nr4+DPW9ncRsbs6nVvGlTgYQ7mbnV9VcLD+vAPMrILC7QWD75Joi7wQWsGR4stPa3\njnPLkeEh1eawDzh52f1LVnzkGGmMNhjNbQUQD/C23ZMbkkJuWSYXbnQZRua784HI\npm2Vnr9/3LypwMf2hxUEuED82dNsVNnPYZ1DRShi17T8/Y8RthuiJecY/yYPm2ed\n1HjLhyfgAMXrZfFiwFmSrBGUkcEu7CQV303p6e9aZOw4F2ZAR0fkB++tFF1MLtJa\n2F+8z7xzWWxkD+yVAuuXeKN4dVi0Iey2stlIDUBdJxTFuMn8g9PjmW393tdVaCOv\nq0fVwVCLAgMBAAECggEACS8W0AVoz6YgZHGRGNCC2gj1eiY/HXvfRfBcdk/B5EuS\n53tg8vRyi3ZI7274BtajmzDS82QAiUezedgsuE74cwWhzkZLWhqgSThRpYheh+kO\n+VpmnwVioENTFR8v3yfoXZrEWRlaEBKQstBz8tB/W6ybVfR7gALvak4vHhLJfmy6\n4g1nvvo6VtfOEKUZFsDrFOMXAPlTg7+JVFBXBZ/N6q2Luugdx2Gu4kKFnypdyAJg\nxZVTs8+mKWzAiSlEgd85ZF3xgzFSE1oV87riOD8TpYMOVIBjoEBdHBNTOoW7fMQw\no7o/EJtMBlq+bccb3/Limt+7Ih1q5KCGbt+zG2M/mQKBgQD+JJZcS9E/pPtoRw2X\nowD0q5mOzEN6X+RgYRi1elnR9LfDl5aZBPZwpBtASG0IgKM1qgVf3YICwsPtNcsA\nh3ks8H7FA/sq4Yg3ArbGlph4QsCxcSine4/qpTjvx02iUn7mRyWnXkxTDoNf18Q+\nydS/ZzLDOZv13nWMMhnZ93xQjwKBgQDUgh7Pg28gAk/KYdh7K2jOgbRI3EWKv66t\nKWGkz+Q/LJE0iR+XlNdvcUQb5CW2lVNcEzBncN9EhWvhIvpS9K3eVJf7oTeXZHHo\ncF+EOwG1BHngleDjPHHlADUtHEvfbtso5kZTqjE2YPcV4YY09lEsMkD60dnOWR6k\n0xGnvH/GRQKBgDYEvNj9XIq0nKN7hs4WXZuj5c3OaQFX5Ij/2mqoiPLxmyW90MrR\nnTgwCYLOYi6OeSJs8xt/T6UalN6UsoN4SC9fJvLld7uTmIpoz0TCucHGHoMY1FVV\nFDAB0mpU6JF6C3MS6FP83ShCS3ZRvGrEJ65PVyDb2+SU1lNoSspjqk7NAoGAOaZP\nG3aJiAJ4iOvAYbGmDherw/RVvU1A4uMOBTsMrYK2pazpcCLFywrMMlDTVlPuOFVQ\nVU+OkjUrzfjCNg0Augby8CWNQjnSmP8bOnEThnr/YUjnqF22fCxxQJqjjqqxM8g8\nnefWz+zAOyRiVy3XWYkMjb6uOsd8g7Rq3rlJZI0CgYBe2yxET5zFMeTstDljn1fi\nhS6CLdETD+jZWAtuF3O1k9OvFVTIjfQM2EBhCbLCqz4WnzSis3ontGawcvnZDRjd\n1V+rrS1VJKFpfADHEKzzs/CNoG8cFJZrZvAj/bviw03fjLHUQkFzwaGdBN7Ko4Id\nSNQ2Q+iVkZ76eEF4p9E7xA==\n-----END PRIVATE KEY-----\n",
+  "client_email": "freja-translation@imposing-ratio-277208.iam.gserviceaccount.com",
+  "client_id": "104056727799376475769",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/freja-translation%40imposing-ratio-277208.iam.gserviceaccount.com"
+}

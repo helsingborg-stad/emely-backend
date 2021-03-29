@@ -79,7 +79,7 @@ target/
 
 # exclude data from source control by default
 /data/
-/notebooks/01_conversation_output/
+/notebooks/
 src/chat/chat_output/*.txt
 src/chat/*.log
 src/models/lightning_logs

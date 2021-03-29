@@ -3,83 +3,78 @@ import click
 import logging
 from pathlib import Path
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from argparse import ArgumentParser
 
 
 def read_interview_files(input_filepath: Path, output_filepath: Path):
-    # TODO: Read files
-    # TODO: Split episode on episode_done
-    # TODO: Identify how many follow up questions is in an episode, and how many samples it can produce
-    # TODO: Split into X,Y, remove 'freja:' and 'user:' and add special tokens
-
-    # TODO: Read one or several files
-    id = 0
-    files = [file for file in input_filepath.iterdir() if file.suffix == '.txt']
-    texts = []
-    for file in files:
-        with open(file, 'r') as f:
-            texts.append(f.read())
+    index = 0
+    with open(input_filepath, 'r') as f:
+        text = f.read()
 
     src_target_dict = {}
-    for text in texts:
-        # TODO: Split every text into episodes
-        episodes = text.split('episode_done')
-        for episode in episodes:
-            # Count how many _follow up questions_ freja asks
-            lines = episode.split('\n')
-            lines = list(filter(('').__ne__, lines))
-            # Remove unwanted empty lines
-            nbr_follow_up_questions = sum([1 for line in lines if 'freja' in line]) - 1
+    episodes = text.split('episode_done')
+    for episode in episodes:
+        # Count how many _follow up questions_ freja asks
+        lines = episode.split('\n')
+        lines = list(filter(('').__ne__, lines))
+        if len(lines)==0:
+            continue
 
-            # We get rid of 'freja: ' and 'user: ' in the lines
-            new_lines = []
-            for line in lines:
-                line = line.replace('freja: ', '')
-                line = line.replace('user: ', '')
-                new_lines.append(line)
-            for i in range(2, nbr_follow_up_questions * 2 + 1, 2):
-                target = new_lines[i]
-                src = ''
-                for j in range(i):
-                    src = src + new_lines[j] + '\n'
+        # Remove unwanted empty lines
+        #nbr_follow_up_questions = sum([1 for line in lines if 'freja' in line]) - 1
 
-                sample_id = str(id).zfill(6)
-                src_target_dict[sample_id] = {'src': src, 'target': target}
-                id += 1
-    # Convert to DataFrame and split into test and validation sets
+        # Make sure episode ends with freja/emelys question so we can set it as target
+        if 'freja' not in lines[-1]:
+            lines.pop(-1)
+            assert 'freja' in lines[-1], 'Something strange is going on'
+
+        # We get rid of 'freja: ' and 'user: ' in the lines,  remove eventual first space and capitalize
+        formatted_lines = []
+        for line in lines:
+            line = line.replace('freja:', '')
+            line = line.replace('user:', '')
+            if line[0] == ' ':
+                line = line[1:]
+            line = line.capitalize()
+            formatted_lines.append(line)
+
+        target = formatted_lines[-1]
+        src = ''
+        for i in range(len(formatted_lines)-1):
+            src = src + '\n' + formatted_lines[i]
+
+        sample_id = str(index).zfill(6)
+        src_target_dict[sample_id] = {'src': src, 'target': target}
+        index += 1
+
     src_target_df = pd.DataFrame.from_dict(src_target_dict, orient='index')
 
-    train_df, val_df = train_test_split(src_target_df, test_size=0.20, shuffle=True)
+    # Check for empty rows and remove them
+    src_target_df = src_target_df[(src_target_df['target'] != '')]
+    src_target_df = src_target_df[(src_target_df['src'] != '')]
 
-    train_csv_path = output_filepath.joinpath('interview_train.csv')
-    val_csv_path = output_filepath.joinpath('interview_val.csv')
-    train_df.to_csv(train_csv_path, index_label='Name')
-    val_df.to_csv(val_csv_path, index_label='Name')
+    out_file = project_dir / 'data/processed' / output_filepath
+
+    src_target_df.to_csv(out_file, index_label='Name')
     return
 
 
-@click.command()
-@click.argument('input_filepath', type=click.Path(exists=True))
-@click.argument('output_filepath', type=click.Path())
 def main(input_filepath, output_filepath):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
-    logger = logging.getLogger(__name__)
-    logger.info('making final data set from raw data')
-    data_path = project_dir.joinpath('data')
-    raw_data_path = project_dir.joinpath(input_filepath)
-    processed_data_path = project_dir.joinpath(output_filepath)
-    if not data_path.exists():
-        data_path.mkdir()
-    if not raw_data_path.exists():
-        raw_data_path.mkdir()
-    if not processed_data_path.exists():
-        processed_data_path.mkdir()
+    input_file = project_dir / 'data/raw' / input_filepath
+    output_file = project_dir / 'data/processed' / output_filepath
 
-    read_interview_files(raw_data_path,processed_data_path)
+    read_interview_files(input_file, output_file)
+
 
 if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('--input_file', type=str, required=True)
+    parser.add_argument('--output_file', type=str, required=True)
+    args = parser.parse_args()
+
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
 
@@ -89,4 +84,4 @@ if __name__ == '__main__':
     # find .env automagically by walking up directories until it's found, then
     # load up the .env entries as environment variables
 
-    main()
+    main(input_filepath=args.input_file, output_filepath=args.output_file)
