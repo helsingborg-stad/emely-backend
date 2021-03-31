@@ -1,9 +1,9 @@
 steps:
-- name: 'gcr.io/cloud-builders/docker'
+- name: 'eu.gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'eu.gcr.io/emelybrainapi/github.com/nordaxon/emelys_brain:$SHORT_SHA', '.']
-- name: 'gcr.io/cloud-builders/docker'
+- name: 'eu.gcr.io/cloud-builders/docker'
   args: ['push', 'eu.gcr.io/emelybrainapi/github.com/nordaxon/emelys_brain:$SHORT_SHA']
-- name: 'gcr.io/cloud-builders/gcloud'
-  args: ['beta', 'run', 'deploy', 'emelybrainapi', '--region=europe-west1', '--platform=managed',
+- name: 'eu.gcr.io/cloud-builders/gcloud'
+  args: ['run', 'deploy', 'emely-chatservice-api-staging', '--region=europe-west1', '--platform=managed',
          '--image=eu.gcr.io/emelybrainapi/github.com/nordaxon/emelys_brain:$SHORT_SHA']
 
