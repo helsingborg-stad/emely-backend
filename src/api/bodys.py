@@ -54,6 +54,9 @@ class UserMessage(BaseModel):
     response_time: float
     lang: LanguageEnum
     message: str
+    persona: PersonaEnum
+    created_at: str
+    recording_used: bool
     password: str
 
     class Config:
