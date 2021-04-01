@@ -1,59 +1,13 @@
 from src.chat.worlds import InterviewWorld, ChatWorld
 from fastapi import FastAPI, Response, status
-from pydantic import BaseModel
 from argparse import Namespace
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-from typing import Optional
+
 from collections import defaultdict
 from src.api.models_from_bucket import download_models
 from src.api.utils import is_gcp_instance
-
-class Message(BaseModel):
-    # Defines regular message during chat
-    persona: str
-    conversation_id: int
-    message: str
-    class Config:
-        schema_extra = {
-            "example": {
-                "persona": "Foo",
-                "conversation_id": "string",
-                "message": 'Hej det är bra med mig! Hur är det med dig?'
-            }
-        }
-
-
-class InitChat(BaseModel):
-    # Defines body for initial contact where a user starts a chat with Emely
-    persona: str
-    conversation_id: int
-    name: str
-    job: Optional[str] = None
-    class Config:
-        schema_extra = {
-            "example": {
-                "persona": "intervju",
-                "conversation_id": "test_id",
-                "name": "Swagger docs test",
-                "job": "snickare"
-            }
-        }
-
-
-class BaseResponse(BaseModel):
-    reply: str
-    episode_done: bool
-
-
-class BrainResponse(BaseModel):
-    # brain_version: float
-    response: BaseResponse
-    # reply_to_local_message_id: str
-
+from src.api.bodys import BrainMessage, UserMessage, InitBody
 
 brain = FastAPI()
-conversations = defaultdict(dict)
 
 interview_persona = Namespace(model_name='blenderbot_small-90M@f70_v2_acc20', local_model=True,
                               chat_mode='interview', no_correction=False)
@@ -81,8 +35,36 @@ async def init_config():
 brain.add_event_handler("startup", init_config)
 
 
+@brain.post('/init', status_code=201)
+def new_chat(msg: InitBody, response: Response):
+
+    if msg.persona == 'fika':
+        world = fika_world
+    elif msg.persona == 'intervju':
+        if msg.job is None:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return response
+        else:
+            world = interview_world
+    else:
+        raise NotImplementedError('There are only two personas implemented')
+
+    greeting = world.init_conversation(conversation_id= 'testconv', **msg.dict())
+    response = {'reply': greeting,
+                'episode_done': False
+                }
+
+    brain_response = BrainMessage(conversation_id='test',
+                                  lang='sv',
+                                  message='Hello, this is a hardcoded test',
+                                  is_init_message='true',
+                                  hardcoded_message='true',
+                                  error_messages='None')
+    return brain_response
+
+
 @brain.post('/message')
-def chat(msg: Message, response: Response):
+def chat(msg: UserMessage, response: Response):
     conversation_id, message, persona = msg.conversation_id, msg.message, msg.persona
     if persona == 'fika':
         world = fika_world
@@ -100,38 +82,10 @@ def chat(msg: Message, response: Response):
         response.status_code = status.HTTP_404_NOT_FOUND
         episode_done = True
         reply = 'conversation_id not found'
-    response = BaseResponse(reply=reply, episode_done=episode_done)
-    brain_response = BrainResponse(response=response)
+
+    raise NotImplementedError('')
+    brain_response = BrainMessage()
     return brain_response
-
-
-@brain.post('/init', status_code=201)
-def new_chat(msg: InitChat, response: Response):
-    persona, conversation_id = msg.persona, msg.conversation_id
-    if persona == 'fika':
-        world = fika_world
-    elif persona == 'intervju':
-        if msg.job is None:
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return response
-        else:
-            world = interview_world
-    else:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return response
-    if conversation_id not in conversations.keys():
-        conversations[conversation_id] = {'fika': False, 'intervju': False}
-    conversations[conversation_id][persona] = True
-    greeting = world.init_conversation(**msg.dict())
-    response = {'reply': greeting,
-                'episode_done': False
-                }
-    response = BaseResponse(**response)
-    brain_response = {'response': response}
-    brain_response = BrainResponse(**brain_response)
-    return brain_response
-
-
 
 #
 # @brain.get('/init', status_code=200)
