@@ -22,9 +22,10 @@ class InitBody(BaseModel):
     webapp_local: bool
     webapp_url: str
     webapp_version: str
+    webapp_git_build: str
     brain_local: bool
+    brain_url: str
     lang: LanguageEnum
-    webapp_version: str
     password: str
     user_ip_number: str
 
@@ -32,13 +33,15 @@ class InitBody(BaseModel):
         schema_extra = {
             "example": {
                 "name": "Wilma",
-                "persona": "intervju",
                 "job": "snickare",
+                "persona": "intervju",                
                 "development_testing": True,
                 "webapp_local": True,
                 "webapp_url": "swaggerdocs",
                 "webapp_version": "NA",
+                "webapp_git_build": "NA",
                 "brain_local": is_gcp_instance(),
+                "brain_url": "NA",
                 "lang": "sv",
                 "password": "KYgZfDG6P34H56WJM996CKKcNG4",
                 "user_ip_number": "127.0.0.1",
