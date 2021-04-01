@@ -8,3 +8,4 @@ def is_gcp_instance():
     except socket.gaierror:
         return False
     return True
+
