@@ -32,12 +32,11 @@ async def init_config():
     return
 
 
-brain.add_event_handler("startup", init_config)
+#brain.add_event_handler("startup", init_config)
 
 
 @brain.post('/init', status_code=201)
 def new_chat(msg: InitBody, response: Response):
-
     if msg.persona == 'fika':
         world = fika_world
     elif msg.persona == 'intervju':
@@ -49,11 +48,12 @@ def new_chat(msg: InitBody, response: Response):
     else:
         raise NotImplementedError('There are only two personas implemented')
 
-    greeting = world.init_conversation(conversation_id= 'testconv', **msg.dict())
+    greeting = world.init_conversation(conversation_id='testconv', **msg.dict())
     response = {'reply': greeting,
                 'episode_done': False
                 }
 
+    # TODO: Not hardcoded
     brain_response = BrainMessage(conversation_id='test',
                                   lang='sv',
                                   message='Hello, this is a hardcoded test',
@@ -63,6 +63,32 @@ def new_chat(msg: InitBody, response: Response):
     return brain_response
 
 
+@brain.post('/fika')
+def fika(msg: UserMessage):
+    conversation_id = msg.conversation_id
+    # TODO: Not hardcoded
+    return BrainMessage(conversation_id=conversation_id,
+                        lang='sv',
+                        message='This is a hardcoded test message',
+                        is_init_message=False,
+                        hardcoded_message=True,
+                        error_messages='None'
+                        )
+
+
+@brain.post('/intervju')
+def interview(msg: UserMessage):
+    conversation_id = msg.conversation_id
+    # TODO: Not hardcoded
+    return BrainMessage(conversation_id=conversation_id,
+                        lang='sv',
+                        message='This is a hardcoded test message',
+                        is_init_message=False,
+                        hardcoded_message=True,
+                        error_messages='None')
+
+
+# TODO: Deprecate in favour of post to /fika and /intervju
 @brain.post('/message')
 def chat(msg: UserMessage, response: Response):
     conversation_id, message, persona = msg.conversation_id, msg.message, msg.persona

@@ -55,7 +55,6 @@ class UserMessage(BaseModel):
     response_time: float
     lang: LanguageEnum
     message: str
-    persona: PersonaEnum
     created_at: str
     recording_used: bool
     password: str
@@ -66,6 +65,8 @@ class UserMessage(BaseModel):
                 "message": "This is a test message you can change",
                 "conversation_id": "test",
                 "response_time": -1,
+                "created_at": "-1",
+                "recording_used": False,
                 "lang": "sv",
                 "password": "KYgZfDG6P34H56WJM996CKKcNG4",
             }
