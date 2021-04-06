@@ -6,6 +6,7 @@ from datetime import datetime
 @dataclass
 class FirestoreMessage(object):
     conversation_id: str
+    msg_nbr: int
     who: str
     created_at: datetime
     response_time: float
@@ -13,8 +14,8 @@ class FirestoreMessage(object):
     message: str
     message_en: str
     case_type: str
-    recording_used: bool        # Whether the STT-recording was used or not
-    removed_from_message: str   # Message that was removed using world.correct_reply
+    recording_used: bool  # Whether the STT-recording was used or not
+    removed_from_message: str  # Message that was removed using world.correct_reply
     is_more_information: bool
     is_init_message: bool
     is_predefined_question: bool
@@ -33,6 +34,7 @@ class FirestoreMessage(object):
 class FirestoreConversation(object):
     name: str
     persona: str
+    nbr_messages: int = 0
     job: str = None
     created_at: str = None
     development_testing: bool = None
@@ -48,7 +50,8 @@ class FirestoreConversation(object):
     episode_done: bool = False
     last_input_is_question: bool = False
     replies_since_last_question: int = -1
-    pmrr_interview_questions: str = 'All'
+    pmrr_interview_questions: str = None  # None to start with as we may have different number of questions in the future
+    pmrr_more_information: str = None  # None to start with as we may have different number of questions in the future
 
     @staticmethod
     def from_dict(source):
@@ -130,6 +133,7 @@ class InterviewConversation:
         return context
 
     def get_fire_object(self):
+        #
         interview_firestore = InterviewFirestore(conversation_id=self.fire.conversation_id,
                                                  name=self.name,
                                                  job=self.job,
