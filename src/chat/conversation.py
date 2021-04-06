@@ -1,154 +1,66 @@
-from pathlib import Path
 from collections import deque
+from dataclasses import dataclass, asdict
+from datetime import datetime
 
 
-# TODO: Deprecate
-class InterviewFirestore(object):
-
-    def __init__(self, conversation_id, name, job, episode_done=False, bot_text_sv=[], user_text_sv=[],
-                 bot_text_en=[], user_text_en=[], more_information=None, questions=None, last_input_is_question=False,
-                 nbr_replies=0
-                 ):
-        self.conversation_id = conversation_id
-        self.name = name
-        self.job = job
-
-        self.bot_text_sv = bot_text_sv
-        self.user_text_sv = user_text_sv
-        self.bot_text_en = bot_text_en
-        self.user_text_en = user_text_en
-
-        self.nbr_replies = nbr_replies
-        self.last_input_is_question = last_input_is_question
-        self.episode_done = episode_done
-
-        if questions is None:
-            self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
-                              read_questions((Path(__file__).parent / 'interview_questions.txt'))]
-        else:
-            self.questions = questions
-        if more_information is None:
-            self.more_information = ['Kan du ge mig lite mer information om det?',
-                                     'Kan du berätta mer om det?',
-                                     'Berätta lite mer om det!',
-                                     'Jag vill höra mer om det!',
-                                     'Jag förstår. Kan du berätta lite mer om det?']
-        else:
-            self.more_information = more_information
-
-    @staticmethod
-    def from_dict(source):
-        interview_firestore = InterviewFirestore(conversation_id=source['conversation_id'],
-                                                 name=source['name'],
-                                                 job=source['job'])
-        for k, v in source.items():
-            setattr(interview_firestore, k, v)
-        return interview_firestore
-
-    def to_dict(self):
-        attribute_dict = self.__dict__
-        return attribute_dict
-
-    def __repr__(self):
-        return (
-            f'InterviewFirestore(\
-                        name={self.name}, \
-                        conversation_id={self.conversation_id}, \
-                        job={self.job}, \
-                        bot_text_sv={self.bot_text_sv}, \
-                        user_text_sv={self.user_text_sv}, \
-                        bot_text_en={self.bot_text_en}, \
-                        user_text_en={self.user_text_en}, \
-                        episode_done={self.episode_done}, \
-                        nbr_replies = {self.nbr_replies}, \
-                        last_input_is_question = {self.last_input_is_question}, \
-                        questions = {self.questions}, \
-                        more_information = {self.more_information} \
-                    )'
-        )
-
-
-# TODO: Deprecate
-class FikaFirestore(object):
-    def __init__(self, conversation_id, name, episode_done=False, bot_text_sv=[], user_text_sv=[],
-                 bot_text_en=[], user_text_en=[], change_subject=None
-                 ):
-        self.conversation_id = conversation_id
-        self.name = name
-        self.episode_done = episode_done
-        self.bot_text_sv = bot_text_sv
-        self.user_text_sv = user_text_sv
-        self.bot_text_en = bot_text_en
-        self.user_text_en = user_text_en
-        if change_subject is None:
-            self.change_subject = ['Berätta något annat om dig själv!',
-                                   'Nu tycker jag att vi ska prata om något annat!',
-                                   'Vill du prata om något annat kanske']
-        else:
-            self.change_subject = change_subject
-
-    @staticmethod
-    def from_dict(source):
-        fika_firestore = FikaFirestore(conversation_id=source['conversation_id'],
-                                       name=source['name'])
-        for k, v in source.items():
-            setattr(fika_firestore, k, v)
-        return fika_firestore
-
-    def to_dict(self):
-        attribute_dict = self.__dict__
-        return attribute_dict
-
-    def __repr__(self):
-        return (
-            f'FikaFirestore(\
-                        name={self.name}, \
-                        conversation_id={self.conversation_id}, \
-                        bot_text_sv={self.bot_text_sv}, \
-                        user_text_sv={self.user_text_sv}, \
-                        bot_text_en={self.bot_text_en}, \
-                        user_text_en={self.user_text_en}, \
-                        episode_done={self.episode_done}, \
-                        change_subject={self.change_subject}\
-                    )'
-        )
-
-
-# TODO: Implement
+@dataclass
 class FirestoreMessage(object):
-    def __init__(self):
-        self.value = None
+    conversation_id: str
+    who: str
+    created_at: datetime
+    response_time: float
+    lang: str
+    message: str
+    message_en: str
+    case_type: str
+    recording_used: bool        # Whether the STT-recording was used or not
+    removed_from_message: str   # Message that was removed using world.correct_reply
+    is_more_information: bool
+    is_init_message: bool
+    is_predefined_question: bool
+    is_hardcoded: bool
+    error_messages: str
 
     @staticmethod
     def from_dict(source):
-        raise NotImplementedError
+        return FirestoreMessage(**source)
 
     def to_dict(self):
-        raise NotImplementedError
-
-    def __repr__(self):
-        raise NotImplementedError
+        return asdict(self)
 
 
+@dataclass
 class FirestoreConversation(object):
-
-    def __init__(self):
-        self.value = None
+    name: str
+    persona: str
+    job: str = None
+    created_at: str = None
+    development_testing: bool = None
+    webapp_local: bool = None
+    webapp_url: str = None
+    webapp_version: str = None
+    webapp_git_build: str = None
+    brain_url: str = None
+    brain_version: str = None
+    brain_git_build: str = None
+    user_ip_number: str = None
+    lang: str = None
+    episode_done: bool = False
+    last_input_is_question: bool = False
+    replies_since_last_question: int = -1
+    pmrr_interview_questions: str = 'All'
 
     @staticmethod
     def from_dict(source):
-        raise NotImplementedError
+        return FirestoreConversation(**source)
 
     def to_dict(self):
-        raise NotImplementedError
-
-    def __repr__(self):
-        raise NotImplementedError
+        return asdict(self)
 
 
 class OpenConversation:
     # TODO: Switch Firestore
-    def __init__(self, fire: FikaFirestore, tokenizer):
+    def __init__(self, conversation: FirestoreConversation, tokenizer):
         self.fire = fire
         self.name = fire.name
         self.conversation_id = fire.conversation_id
