@@ -28,6 +28,7 @@ class ChatWorld:
         self.model_name = kwargs['model_name']
         self.local_model = kwargs['local_model']
         self.no_correction = kwargs['no_correction']
+        # TODO: deprecate device, model, but not tokenizer!
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = None
         self.tokenizer = None
@@ -61,6 +62,7 @@ class ChatWorld:
 
         logging.basicConfig(filename='worlds.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
 
+    # TODO: Deprecate function!
     def load_model(self):
         """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
         if self.local_model:
@@ -84,6 +86,7 @@ class ChatWorld:
         self.model_loaded = True
         return
 
+    # TODO: Deprecate
     def unload_model(self):
         self.model = None
         self.tokenizer = None
@@ -137,11 +140,13 @@ class ChatWorld:
     def act(self, dialogue):
         if not dialogue.episode_done:
             context = dialogue.get_context()
+            # TODO: Replace with call to model on gcp funciton
             inputs = self.tokenizer([context], return_tensors='pt')
             inputs.to(self.device)
             with no_grad():
                 output_tokens = self.model.generate(**inputs)
             reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
+            # TODO: End
             if not self.no_correction:  # Removes repetitive statements
                 reply_en = self._correct_reply(reply_en, dialogue)
                 if len(reply_en) < 3:  # TODO: Move the popping and length check into correct reply
@@ -226,6 +231,7 @@ class ChatWorld:
                 logging.warning('Corrected: {} \n to: {}'.format(reply, new_reply))
             return new_reply
 
+    # TODO: Deprecate
     def save(self, conversation_id):
         dialogue = self.dialogues[conversation_id]
         description = self.model_name
@@ -248,6 +254,8 @@ class InterviewWorld(ChatWorld):
                           'Hej {}, Emely heter jag och det är jag som ska intervjua dig. Hur är det med dig idag?',
                           'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?'
                           ]
+        # TODO: Attribute for brain api
+        # self.brain_api = pointer_to_gcp_
 
         if is_gcp_instance():
             if not firebase_admin._apps:
@@ -345,11 +353,16 @@ class InterviewWorld(ChatWorld):
             return interview_question
         else:
             context = interview.get_context()
+
+            # TODO: Call model from other gcp function
             inputs = self.tokenizer([context], return_tensors='pt')
             inputs.to(self.device)
+
             with no_grad():
                 output_tokens = self.model.generate(**inputs)
                 reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
+            # TODO: end
+
 
             if self.no_correction:
                 pass
