@@ -17,6 +17,7 @@ class InitBody(BaseModel):
     # Defines body for initial contact where a user starts a chat with Emely
     name: str
     job: str
+    created_at: str
     persona: PersonaEnum
     development_testing: bool
     webapp_local: bool
