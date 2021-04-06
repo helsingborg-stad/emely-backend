@@ -17,6 +17,7 @@ class InitBody(BaseModel):
     # Defines body for initial contact where a user starts a chat with Emely
     name: str
     job: str
+    created_at: str
     persona: PersonaEnum
     development_testing: bool
     webapp_local: bool
@@ -54,6 +55,9 @@ class UserMessage(BaseModel):
     response_time: float
     lang: LanguageEnum
     message: str
+    persona: PersonaEnum
+    created_at: str
+    recording_used: bool
     password: str
 
     class Config:
