@@ -92,26 +92,33 @@ def interview(msg: UserMessage):
 @brain.post('/message')
 def chat(msg: UserMessage, response: Response):
     conversation_id, message, persona = msg.conversation_id, msg.message, msg.persona
-    if persona == 'fika':
-        world = fika_world
-    elif persona == 'intervju':
-        world = interview_world
-    else:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return response
-
-    try:
-        episode_done, dialogue = world.observe(message, conversation_id)
-        reply = world.act(dialogue)
-        response.status_code = status.HTTP_200_OK
-    except KeyError:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        episode_done = True
-        reply = 'conversation_id not found'
-
-    raise NotImplementedError('')
-    brain_response = BrainMessage()
-    return brain_response
+    return BrainMessage(conversation_id=conversation_id,
+                        lang='sv',
+                        message='This is a hardcoded test message',
+                        is_init_message=False,
+                        hardcoded_message=True,
+                        error_messages='None')
+    # TODO: Deprecated?
+    # if persona == 'fika':
+    #     world = fika_world
+    # elif persona == 'intervju':
+    #     world = interview_world
+    # else:
+    #     response.status_code = status.HTTP_400_BAD_REQUEST
+    #     return response
+    #
+    # try:
+    #     episode_done, dialogue = world.observe(message, conversation_id)
+    #     reply = world.act(dialogue)
+    #     response.status_code = status.HTTP_200_OK
+    # except KeyError:
+    #     response.status_code = status.HTTP_404_NOT_FOUND
+    #     episode_done = True
+    #     reply = 'conversation_id not found'
+    #
+    # raise NotImplementedError('')
+    # brain_response = BrainMessage()
+    # return brain_response
 
 #
 # @brain.get('/init', status_code=200)
