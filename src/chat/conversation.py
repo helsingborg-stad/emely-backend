@@ -2,6 +2,7 @@ from pathlib import Path
 from collections import deque
 
 
+# TODO: Deprecate
 class InterviewFirestore(object):
 
     def __init__(self, conversation_id, name, job, episode_done=False, bot_text_sv=[], user_text_sv=[],
@@ -67,6 +68,7 @@ class InterviewFirestore(object):
         )
 
 
+# TODO: Deprecate
 class FikaFirestore(object):
     def __init__(self, conversation_id, name, episode_done=False, bot_text_sv=[], user_text_sv=[],
                  bot_text_en=[], user_text_en=[], change_subject=None
@@ -112,8 +114,38 @@ class FikaFirestore(object):
         )
 
 
-class OpenConversation:
+# TODO: Implement
+class FirestoreMessage(object):
+    def __init__(self):
 
+    @staticmethod
+    def from_dict(source):
+        raise NotImplementedError
+
+    def to_dict(self):
+        raise NotImplementedError
+
+    def __repr__(self):
+        raise NotImplementedError
+
+
+class FirestoreConversation(object):
+
+    def __init__(self):
+
+    @staticmethod
+    def from_dict(source):
+        raise NotImplementedError
+
+    def to_dict(self):
+        raise NotImplementedError
+
+    def __repr__(self):
+        raise NotImplementedError
+
+
+class OpenConversation:
+    # TODO: Switch Firestore
     def __init__(self, fire: FikaFirestore, tokenizer):
         self.fire = fire
         self.name = fire.name
@@ -149,7 +181,7 @@ class OpenConversation:
 
 
 class InterviewConversation:
-
+    # TODO: Switch Firestore
     def __init__(self, fire: InterviewFirestore, tokenizer):
         self.fire = fire
         self.conversation_id = fire.conversation_id
