@@ -117,6 +117,7 @@ class FikaFirestore(object):
 # TODO: Implement
 class FirestoreMessage(object):
     def __init__(self):
+        self.value = None
 
     @staticmethod
     def from_dict(source):
@@ -132,6 +133,7 @@ class FirestoreMessage(object):
 class FirestoreConversation(object):
 
     def __init__(self):
+        self.value = None
 
     @staticmethod
     def from_dict(source):
