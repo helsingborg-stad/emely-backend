@@ -2,6 +2,9 @@ from google.cloud import storage
 from pathlib import Path
 import os
 
+from src.api.utils import is_gcp_instance
+
+
 def download_model_dir(model, dl_dir, bucket):
     blobs = bucket.list_blobs(prefix=model)  # Get list of files
 
@@ -16,7 +19,8 @@ def download_model_dir(model, dl_dir, bucket):
 def download_models(model_dirs: list):
     bucket_name = 'emelys_models'
     project_dir = Path(__file__).resolve().parents[2]
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = project_dir.joinpath('emelybrainapi-7fe03b6e672c.json').as_posix()
+    if not is_gcp_instance():
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = project_dir.joinpath('emelybrainapi-7fe03b6e672c.json').as_posix()
 
     dl_dir = project_dir / 'models'
 

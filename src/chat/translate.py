@@ -7,12 +7,19 @@ import logging
 import os
 from pathlib import Path
 
+from src.api.utils import is_gcp_instance
+
 class ChatTranslator:
 
     def __init__(self, default_translator='googletrans'):
         # Set this to your google api key location
-        json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = json_path.as_posix()
+        if is_gcp_instance():
+            # Add a authentication to the Google translate.
+            pass
+
+        else:
+            json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = json_path.as_posix()
 
         # Translator objects
         self.default = default_translator

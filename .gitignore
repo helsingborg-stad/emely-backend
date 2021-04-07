@@ -58,6 +58,9 @@ docs/_build/
 # PyBuilder
 target/
 
+#JSON
+*.json
+
 # DotEnv configuration
 .env
 
