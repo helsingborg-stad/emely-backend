@@ -1,16 +1,14 @@
-from collections import deque
 from dataclasses import dataclass, asdict
-from datetime import datetime
-
+from pathlib import Path
 
 @dataclass
 class FirestoreMessage(object):
     """ Dataclass used to push Message data to the Firestore database """
     conversation_id: str
     msg_nbr: int
-    who: str
-    created_at: datetime
-    response_time: float
+    who: str                    # 'user' or 'bot'
+    created_at: str
+    response_time: str
     lang: str
     message: str
     message_en: str
@@ -34,11 +32,12 @@ class FirestoreMessage(object):
 @dataclass
 class FirestoreConversation(object):
     """ Dataclass used to push Conversation data to the Firestore database """
-    # Fixed attributes
+    # Fixed attributes  TODO: Remove None for attributes ?
     name: str
     persona: str
+    created_at: str
+    lang: str
     job: str = None
-    created_at: str = None
     development_testing: bool = None
     webapp_local: bool = None
     webapp_url: str = None
@@ -48,15 +47,15 @@ class FirestoreConversation(object):
     brain_version: str = None
     brain_git_build: str = None
     user_ip_number: str = None
-    lang: str = None
+
 
     # Updated attributes
     episode_done: bool = False
-    nbr_messages: int = 0
+    nbr_messages: int = -1
     last_input_is_question: bool = False
     replies_since_last_question: int = -1
-    pmrr_interview_questions: str = None  # None to start with as we may have different number of questions in the future
-    pmrr_more_information: str = None  # None to start with as we may have different number of questions in the future
+    pmrr_interview_questions: str = '01234'  # TODO: FIX this predefined stuff
+    pmrr_more_information: str = '012'
 
     @staticmethod
     def from_dict(source):
@@ -66,8 +65,8 @@ class FirestoreConversation(object):
         return asdict(self)
 
 
-class OpenConversation:
-    ""
+class FikaConversation:
+    "Object that tracks the states of a conversation with fika Emely"
     def __init__(self, firestore_conversation: FirestoreConversation, conversation_id, firestore_client):
         self.firestore_conversation = firestore_conversation
         self.name = firestore_conversation.name
@@ -86,7 +85,7 @@ class OpenConversation:
         self._get_more_information()  # Updates self.change_subject
 
         # Non fire params
-        self.firestore_messages_collection = firestore_client.collection(u'messages').document(conversation_id)
+        self.firestore_messages_collection = firestore_client.collection('messages').document(conversation_id)
 
         # Not used currently
         self.persona = ''
@@ -97,7 +96,8 @@ class OpenConversation:
         """ Reads more information utterances from file.
         self.pmrr_more_information is used to keep track of which are left to use
         """
-        with open('more_information.txt', 'r') as f:
+        more_info_path = Path(__file__).resolve().parent.joinpath('more_information.txt')
+        with open(more_info_path, 'r') as f:
             text = f.read()
         self.change_subject = text.split('\n')
         return
@@ -106,11 +106,12 @@ class OpenConversation:
     def add_text(self, firestore_message: FirestoreMessage):
         """ Pushes new message to database
         """
+        conversation_id = firestore_message.conversation_id
         self.nbr_messages += 1
         msg_nbr = firestore_message.msg_nbr
         assert msg_nbr == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
 
-        doc_ref = self.firestore_messages_collection.document(msg_nbr)
+        doc_ref = self.firestore_messages_collection.collection(conversation_id).document(str(msg_nbr)) #
         doc_ref.set(firestore_message.to_dict())
         return
 
@@ -195,7 +196,8 @@ class InterviewConversation:
     def _get_interview_questions(self):
         """ Reads and formats interview questions according to the job
         """
-        with open('interview_questions.txt', 'r') as f:
+        interview_questions_path = Path(__file__).resolve().parent.joinpath('interview_questions.txt')
+        with open(interview_questions_path, 'r') as f:
             text = f.read()
         lines = text.split('\n')
         formatted_questions = []

@@ -48,18 +48,16 @@ def new_chat(msg: InitBody, response: Response):
     else:
         raise NotImplementedError('There are only two personas implemented')
 
-    greeting = world.init_conversation(conversation_id='testconv', **msg.dict())
-    response = {'reply': greeting,
-                'episode_done': False
-                }
+    brain_response = world.init_conversation(msg)
+
 
     # TODO: Not hardcoded
-    brain_response = BrainMessage(conversation_id='test',
-                                  lang='sv',
-                                  message='Hello, this is a hardcoded test',
-                                  is_init_message='true',
-                                  hardcoded_message='true',
-                                  error_messages='None')
+    # brain_response = BrainMessage(conversation_id='test',
+    #                               lang='sv',
+    #                               message='Hello, this is a hardcoded test',
+    #                               is_init_message='true',
+    #                               hardcoded_message='true',
+    #                               error_messages='None')
     return brain_response
 
 

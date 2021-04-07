@@ -2,7 +2,7 @@ from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration
     BlenderbotSmallForConditionalGeneration
 from torch import no_grad
 import torch
-from src.chat.conversation import OpenConversation, InterviewConversation, FikaFirestore, InterviewFirestore
+from src.chat.conversation import FikaConversation, InterviewConversation, FirestoreConversation, FirestoreMessage
 from src.chat.translate import ChatTranslator
 
 import re
@@ -17,11 +17,12 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from src.api.utils import is_gcp_instance
-import os
+from src.api.bodys import BrainMessage, UserMessage, InitBody
+from datetime import datetime
+import time
 
 
 class ChatWorld:
-    # Class that keeps
 
     def __init__(self, **kwargs):
         # Attributes common for both ChatWorld and InterviewWorld
@@ -41,8 +42,7 @@ class ChatWorld:
                     'projectId': 'emelybrainapi',
                 })
 
-            db = firestore.client()
-            self.db = db.collection(u'fika')
+            self.firestore_client = firestore.client()
         else:
             # Use a service account
             if not firebase_admin._apps:
@@ -50,8 +50,10 @@ class ChatWorld:
                 cred = credentials.Certificate(json_path.as_posix())
                 firebase_admin.initialize_app(cred)
 
-            db = firestore.client()
-            self.db = db.collection(u'fika')
+            self.firestore_client = firestore.client()
+
+        # Message collection will depend on the conversation
+        self.firestore_conversation_collection = self.firestore_client.collection('conversations')
 
         self.translator = ChatTranslator()
 
@@ -60,9 +62,10 @@ class ChatWorld:
                           'Hej {}! Mitt namn är Emely. Vad vill du prata om idag?',
                           'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!']
 
+        # TODO: Work this through, should we even log here? There's another logger in translate
         logging.basicConfig(filename='worlds.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
 
-    # TODO: Deprecate function!
+    # TODO: Deprecate function after deploying models to gcp!
     def load_model(self):
         """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
         if self.local_model:
@@ -86,47 +89,66 @@ class ChatWorld:
         self.model_loaded = True
         return
 
-    # TODO: Deprecate
-    def unload_model(self):
-        self.model = None
-        self.tokenizer = None
-        self.model_loaded = False
-        return
-
-    def init_conversation(self, conversation_id, name, **kwargs):
+    def init_conversation(self, init_body: InitBody):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
-        name = name.capitalize()
+
+        # Creates a greeting message
+        name = init_body.name.capitalize()
         greeting = random.choice(self.greetings).format(name)
         greeting_en = 'Hi {}, my name is Emely. How are you today?'.format(name)
 
-        # Create new fire object
-        fika_fire = FikaFirestore(conversation_id=conversation_id, name=name)
-        new_conversation = OpenConversation(fire=fika_fire, tokenizer=self.tokenizer)
-        new_conversation.conversation_en.add_bot_text(greeting_en)
-        new_conversation.conversation_sv.add_bot_text(greeting)
+        # Convert to dict and remove data not needed
+        init_body = init_body.dict()
+        init_body.pop('password')
 
-        # Get updated fire object and push it to firestore
-        fika_fire = new_conversation.get_fire_object()
-        doc_ref = self.db.document(str(conversation_id))
-        doc_ref.set(fika_fire.to_dict())
+        # Create FirestoreConversation, push to db and get conversation_id
+        fire_convo = FirestoreConversation.from_dict(init_body)
+        print('Is all the information needed for firestoreconversation in init_body?')  # TODO:Check
+        conversation_ref = self.firestore_conversation_collection.document()
+        conversation_ref.set(fire_convo.to_dict())
+        conversation_id = conversation_ref.id
 
-        return greeting
+        # Time
+        webapp_creation_time = datetime.fromisoformat(init_body['created_at'])
+        timestamp = datetime.now()
+        response_time = str(timestamp - webapp_creation_time)
 
-    # def save(self, error=None):
-    #     self.conversation_sv.to_txt(self.description, 'chat_output/interview_dialogue.txt', error=error)
-    #     self.conversation_en.to_txt('English ' + self.description, 'chat_output/interview_dialogue.txt', error=error)
-    #     return
+        # Create FirestoreMessage
+        fire_msg = FirestoreMessage(conversation_id=conversation_id,
+                                    msg_nbr=0, who='bot', created_at=str(timestamp), response_time=response_time,
+                                    lang=fire_convo.lang, message=greeting, message_en=greeting_en, case_type='None',
+                                    recording_used=False, removed_from_message='', is_more_information=False,
+                                    is_init_message=True, is_predefined_question=False, is_hardcoded=True,
+                                    error_messages='')
+
+        # Create a FikaConversation
+        new_conversation = FikaConversation(firestore_conversation=fire_convo, conversation_id=conversation_id,
+                                            firestore_client=self.firestore_client)
+        new_conversation.add_text(fire_msg)
+
+        # Update firestoreconversation and update it in database by overwriting
+        fire_convo = new_conversation.update_fire_object()
+        conversation_ref.set(fire_convo)
+
+        response = BrainMessage(conversation_id=conversation_id,
+                                lang=init_body['lang'],
+                                message=greeting,
+                                is_init_message=True,
+                                hardcoded_message=True,
+                                error_messages='None')
+
+        return response
 
     def observe(self, user_input, conversation_id):
         # Observe the user input, translate and update internal states
         # Check if user wants to quit/no questions left --> self.episode_done = True
 
+        conversation_doc = self.firestore_conversation_collection.document(conversation_id)
+
         doc = self.db.document(str(conversation_id)).get()
         fika = FikaFirestore.from_dict(doc.to_dict())
-        print('Observing: {}'.format(str(conversation_id)))
-        print(doc.to_dict())
 
-        dialogue = OpenConversation(fire=fika, tokenizer=self.tokenizer)
+        dialogue = FikaConversation(fire=fika, tokenizer=self.tokenizer)
 
         translated_input = self.translator.translate(user_input, src='sv', target='en')
         dialogue.conversation_sv.add_user_text(user_input)
@@ -164,7 +186,7 @@ class ChatWorld:
             dialogue.conversation_sv.add_bot_text(reply_sv)
             dialogue.conversation_en.add_bot_text(reply_en)
 
-            # Update firestore
+            # Update firestore_client
             fika_fire = dialogue.get_fire_object()
             doc_ref = self.db.document(str(dialogue.conversation_id))
             doc_ref.set(fika_fire.to_dict())
@@ -257,24 +279,8 @@ class InterviewWorld(ChatWorld):
         # TODO: Attribute for brain api
         # self.brain_api = pointer_to_gcp_
 
-        if is_gcp_instance():
-            if not firebase_admin._apps:
-                cred = credentials.ApplicationDefault()
-                firebase_admin.initialize_app(cred, {
-                    'projectId': 'emelybrainapi',
-                })
-
-            db = firestore.client()
-            self.db = db.collection(u'intervju')
-        else:
-            # Use a service account
-            if not firebase_admin._apps:
-                json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
-                cred = credentials.Certificate(json_path.as_posix())
-                firebase_admin.initialize_app(cred)
-
-            db = firestore.client()
-            self.db = db.collection(u'intervju')
+        # TODO: Set this locally in observe and act
+        self.firestore_message_collection = None
 
     def init_conversation(self, conversation_id, name, **kwargs):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
@@ -289,7 +295,7 @@ class InterviewWorld(ChatWorld):
         new_interview.conversation_en.add_bot_text(greeting_en)
         new_interview.conversation_sv.add_bot_text(greeting)
 
-        # Get updated fire object and push it to firestore
+        # Get updated fire object and push it to firestore_client
         interview_fire = new_interview.get_fire_object()
         doc_ref = self.db.document(str(conversation_id))
         doc_ref.set(interview_fire.to_dict())
@@ -346,7 +352,7 @@ class InterviewWorld(ChatWorld):
             interview.conversation_sv.add_bot_text(interview_question)
             interview.conversation_en.add_bot_text(interview_question_en)
 
-            # Update firestore
+            # Update firestore_client
             interview_fire = interview.get_fire_object()
             doc_ref = self.db.document(str(interview.conversation_id))
             doc_ref.set(interview_fire.to_dict())
@@ -362,7 +368,6 @@ class InterviewWorld(ChatWorld):
                 output_tokens = self.model.generate(**inputs)
                 reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
             # TODO: end
-
 
             if self.no_correction:
                 pass
@@ -395,7 +400,7 @@ class InterviewWorld(ChatWorld):
             interview.conversation_sv.add_bot_text(reply_sv)
             interview.conversation_en.add_bot_text(reply_en)
 
-            # Update firestore
+            # Update firestore_client
             interview_fire = interview.get_fire_object()
             doc_ref = self.db.document(str(interview.conversation_id))
             doc_ref.set(interview_fire.to_dict())
@@ -456,7 +461,7 @@ class InterviewWorld(ChatWorld):
                 logging.warning('Corrected: {} \n to: {}'.format(reply, new_reply))
             return new_reply
 
-    # Deprecated because ouf firestore situation
+    # Deprecated because ouf firestore_client situation
     # def one_step_back(self, conversation_id):
     #     last_reply = self.interviews[conversation_id].one_step_back()
     #     return last_reply

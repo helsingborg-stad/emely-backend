@@ -57,8 +57,8 @@ class InitBody(BaseModel):
             "example": {
                 "name": "Wilma",
                 "job": "snickare",
-                "created_at": 'testtime',
-                "persona": "intervju",
+                "created_at": '1999-04-07 18:59:24.584658',
+                "persona": "fika",
                 "development_testing": True,
                 "webapp_local": True,
                 "webapp_url": "swaggerdocs",
