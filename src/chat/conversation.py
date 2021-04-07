@@ -68,7 +68,7 @@ class FirestoreConversation(object):
 
 class OpenConversation:
     ""
-    def __init__(self, firestore_conversation: FirestoreConversation, conversation_id, tokenizer, firestore_client):
+    def __init__(self, firestore_conversation: FirestoreConversation, conversation_id, firestore_client):
         self.firestore_conversation = firestore_conversation
         self.name = firestore_conversation.name
         self.conversation_id = conversation_id  # TODO: Make sure this is passed
@@ -87,7 +87,6 @@ class OpenConversation:
 
         # Non fire params
         self.firestore_messages_collection = firestore_client.collection(u'messages').document(conversation_id)
-        self.tokenizer = tokenizer
 
         # Not used currently
         self.persona = ''
@@ -155,7 +154,7 @@ class OpenConversation:
 
 
 class InterviewConversation:
-    def __init__(self, firestore_conversation: FirestoreConversation, conversation_id, tokenizer, firestore_client):
+    def __init__(self, firestore_conversation: FirestoreConversation, conversation_id, firestore_client):
         self.firestore_conversation = firestore_conversation
         self.name = firestore_conversation.name
         self.job = firestore_conversation.job
@@ -175,7 +174,6 @@ class InterviewConversation:
 
         # Non fire params
         self.firestore_messages_collection = firestore_client.collection(u'messages').document(conversation_id)
-        self.tokenizer = tokenizer
 
         # Not used currently
         self.persona = ''
