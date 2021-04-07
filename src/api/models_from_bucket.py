@@ -2,8 +2,6 @@ from google.cloud import storage
 from pathlib import Path
 import os
 
-from
-
 from src.api.utils import is_gcp_instance
 
 
