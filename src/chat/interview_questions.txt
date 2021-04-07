@@ -1,5 +1,5 @@
-Aha! Du har sökt jobbet som {}. Vad är det som du tycker verkar vara roligt med detta arbete?
-Okej men om du ska arbeta som {} så är det bra om du har erfarenhet från att jobba tillsammans med andra. Kan du berätta lite om du har sådan erfarenhet?
-Och vad gör att du skulle passa bra som {}?
+Aha! Du har sökt jobbet som _job_. Vad är det som du tycker verkar vara roligt med detta arbete?
+Okej men om du ska arbeta som _job_ så är det bra om du har erfarenhet från att jobba tillsammans med andra. Kan du berätta lite om du har sådan erfarenhet?
+Och vad gör att du skulle passa bra som _job_?
 Vad är din bästa erfarenhet från dina tidigare arbeten?
 Är det någonting som du vill fråga om det här arbetet?
