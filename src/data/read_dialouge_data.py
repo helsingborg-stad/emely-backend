@@ -100,6 +100,7 @@ def run_data_extraction(lines, output_path):
         if "episode_start" in line:
             append_lines = True
 
+
 def main(input_file, store_path):
 
     # The path for the rawdata must be here.
@@ -107,20 +108,15 @@ def main(input_file, store_path):
     input_path = data_dir / 'raw' / Path(input_file)
     output_path = data_dir / store_path
 
-    # Check if the output path exists.
-    print(input_path)
-    print(data_dir)
-    print(store_path)
-    print(output_path)
+    # Check if the output path exists. If not make it.
+
     if not Path(output_path).is_dir():
         Path(output_path).mkdir(parents=True, exist_ok=True)
 
     # Read the lines.
     with open(input_path) as fp:
         lines = fp.readlines()
-    # Check if the output path exist.
 
-    # If not, create the path.
     run_data_extraction(lines, output_path)
 
 
