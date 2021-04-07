@@ -45,6 +45,14 @@ def new_chat(msg: InitBody, response: Response):
             return response
         else:
             world = interview_world
+            # TODO: Remove this when init works for interviewworld
+            brain_response = BrainMessage(conversation_id='test',
+                                          lang='sv',
+                                          message='Hello, this is a hardcoded test for interviewworld which isn not done',
+                                          is_init_message='true',
+                                          hardcoded_message='true',
+                                          error_messages='None')
+            return brain_response
     else:
         raise NotImplementedError('There are only two personas implemented')
 
@@ -52,12 +60,7 @@ def new_chat(msg: InitBody, response: Response):
 
 
     # TODO: Not hardcoded
-    # brain_response = BrainMessage(conversation_id='test',
-    #                               lang='sv',
-    #                               message='Hello, this is a hardcoded test',
-    #                               is_init_message='true',
-    #                               hardcoded_message='true',
-    #                               error_messages='None')
+
     return brain_response
 
 
