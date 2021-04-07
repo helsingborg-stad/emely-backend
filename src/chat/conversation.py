@@ -111,7 +111,7 @@ class OpenConversation:
         assert msg_nbr == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
 
         doc_ref = self.firestore_messages_collection.document(msg_nbr)
-        doc_ref.set(firestore_message)
+        doc_ref.set(firestore_message.to_dict())
         return
 
     def get_next_hardcoded_message(self):
@@ -188,7 +188,7 @@ class InterviewConversation:
         assert msg_nbr == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
 
         doc_ref = self.firestore_messages_collection.document(msg_nbr)
-        doc_ref.set(firestore_message)
+        doc_ref.set(firestore_message.to_dict())
         return
 
     # TODO: Draw from database instead
