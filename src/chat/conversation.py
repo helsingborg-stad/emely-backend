@@ -5,6 +5,7 @@ from datetime import datetime
 
 @dataclass
 class FirestoreMessage(object):
+    """ Dataclass used to push Message data to the Firestore database """
     conversation_id: str
     msg_nbr: int
     who: str
@@ -32,9 +33,10 @@ class FirestoreMessage(object):
 
 @dataclass
 class FirestoreConversation(object):
+    """ Dataclass used to push Conversation data to the Firestore database """
+    # Fixed attributes
     name: str
     persona: str
-    nbr_messages: int = 0
     job: str = None
     created_at: str = None
     development_testing: bool = None
@@ -47,7 +49,10 @@ class FirestoreConversation(object):
     brain_git_build: str = None
     user_ip_number: str = None
     lang: str = None
+
+    # Updated attributes
     episode_done: bool = False
+    nbr_messages: int = 0
     last_input_is_question: bool = False
     replies_since_last_question: int = -1
     pmrr_interview_questions: str = None  # None to start with as we may have different number of questions in the future
@@ -62,217 +67,181 @@ class FirestoreConversation(object):
 
 
 class OpenConversation:
-    # TODO: Switch Firestore
-    def __init__(self, conversation: FirestoreConversation, tokenizer):
-        self.fire = fire
-        self.name = fire.name
-        self.conversation_id = fire.conversation_id
+    ""
+    def __init__(self, firestore_conversation: FirestoreConversation, conversation_id, tokenizer, firestore_client):
+        self.firestore_conversation = firestore_conversation
+        self.name = firestore_conversation.name
+        self.conversation_id = conversation_id  # TODO: Make sure this is passed
 
-        self.conversation_sv = BlenderConversation(user_text=fire.user_text_sv, bot_text=fire.bot_text_sv,
-                                                   tokenizer=tokenizer)
-        self.conversation_en = BlenderConversation(user_text=fire.user_text_en, bot_text=fire.bot_text_en,
-                                                   tokenizer=tokenizer)
+        # Attributes to update
+        self.episode_done = firestore_conversation.episode_done
+        self.nbr_messages = firestore_conversation.nbr_messages
+        self.last_input_is_question = firestore_conversation.last_input_is_question
+        self.replies_since_last_question = firestore_conversation.replies_since_last_question
 
-        self.episode_done = fire.episode_done
-        self.change_subject = fire.change_subject
+        # Fika specific - draw from db or file
+        self.pmrr_more_information = [c for c in
+                                      firestore_conversation.pmrr_more_information]  # Split '1234 into ['1','2','3','4']
+        self.change_subject = None
+        self._get_more_information()  # Updates self.change_subject
 
         # Non fire params
+        self.firestore_messages_collection = firestore_client.collection(u'messages').document(conversation_id)
         self.tokenizer = tokenizer
+
+        # Not used currently
         self.persona = ''
         self.persona_length = 0  # len(self.tokenizer(self.persona)['input_ids'])
 
-    def get_context(self):
-        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history(30))
+    # TODO: Retrieve more information from database instead of from file
+    def _get_more_information(self):
+        """ Reads more information utterances from file.
+        self.pmrr_more_information is used to keep track of which are left to use
+        """
+        with open('more_information.txt', 'r') as f:
+            text = f.read()
+        self.change_subject = text.split('\n')
+        return
+
+    # TODO: Make sure this is used appropriately in worlds
+    def add_text(self, firestore_message: FirestoreMessage):
+        """ Pushes new message to database
+        """
+        self.nbr_messages += 1
+        msg_nbr = firestore_message.msg_nbr
+        assert msg_nbr == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
+
+        doc_ref = self.firestore_messages_collection.document(msg_nbr)
+        doc_ref.set(firestore_message)
+        return
+
+    def get_next_hardcoded_message(self):
+        index = self.pmrr_more_information.pop(0)
+        utterance = self.change_subject[index]
+        return utterance
+
+    def get_input_with_context(self):
+        """ Gets the input for the model which is the last four messages of the conversation
+        """
+        nbr_replies_for_context = 4
+        condition = self.nbr_messages - nbr_replies_for_context - 1
+        docs = self.firestore_messages_collection.where('msg_nbr', '>=', condition).stream()
+        messages = [doc.to_dict for doc in docs]
+        messages.sort(key=lambda x: x.msg_nbr)
+        context = ''
+        for i, message in enumerate(messages):
+            if i == len(messages - 1):  #
+                context = context + message['message_en']
+            else:
+                context = context + message['message_en'] + '\n'
+
         return context
 
+    def update_fire_object(self):
+        self.firestore_conversation.episode_done = self.episode_done
+        self.firestore_conversation.nbr_messages = self.nbr_messages
+        self.firestore_conversation.last_input_is_question = self.last_input_is_question
+        self.firestore_conversation.replies_since_last_question = self.replies_since_last_question
+
+        pmrr = ''
+        for c in self.pmrr_more_information:
+            pmrr = pmrr + c
+        self.firestore_conversation.pmrr_more_information = pmrr
+        return
+
     def get_fire_object(self):
-        fika_firestore = FikaFirestore(conversation_id=self.fire.conversation_id,
-                                       name=self.name,
-                                       episode_done=self.episode_done,
-                                       bot_text_sv=self.conversation_sv.bot_text,
-                                       user_text_sv=self.conversation_sv.user_text,
-                                       bot_text_en=self.conversation_en.bot_text,
-                                       user_text_en=self.conversation_en.user_text,
-                                       change_subject=self.change_subject)
-        return fika_firestore
+        self.update_fire_object()
+        return self.firestore_conversation
 
 
 class InterviewConversation:
-    # TODO: Switch Firestore
-    def __init__(self, fire: InterviewFirestore, tokenizer):
-        self.fire = fire
-        self.conversation_id = fire.conversation_id
-        self.name = fire.name
-        self.job = fire.job
+    def __init__(self, firestore_conversation: FirestoreConversation, conversation_id, tokenizer, firestore_client):
+        self.firestore_conversation = firestore_conversation
+        self.name = firestore_conversation.name
+        self.job = firestore_conversation.job
+        self.conversation_id = conversation_id  # TODO: Make sure this is passed
 
-        self.conversation_sv = BlenderConversation(user_text=fire.user_text_sv, bot_text=fire.bot_text_sv,
-                                                   tokenizer=tokenizer)
-        self.conversation_en = BlenderConversation(user_text=fire.user_text_en, bot_text=fire.bot_text_en,
-                                                   tokenizer=tokenizer)
+        # Attributes to update
+        self.episode_done = firestore_conversation.episode_done
+        self.nbr_messages = firestore_conversation.nbr_messages
+        self.last_input_is_question = firestore_conversation.last_input_is_question
+        self.replies_since_last_question = firestore_conversation.replies_since_last_question
 
-        self.nbr_replies = fire.nbr_replies
-        self.last_input_is_question = fire.last_input_is_question
-        self.episode_done = fire.episode_done
-        self.questions = fire.questions
+        # Fika specific - draw from db or file
+        self.pmrr_interview_questions = [c for c in
+                                         firestore_conversation.pmrr_more_information]  # Split '1234 into ['1','2','3','4']
+        self.interview_questions = None
+        self._get_interview_questions()  # Updates self.change_subject
+
+        # Non fire params
+        self.firestore_messages_collection = firestore_client.collection(u'messages').document(conversation_id)
         self.tokenizer = tokenizer
-        self.persona = 'your persona: My name is Emely and I am an AI interviewer'
-        self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
-        self.more_information = fire.more_information
 
-    def one_step_back(self):
-        self.conversation_sv.pop()
-        self.conversation_sv.pop()
-        self.conversation_en.pop()
-        self.conversation_en.pop()
-        self.nbr_replies -= 1
-        return self.conversation_sv.bot_text[-1]
+        # Not used currently
+        self.persona = ''
+        self.persona_length = 0  # len(self.tokenizer(self.persona)['input_ids'])
 
-    def get_context(self):
-        # context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history(40))
-        context = self.conversation_en.get_nbr_interactions(self.nbr_replies)
+    # TODO: Make sure this is called in worlds
+    def add_text(self, firestore_message: FirestoreMessage):
+        """ Pushes new message to database
+        """
+        self.nbr_messages += 1
+        msg_nbr = firestore_message.msg_nbr
+        assert msg_nbr == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
+
+        doc_ref = self.firestore_messages_collection.document(msg_nbr)
+        doc_ref.set(firestore_message)
+        return
+
+    # TODO: Draw from database instead
+    def _get_interview_questions(self):
+        """ Reads and formats interview questions according to the job
+        """
+        with open('interview_questions.txt', 'r') as f:
+            text = f.read()
+        lines = text.split('\n')
+        formatted_questions = []
+        for line in lines:  # TODO: Also format skill eventually
+            line = line.replace('_job_', self.job)
+            formatted_questions.append(line)
+        self.interview_questions = formatted_questions
+        return
+
+    def get_next_interview_question(self):
+        """Pops the next question index from the pmrr_interview_questions list
+           and returns the corresponding question """
+        index = self.pmrr_interview_questions.pop(0)
+        question = self.interview_questions[index]
+        return question
+
+    def get_input_with_context(self):
+        """ Creates input for model: the conversation history since the last predefined question! """
+        nbr_replies_for_context = self.replies_since_last_question * 2  #
+        condition = self.nbr_messages - nbr_replies_for_context
+        docs = self.firestore_messages_collection.where('msg_nbr', '>=', condition).stream()
+        messages = [doc.to_dict for doc in docs]
+        messages.sort(key=lambda x: x.msg_nbr)
+        context = ''
+        for i, message in enumerate(messages):
+            if i == len(messages) - 1:  # We don't want a '\n' after the last line
+                context = context + message['message_en']
+            else:
+                context = context + message['message_en'] + '\n'
+
         return context
+
+    def update_fire_object(self):
+        self.firestore_conversation.episode_done = self.episode_done
+        self.firestore_conversation.nbr_messages = self.nbr_messages
+        self.firestore_conversation.last_input_is_question = self.last_input_is_question
+        self.firestore_conversation.replies_since_last_question = self.replies_since_last_question
+
+        pmrr = ''
+        for c in self.pmrr_interview_questions:
+            pmrr = pmrr + c
+        self.firestore_conversation.pmrr_interview_questions = pmrr
+        return
 
     def get_fire_object(self):
-        #
-        interview_firestore = InterviewFirestore(conversation_id=self.fire.conversation_id,
-                                                 name=self.name,
-                                                 job=self.job,
-                                                 episode_done=self.episode_done,
-                                                 bot_text_sv=self.conversation_sv.bot_text,
-                                                 user_text_sv=self.conversation_sv.user_text,
-                                                 bot_text_en=self.conversation_en.bot_text,
-                                                 user_text_en=self.conversation_en.user_text,
-                                                 more_information=self.more_information,
-                                                 questions=self.questions,
-                                                 last_input_is_question=self.last_input_is_question,
-                                                 nbr_replies=self.nbr_replies
-                                                 )
-        return interview_firestore
-
-
-class BlenderConversation:
-
-    def __init__(self, bot_text, user_text, tokenizer):
-        self.bot_text = bot_text
-        self.user_text = user_text
-        self.user_turn = None
-        self.tokenizer = tokenizer
-
-    def add_user_text(self, text):
-        if self.user_turn or self.user_turn is None:
-            self.user_text.append(text)
-            self.user_turn = False
-        else:
-            raise ValueError("It's the bot's turn to add a reply to the conversation")
-        return
-
-    def add_bot_text(self, text):
-        if not self.user_turn or self.user_turn is None:
-            self.bot_text.append(text)
-            self.user_turn = True
-        else:
-            raise ValueError("It's the user's turn to add an input to the conversation")
-        return
-
-    def pop(self):
-        if self.user_turn:
-            self.bot_text.pop()
-            self.user_turn = False
-        else:
-            self.user_text.pop()
-            self.user_turn = True
-        return
-
-    def get_dialogue_history(self, max_len=120):
-        # Returns string of the dialogue history with bot and user inputs separated with '\n'
-        # max_len set to default 100 as model has max input length 128 and we want some space for new input
-        history = ''
-        tokens_left = max_len
-        if self.user_turn:
-            # Start backwards from bot_text
-            for i in reversed(range(len(self.user_text))):
-                bot_text = self.bot_text[i]
-                user_text = self.user_text[i]
-                nbr_tokens = len(self.tokenizer(bot_text)['input_ids']) + len(self.tokenizer(user_text)['input_ids'])
-                if nbr_tokens < tokens_left:  # This is not fool proof as the model tokenizer tokenizes differently
-                    history = user_text + '\n' + bot_text + '\n' + history
-                    tokens_left -= (nbr_tokens + 2)
-                else:
-                    break
-
-        else:
-            # Start backwards from user_text
-            history = self.user_text[-1]
-            tokens_left -= len(self.tokenizer(history)['input_ids'])
-            for i in reversed(range(len(self.user_text) - 1)):
-                bot_text = self.bot_text[i]
-                user_text = self.user_text[i]
-                nbr_tokens = len(self.tokenizer(bot_text)['input_ids']) + len(self.tokenizer(user_text)['input_ids'])
-                if nbr_tokens < tokens_left:
-                    history = user_text + '\n' + bot_text + '\n' + history
-                    tokens_left -= (nbr_tokens + 2)
-                else:
-                    break
-        return history
-
-    def to_txt(self, description, file, error=None):
-        # Writes the dialogue to txt file in subdirectory
-        text = '####################################\n' + 'Conversation description: ' + description + '\n\n'
-        if self.user_turn:
-            for i in range(len(self.user_text)):
-                text = text + 'User>>> ' + self.user_text[i] + '\n Bot>>> ' + self.bot_text[i] + '\n'
-        else:
-            for i in range(len(self.bot_text)):
-                text = text + 'User>>> ' + self.user_text[i] + '\n Bot>>> ' + self.bot_text[i] + '\n'
-            text = text + 'User>>> ' + self.user_text[-1]
-
-        if error is None:
-            text = text + '\n\n'
-        else:
-            text = text + '\n' + 'Terminated due to {}'.format(error) + '\n\n'
-
-        with open(file, 'a') as f:
-            f.write(text)
-        return
-
-    def print_dialogue(self):
-        # Prints the dialogue
-        text = ''
-        if self.user_turn:
-            for i in range(len(self.user_text)):
-                text = text + 'User>>> ' + self.user_text[i] + '\n Bot>>> ' + self.bot_text[i] + '\n'
-        else:
-            for i in range(len(self.bot_text)):
-                text = text + 'User>>> ' + self.user_text[i] + '\n Bot>>> ' + self.bot_text[i] + '\n'
-            text = text + 'User>>> ' + self.user_text[-1]
-
-            print(text)
-        return
-
-    def get_nbr_interactions(self, nbr):
-        """Retrieves only the last nbr interactions in the conversation as a string formatted with \n separators"""
-        lines = deque()
-        assert not self.user_turn  # Needs to be bots turn for this method to be used
-        for i in range(nbr + 1):
-            backindex = -1 - i
-            lines.appendleft(self.user_text[backindex])
-            lines.appendleft(self.bot_text[backindex])
-        context = ''
-        for line in lines:
-            context = context + line + '\n'
-        context = context.rsplit('\n', 1)[0]
-        return context
-
-    def get_bot_replies(self):
-        return self.bot_text
-
-    def get_user_replies(self):
-        return self.user_text
-
-
-def read_questions(file_path):
-    # Reads interview questions from a text file, one question per line. '{}' in place where job should be inserted
-    with open(file_path, 'r') as f:
-        questions = f.readlines()
-    format_this = [True if '{}' in question else False for question in questions]
-    return zip(questions, format_this)
+        self.update_fire_object()
+        return self.firestore_conversation
