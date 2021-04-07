@@ -3,6 +3,7 @@ from googletrans import Translator
 import six
 from google.cloud import translate_v2 as translate
 
+
 import logging
 import os
 from pathlib import Path
@@ -13,11 +14,8 @@ class ChatTranslator:
 
     def __init__(self, default_translator='googletrans'):
         # Set this to your google api key location
-        if is_gcp_instance():
-            # Add a authentication to the Google translate.
-            pass
-
-        else:
+        if not is_gcp_instance():
+            # Add a authentication to the Google translate if we are not on GCP.
             json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
             os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = json_path.as_posix()
 
