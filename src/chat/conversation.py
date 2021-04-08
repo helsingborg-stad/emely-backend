@@ -1,12 +1,13 @@
 from dataclasses import dataclass, asdict
 from pathlib import Path
 
+
 @dataclass
 class FirestoreMessage(object):
     """ Dataclass used to push Message data to the Firestore database """
     conversation_id: str
     msg_nbr: int
-    who: str                    # 'user' or 'bot'
+    who: str  # 'user' or 'bot'
     created_at: str
     response_time: str
     lang: str
@@ -37,21 +38,20 @@ class FirestoreConversation(object):
     persona: str
     created_at: str
     lang: str
-    job: str = None
-    development_testing: bool = None
-    webapp_local: bool = None
-    webapp_url: str = None
-    webapp_version: str = None
-    webapp_git_build: str = None
+    development_testing: bool
+    webapp_local: bool
+    webapp_url: str
+    webapp_version: str
+    webapp_git_build: str
+    user_ip_number: str
     brain_url: str = None
     brain_version: str = None
     brain_git_build: str = None
-    user_ip_number: str = None
-
+    job: str = None
 
     # Updated attributes
     episode_done: bool = False
-    nbr_messages: int = -1
+    nbr_messages: int = 0
     last_input_is_question: bool = False
     replies_since_last_question: int = -1
     pmrr_interview_questions: str = '01234'  # TODO: FIX this predefined stuff
@@ -67,7 +67,9 @@ class FirestoreConversation(object):
 
 class FikaConversation:
     "Object that tracks the states of a conversation with fika Emely"
-    def __init__(self, firestore_conversation: FirestoreConversation, conversation_id, firestore_client):
+
+    def __init__(self, firestore_conversation: FirestoreConversation, conversation_id,
+                 firestore_conversation_collection):
         self.firestore_conversation = firestore_conversation
         self.name = firestore_conversation.name
         self.conversation_id = conversation_id  # TODO: Make sure this is passed
@@ -85,7 +87,8 @@ class FikaConversation:
         self._get_more_information()  # Updates self.change_subject
 
         # Non fire params
-        self.firestore_messages_collection = firestore_client.collection('messages').document(conversation_id)
+        self.firestore_messages_collection = firestore_conversation_collection.document(conversation_id).collection(
+            'messages')
 
         # Not used currently
         self.persona = ''
@@ -109,9 +112,9 @@ class FikaConversation:
         conversation_id = firestore_message.conversation_id
         self.nbr_messages += 1
         msg_nbr = firestore_message.msg_nbr
-        assert msg_nbr == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
+        assert msg_nbr == self.nbr_messages - 1, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
 
-        doc_ref = self.firestore_messages_collection.collection(conversation_id).document(str(msg_nbr)) #
+        doc_ref = self.firestore_messages_collection.document(str(msg_nbr))  #
         doc_ref.set(firestore_message.to_dict())
         return
 
@@ -137,7 +140,7 @@ class FikaConversation:
 
         return context
 
-    def update_fire_object(self):
+    def _update_fire_object(self):
         self.firestore_conversation.episode_done = self.episode_done
         self.firestore_conversation.nbr_messages = self.nbr_messages
         self.firestore_conversation.last_input_is_question = self.last_input_is_question
@@ -150,12 +153,13 @@ class FikaConversation:
         return
 
     def get_fire_object(self):
-        self.update_fire_object()
+        self._update_fire_object()
         return self.firestore_conversation
 
 
 class InterviewConversation:
-    def __init__(self, firestore_conversation: FirestoreConversation, conversation_id, firestore_client):
+    def __init__(self, firestore_conversation: FirestoreConversation, conversation_id,
+                 firestore_conversation_collection):
         self.firestore_conversation = firestore_conversation
         self.name = firestore_conversation.name
         self.job = firestore_conversation.job
@@ -174,7 +178,8 @@ class InterviewConversation:
         self._get_interview_questions()  # Updates self.change_subject
 
         # Non fire params
-        self.firestore_messages_collection = firestore_client.collection(u'messages').document(conversation_id)
+        self.firestore_messages_collection = firestore_conversation_collection.document(conversation_id).collection(
+            'messages')
 
         # Not used currently
         self.persona = ''
@@ -188,7 +193,7 @@ class InterviewConversation:
         msg_nbr = firestore_message.msg_nbr
         assert msg_nbr == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
 
-        doc_ref = self.firestore_messages_collection.document(msg_nbr)
+        doc_ref = self.firestore_messages_collection.document(str(msg_nbr))
         doc_ref.set(firestore_message.to_dict())
         return
 
@@ -230,7 +235,7 @@ class InterviewConversation:
 
         return context
 
-    def update_fire_object(self):
+    def _update_fire_object(self):
         self.firestore_conversation.episode_done = self.episode_done
         self.firestore_conversation.nbr_messages = self.nbr_messages
         self.firestore_conversation.last_input_is_question = self.last_input_is_question
@@ -243,5 +248,5 @@ class InterviewConversation:
         return
 
     def get_fire_object(self):
-        self.update_fire_object()
+        self._update_fire_object()
         return self.firestore_conversation

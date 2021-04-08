@@ -19,7 +19,6 @@ from firebase_admin import firestore
 from src.api.utils import is_gcp_instance
 from src.api.bodys import BrainMessage, UserMessage, InitBody
 from datetime import datetime
-import time
 
 
 class ChatWorld:
@@ -107,6 +106,7 @@ class ChatWorld:
         conversation_ref = self.firestore_conversation_collection.document()
         conversation_ref.set(fire_convo.to_dict())
         conversation_id = conversation_ref.id
+        print('Conversation id is: ', conversation_id)
 
         # Time
         webapp_creation_time = datetime.fromisoformat(init_body['created_at'])
@@ -123,12 +123,12 @@ class ChatWorld:
 
         # Create a FikaConversation
         new_conversation = FikaConversation(firestore_conversation=fire_convo, conversation_id=conversation_id,
-                                            firestore_client=self.firestore_client)
+                                            firestore_conversation_collection=self.firestore_conversation_collection)
         new_conversation.add_text(fire_msg)
 
-        # Update firestoreconversation and update it in database by overwriting
-        fire_convo = new_conversation.update_fire_object()
-        conversation_ref.set(fire_convo)
+        # Get updated firestoreconversation and update it in database by overwriting
+        fire_convo = new_conversation.get_fire_object()
+        conversation_ref.set(fire_convo.to_dict())
 
         response = BrainMessage(conversation_id=conversation_id,
                                 lang=init_body['lang'],
