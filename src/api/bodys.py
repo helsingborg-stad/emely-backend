@@ -1,6 +1,5 @@
 from enum import Enum
 from pydantic import BaseModel
-from utils import is_gcp_instance
 
 
 class PersonaEnum(str, Enum):

@@ -58,9 +58,6 @@ def new_chat(msg: InitBody, response: Response):
 
     brain_response = world.init_conversation(msg)
 
-
-    # TODO: Not hardcoded
-
     return brain_response
 
 
