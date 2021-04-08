@@ -64,15 +64,33 @@ class FirestoreConversation(object):
     def to_dict(self):
         return asdict(self)
 
+# TODO: Write superclasss
+# class Conversation:
+#     """Super class """
+#     def __init__(self):
+#
+#
+#     def add_text(self, firestore_message: FirestoreMessage):
+#         """ Pushes new message to database
+#         """
+#         self.nbr_messages += 1
+#         msg_nbr = firestore_message.msg_nbr
+#         assert msg_nbr == self.nbr_messages - 1, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
+#
+#         doc_ref = self.firestore_messages_collection.document(str(msg_nbr))  #
+#         doc_ref.set(firestore_message.to_dict())
+#         return
+
 
 class FikaConversation:
-    "Object that tracks the states of a conversation with fika Emely"
+    """Object that tracks the states of a conversation with fika Emely"""
 
     def __init__(self, firestore_conversation: FirestoreConversation, conversation_id,
                  firestore_conversation_collection):
         self.firestore_conversation = firestore_conversation
         self.name = firestore_conversation.name
         self.conversation_id = conversation_id  # TODO: Make sure this is passed
+        self.lang = firestore_conversation.lang
 
         # Attributes to update
         self.episode_done = firestore_conversation.episode_done
@@ -86,13 +104,26 @@ class FikaConversation:
         self.change_subject = None
         self._get_more_information()  # Updates self.change_subject
 
-        # Non fire params
+        # Firestore
         self.firestore_messages_collection = firestore_conversation_collection.document(conversation_id).collection(
             'messages')
+        self.firestore_conversation_ref = firestore_conversation_collection.document(conversation_id)
 
         # Not used currently
         self.persona = ''
         self.persona_length = 0  # len(self.tokenizer(self.persona)['input_ids'])
+
+    # TODO: Move to superclass
+    def add_text(self, firestore_message: FirestoreMessage):
+        """ Pushes new message to database
+        """
+        self.nbr_messages += 1
+        msg_nbr = firestore_message.msg_nbr
+        assert msg_nbr + 1 == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
+
+        doc_ref = self.firestore_messages_collection.document(str(msg_nbr))
+        doc_ref.set(firestore_message.to_dict())
+        return
 
     # TODO: Retrieve more information from database instead of from file
     def _get_more_information(self):
@@ -105,18 +136,6 @@ class FikaConversation:
         self.change_subject = text.split('\n')
         return
 
-    # TODO: Make sure this is used appropriately in worlds
-    def add_text(self, firestore_message: FirestoreMessage):
-        """ Pushes new message to database
-        """
-        conversation_id = firestore_message.conversation_id
-        self.nbr_messages += 1
-        msg_nbr = firestore_message.msg_nbr
-        assert msg_nbr == self.nbr_messages - 1, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
-
-        doc_ref = self.firestore_messages_collection.document(str(msg_nbr))  #
-        doc_ref.set(firestore_message.to_dict())
-        return
 
     def get_next_hardcoded_message(self):
         index = self.pmrr_more_information.pop(0)
@@ -129,11 +148,11 @@ class FikaConversation:
         nbr_replies_for_context = 4
         condition = self.nbr_messages - nbr_replies_for_context - 1
         docs = self.firestore_messages_collection.where('msg_nbr', '>=', condition).stream()
-        messages = [doc.to_dict for doc in docs]
-        messages.sort(key=lambda x: x.msg_nbr)
+        messages = [doc.to_dict() for doc in docs]
+        messages.sort(key=lambda x: x['msg_nbr'])
         context = ''
         for i, message in enumerate(messages):
-            if i == len(messages - 1):  #
+            if i == len(messages) - 1:  #
                 context = context + message['message_en']
             else:
                 context = context + message['message_en'] + '\n'
@@ -156,6 +175,20 @@ class FikaConversation:
         self._update_fire_object()
         return self.firestore_conversation
 
+    # TODO: MOve to superclass
+    def get_bot_replies(self):
+        docs = self.firestore_messages_collection.where('who', '==', 'bot').stream()
+        messages = [doc.to_dict() for doc in docs]
+        messages.sort(key=lambda x: x['msg_nbr'])
+        replies = [m['message_en'] for m in messages]
+        return replies
+
+    # TODO: Move to superclass(does it work despite unique update_fire_object fucntions?)
+    def push_to_firestore(self):
+        self._update_fire_object()
+        self.firestore_conversation_ref.set(self.firestore_conversation.to_dict())
+        return
+
 
 class InterviewConversation:
     def __init__(self, firestore_conversation: FirestoreConversation, conversation_id,
@@ -164,6 +197,7 @@ class InterviewConversation:
         self.name = firestore_conversation.name
         self.job = firestore_conversation.job
         self.conversation_id = conversation_id  # TODO: Make sure this is passed
+        self.lang = firestore_conversation.lang
 
         # Attributes to update
         self.episode_done = firestore_conversation.episode_done
@@ -177,21 +211,23 @@ class InterviewConversation:
         self.interview_questions = None
         self._get_interview_questions()  # Updates self.change_subject
 
-        # Non fire params
+        # Firestore
         self.firestore_messages_collection = firestore_conversation_collection.document(conversation_id).collection(
             'messages')
+        self.firestore_conversation_ref = firestore_conversation_collection.document(conversation_id)
+
 
         # Not used currently
         self.persona = ''
         self.persona_length = 0  # len(self.tokenizer(self.persona)['input_ids'])
 
-    # TODO: Make sure this is called in worlds
+    # TODO: Move to superclass
     def add_text(self, firestore_message: FirestoreMessage):
         """ Pushes new message to database
         """
         self.nbr_messages += 1
         msg_nbr = firestore_message.msg_nbr
-        assert msg_nbr == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
+        assert msg_nbr + 1 == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
 
         doc_ref = self.firestore_messages_collection.document(str(msg_nbr))
         doc_ref.set(firestore_message.to_dict())
@@ -224,8 +260,8 @@ class InterviewConversation:
         nbr_replies_for_context = self.replies_since_last_question * 2  #
         condition = self.nbr_messages - nbr_replies_for_context
         docs = self.firestore_messages_collection.where('msg_nbr', '>=', condition).stream()
-        messages = [doc.to_dict for doc in docs]
-        messages.sort(key=lambda x: x.msg_nbr)
+        messages = [doc.to_dict() for doc in docs]
+        messages.sort(key=lambda x: x['msg_nbr'])
         context = ''
         for i, message in enumerate(messages):
             if i == len(messages) - 1:  # We don't want a '\n' after the last line
@@ -234,6 +270,15 @@ class InterviewConversation:
                 context = context + message['message_en'] + '\n'
 
         return context
+
+    # TODO: MOve to superclass
+    def get_bot_replies(self):
+        docs = self.firestore_messages_collection.where('who', '==', 'bot').stream()
+        messages = [doc.to_dict() for doc in docs]
+        messages.sort(key=lambda x: x['msg_nbr'])
+        replies = [m['message_en'] for m in messages]
+        return replies
+
 
     def _update_fire_object(self):
         self.firestore_conversation.episode_done = self.episode_done
@@ -250,3 +295,9 @@ class InterviewConversation:
     def get_fire_object(self):
         self._update_fire_object()
         return self.firestore_conversation
+
+    # TODO: Move to superclass(does it work despite unique update_fire_object fucntions?)
+    def push_to_firestore(self):
+        self._update_fire_object()
+        self.firestore_conversation_ref.set(self.firestore_conversation.to_dict())
+        return

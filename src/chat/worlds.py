@@ -2,22 +2,23 @@ from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration
     BlenderbotSmallForConditionalGeneration
 from torch import no_grad
 import torch
-from src.chat.conversation import FikaConversation, InterviewConversation, FirestoreConversation, FirestoreMessage
-from src.chat.translate import ChatTranslator
 
 import re
 from itertools import product
 from difflib import SequenceMatcher
 import random
 
-import logging
 from pathlib import Path
 
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+
+from src.chat.conversation import FikaConversation, InterviewConversation, FirestoreConversation, FirestoreMessage
+from src.chat.translate import ChatTranslator
 from src.api.utils import is_gcp_instance
 from src.api.bodys import BrainMessage, UserMessage, InitBody
+from src.chat.utils import user_message_to_firestore_message, firestore_message_to_brain_message
 from datetime import datetime
 
 
@@ -60,9 +61,6 @@ class ChatWorld:
         self.greetings = ['Hej {}, jag heter Emely! Hur är det med dig?',
                           'Hej {}! Mitt namn är Emely. Vad vill du prata om idag?',
                           'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!']
-
-        # TODO: Work this through, should we even log here? There's another logger in translate
-        logging.basicConfig(filename='worlds.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
 
     # TODO: Deprecate function after deploying models to gcp!
     def load_model(self):
@@ -110,12 +108,12 @@ class ChatWorld:
 
         # Time
         webapp_creation_time = datetime.fromisoformat(init_body['created_at'])
-        timestamp = datetime.now()
-        response_time = str(timestamp - webapp_creation_time)
+        init_timestamp = datetime.now()
+        response_time = str(init_timestamp - webapp_creation_time)
 
         # Create FirestoreMessage
         fire_msg = FirestoreMessage(conversation_id=conversation_id,
-                                    msg_nbr=0, who='bot', created_at=str(timestamp), response_time=response_time,
+                                    msg_nbr=0, who='bot', created_at=str(init_timestamp), response_time=response_time,
                                     lang=fire_convo.lang, message=greeting, message_en=greeting_en, case_type='None',
                                     recording_used=False, removed_from_message='', is_more_information=False,
                                     is_init_message=True, is_predefined_question=False, is_hardcoded=True,
@@ -134,74 +132,133 @@ class ChatWorld:
                                 lang=init_body['lang'],
                                 message=greeting,
                                 is_init_message=True,
-                                hardcoded_message=True,
+                                is_hardcoded=True,
                                 error_messages='None')
 
         return response
 
-    def observe(self, user_input, conversation_id):
+    def observe(self, user_request: UserMessage):
         # Observe the user input, translate and update internal states
         # Check if user wants to quit/no questions left --> self.episode_done = True
+        observe_timestamp = datetime.now()
 
-        conversation_doc = self.firestore_conversation_collection.document(conversation_id)
+        # Extract information and translate message
+        conversation_id = user_request.conversation_id
+        message = user_request.message
+        message_en = self.translator.translate(message, src='sv', target='en')
 
-        doc = self.db.document(str(conversation_id)).get()
-        fika = FikaFirestore.from_dict(doc.to_dict())
+        # Create conversation from firestore data
+        fire_convo = self._get_fire_conversation(conversation_id)
+        conversation = FikaConversation(firestore_conversation=fire_convo, conversation_id=conversation_id,
+                                        firestore_conversation_collection=self.firestore_conversation_collection)
 
-        dialogue = FikaConversation(fire=fika, tokenizer=self.tokenizer)
-
-        translated_input = self.translator.translate(user_input, src='sv', target='en')
-        dialogue.conversation_sv.add_user_text(user_input)
-        dialogue.conversation_en.add_user_text(translated_input)
+        # Convert user message to firestore message and add it to conversation
+        firestore_message = user_message_to_firestore_message(user_message=user_request,
+                                                              translated_message=message_en,
+                                                              msg_nbr=conversation.nbr_messages)
+        conversation.add_text(firestore_message)
 
         # Set episode done if exit condition is met.
-        if user_input.lower().replace(' ', '') in self.stop_tokens:
-            dialogue.episode_done = True
-        return dialogue.episode_done, dialogue
+        if message.lower().replace(' ', '') in self.stop_tokens:
+            conversation.episode_done = True
+        return conversation, observe_timestamp
 
-    def act(self, dialogue):
-        if not dialogue.episode_done:
-            context = dialogue.get_context()
-            # TODO: Replace with call to model on gcp funciton
-            inputs = self.tokenizer([context], return_tensors='pt')
+    def act(self, conversation: FikaConversation, observe_timestamp):
+        if not conversation.episode_done:
+            # Preparation for model
+            context = conversation.get_input_with_context()
+            inputs = self.tokenizer([context], return_tensors='pt')  # TODO: Replace with call to model on gcp funciton
             inputs.to(self.device)
             with no_grad():
                 output_tokens = self.model.generate(**inputs)
             reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
-            # TODO: End
-            if not self.no_correction:  # Removes repetitive statements
-                reply_en = self._correct_reply(reply_en, dialogue)
+
+            if self.no_correction:  # Reply isn't checked/modified in any way. Used for testing purposes
+                reply_sv = self.translator.translate(reply_en, src='en', target='sv')
+                removed_from_message = ''
+                case = 'no_correction'
+                is_hardcoded = False
+            else:  # Removes repetitive statements
+                reply_en, removed_from_message = self._correct_reply(reply_en, conversation)
                 if len(reply_en) < 3:  # TODO: Move the popping and length check into correct reply
+                    removed_from_message = ''  # We're forcing a new hardcode anyway
+                    case = 'hardcode'
+                    is_hardcoded = True
                     try:
-                        reply_sv = dialogue.change_subject.pop(0)
+                        reply_sv = conversation.get_next_hardcoded_message()
                         reply_en = self.translator.translate(reply_sv, src='sv', target='en')
                     except IndexError:
-                        dialogue.episode_done = True
+                        conversation.episode_done = True
                         return 'Nu måste jag gå. Det var kul att prata med dig! Hejdå!'
                 else:
                     reply_sv = self.translator.translate(reply_en, src='en', target='sv')
-            else:
-                reply_sv = self.translator.translate(reply_en, src='en', target='sv')
+                    case = 'correction'
+                    is_hardcoded = False
 
-            dialogue.conversation_sv.add_bot_text(reply_sv)
-            dialogue.conversation_en.add_bot_text(reply_en)
+            # Create FirestoreMessage
+            act_timestamp = datetime.now()
+            response_time = str(act_timestamp - observe_timestamp)
+            firestore_message = FirestoreMessage(conversation_id=conversation.conversation_id,
+                                                 msg_nbr=conversation.nbr_messages, who='bot',
+                                                 created_at=str(act_timestamp),
+                                                 response_time=response_time,
+                                                 lang=conversation.lang, message=reply_sv,
+                                                 message_en=reply_en,
+                                                 case_type=case,
+                                                 recording_used=False, removed_from_message=removed_from_message,
+                                                 is_more_information=False,
+                                                 is_init_message=False, is_predefined_question=False,
+                                                 is_hardcoded=is_hardcoded,
+                                                 error_messages='')
+            conversation.add_text(firestore_message)
 
-            # Update firestore_client
-            fika_fire = dialogue.get_fire_object()
-            doc_ref = self.db.document(str(dialogue.conversation_id))
-            doc_ref.set(fika_fire.to_dict())
+            # Create BrainMessage
+            brain_response = firestore_message_to_brain_message(firestore_message)
 
-            return reply_sv
+            # Get firestore object and push to database
+            fire_conversation = conversation.get_fire_object()
+            conversation_ref = self.firestore_conversation_collection.document(conversation.conversation_id)
+            conversation_ref.set(fire_conversation.to_dict())
 
-        else:
-            self.db.document(str(dialogue.conversation_id)).delete()
-            return 'Nu måste jag gå. Det var kul att prata med dig! Hejdå!'  # TODO: Fix flexible
+            return brain_response
 
-    def _correct_reply(self, reply, dialogue):
+        else:  # Episode is done
+            # Time
+            act_timestamp = datetime.now()
+            response_time = str(act_timestamp - observe_timestamp)
+
+            # Message
+            bye_sv = 'Nu måste jag gå. Det var kul att prata med dig! Hejdå!'
+            bye_en = 'I have to leave now. Bye!'
+
+            # Get firestore and push to database
+            firestore_message = FirestoreMessage(conversation_id=conversation.conversation_id,
+                                        msg_nbr=conversation.nbr_messages, who='bot',
+                                        created_at=str(act_timestamp),
+                                        response_time=response_time,
+                                        lang=conversation.lang, message=bye_sv,
+                                        message_en=bye_en,
+                                        case_type='episode_done',
+                                        recording_used=False, removed_from_message='',
+                                        is_more_information=False,
+                                        is_init_message=False, is_predefined_question=False,
+                                        is_hardcoded=True,
+                                        error_messages='')
+            conversation.add_text(firestore_message)
+            brain_response = firestore_message_to_brain_message(firestore_message)
+
+            fire_conversation = conversation.get_fire_object()
+            conversation_ref = self.firestore_conversation_collection.document(conversation.conversation_id)
+            conversation_ref.set(fire_conversation.to_dict())
+
+            return brain_response
+
+    # TODO: Create superclass function which can be called with some parameters specific for fika/interview?
+    def _correct_reply(self, reply, conversation):
         # For every bot reply, check what sentences are repetitive and remove that part only.
         # Current check will discard a sentence where she asks something new but with a little detail
 
-        previous_replies = dialogue.conversation_en.get_bot_replies()
+        previous_replies = conversation.get_bot_replies()
 
         if len(previous_replies) == 0:
             return reply
@@ -224,7 +281,7 @@ class ChatWorld:
         for i in range(len(sentences)):
             combos = list(product([sentences[i]], previous_sentences))
             ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(ratios) < 0.5:
+            if max(ratios) < 0.75:
                 keep_idx.append(i)
 
         # Emely cannot say that she's also a {job}, add
@@ -236,34 +293,31 @@ class ChatWorld:
             lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
             if max(lie_probabilities) < 0.65:
                 temp_idx.append(i)
-            else:
-                logging.warning('Identified lie removed')
+
         keep_idx = temp_idx
 
         if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
-            return reply
+            return reply, ''
         else:
-            new_reply = ''
-            for i in keep_idx:
-                try:
-                    new_reply = new_reply + sentences[i] + separators[i] + ' '
-                except IndexError:
-                    new_reply = new_reply + sentences[i]
-            if len(new_reply) > 3:
-                logging.warning('Corrected: {} \n to: {}'.format(reply, new_reply))
-            return new_reply
+            new_reply = ''  # Reply without repetitions
+            removed_from_message = ''  # What we remove
+            for i in range(len(sentences)):
+                if i in keep_idx:
+                    try:
+                        new_reply = new_reply + sentences[i] + separators[i] + ' '
+                    except IndexError:
+                        new_reply = new_reply + sentences[i]
+                else:
+                    removed_from_message = removed_from_message + sentences[i] + ' '
 
-    # TODO: Deprecate
-    def save(self, conversation_id):
-        dialogue = self.dialogues[conversation_id]
-        description = self.model_name
-        file_path = Path(__file__).parents[2] / 'models' / self.model_name / 'chat_conversation.txt'
-        dialogue.conversation_sv.to_txt(description, file=file_path)
-        return
+            return new_reply, removed_from_message
 
-    def one_step_back(self, conversation_id):
-        last_reply = self.dialogues[conversation_id].interview.one_step_back()
-        return last_reply
+    # TODO: Move to super
+    def _get_fire_conversation(self, conversation_id):
+        conversation_ref = self.firestore_conversation_collection.document(conversation_id)
+        doc = conversation_ref.get()
+        fire_conversation = FirestoreConversation.from_dict(doc.to_dict())
+        return fire_conversation
 
 
 class InterviewWorld(ChatWorld):
@@ -406,7 +460,8 @@ class InterviewWorld(ChatWorld):
             doc_ref.set(interview_fire.to_dict())
             return reply_sv
 
-    def _correct_reply(self, reply, interview):
+    # TODO: Implement returning removed from message
+    def _correct_reply(self, reply, conversation):
         # For every bot reply, check what sentences are repetitive and remove that part only.
         # Current check will discard a sentence where she asks something new but with a little detail
         previous_replies = interview.conversation_en.get_bot_replies()
@@ -444,8 +499,7 @@ class InterviewWorld(ChatWorld):
             lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
             if max(lie_probabilities) < 0.75:
                 temp_idx.append(i)
-            else:
-                logging.warning('Identified lie removed')
+
         keep_idx = temp_idx
 
         if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
@@ -457,18 +511,12 @@ class InterviewWorld(ChatWorld):
                     new_reply = new_reply + sentences[i] + separators[i] + ' '
                 except IndexError:
                     new_reply = new_reply + sentences[i]
-            if len(new_reply) > 3:
-                logging.warning('Corrected: {} \n to: {}'.format(reply, new_reply))
+
             return new_reply
 
-    # Deprecated because ouf firestore_client situation
-    # def one_step_back(self, conversation_id):
-    #     last_reply = self.interviews[conversation_id].one_step_back()
-    #     return last_reply
-
-    # def save(self, conversation_id):
-    #     dialogue = self.interviews[conversation_id]
-    #     description = self.model_name
-    #     file_path = Path(__file__).parents[2] / 'models' / self.model_name / 'interview_conversation.txt'
-    #     dialogue.conversation_sv.to_txt(description, file_path)
-    #     return
+    # TODO: Move to super
+    def _get_fire_conversation(self, conversation_id):
+        conversation_ref = self.firestore_conversation_collection.document(conversation_id)
+        doc = conversation_ref.get()
+        fire_conversation = FirestoreConversation.from_dict(doc.to_dict())
+        return fire_conversation

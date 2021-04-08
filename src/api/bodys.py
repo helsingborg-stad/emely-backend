@@ -76,5 +76,5 @@ class BrainMessage(BaseModel):
     lang: LanguageEnum
     message: str
     is_init_message: bool
-    hardcoded_message: bool
+    is_hardcoded: bool
     error_messages: str

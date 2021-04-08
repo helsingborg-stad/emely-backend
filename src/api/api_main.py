@@ -27,12 +27,12 @@ async def init_config():
         print('Downloading models from bucket')
 
     global interview_world, fika_world
-    interview_world.load_model()
+    # interview_world.load_model()
     fika_world.load_model()
     return
 
 
-#brain.add_event_handler("startup", init_config)
+brain.add_event_handler("startup", init_config)
 
 
 @brain.post('/init', status_code=201)
@@ -50,7 +50,7 @@ def new_chat(msg: InitBody, response: Response):
                                           lang='sv',
                                           message='Hello, this is a hardcoded test for interviewworld which isn not done',
                                           is_init_message='true',
-                                          hardcoded_message='true',
+                                          is_hardcoded='true',
                                           error_messages='None')
             return brain_response
     else:
@@ -65,11 +65,13 @@ def new_chat(msg: InitBody, response: Response):
 def fika(msg: UserMessage):
     conversation_id = msg.conversation_id
     # TODO: Not hardcoded
+    conversation, observe_timestamp = fika_world.observe(user_request=msg)
+    brain_response = fika_world.act(conversation, observe_timestamp)
     return BrainMessage(conversation_id=conversation_id,
                         lang='sv',
                         message='This is a hardcoded test message',
                         is_init_message=False,
-                        hardcoded_message=True,
+                        is_hardcoded=True,
                         error_messages='None'
                         )
 
@@ -82,7 +84,7 @@ def interview(msg: UserMessage):
                         lang='sv',
                         message='This is a hardcoded test message',
                         is_init_message=False,
-                        hardcoded_message=True,
+                        is_hardcoded=True,
                         error_messages='None')
 
 
@@ -94,5 +96,5 @@ def chat(msg: UserMessage, response: Response):
                         lang='sv',
                         message='This is a hardcoded test message',
                         is_init_message=False,
-                        hardcoded_message=True,
+                        is_hardcoded=True,
                         error_messages='None')
