@@ -9,3 +9,13 @@ def is_gcp_instance():
         return False
     return True
 
+# TODO: Implement this function
+def update_firestore_conversation(collection_db, firestore_conversation):
+    raise NotImplementedError
+
+# TODO: Implement
+def update_firestore_message(collection_db, firestore_message):
+    raise NotImplementedError
+
+
+

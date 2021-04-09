@@ -22,6 +22,7 @@ from src.chat.utils import user_message_to_firestore_message, firestore_message_
 from datetime import datetime
 
 
+# TODO: Change name to FikaWorld and implement parent class ChatWorld
 class ChatWorld:
 
     def __init__(self, **kwargs):
@@ -95,19 +96,18 @@ class ChatWorld:
         greeting_en = 'Hi {}, my name is Emely. How are you today?'.format(name)
 
         # Convert to dict and remove data not needed
-        init_body = init_body.dict()
-        init_body.pop('password')
+        initial_information = init_body.dict()
+        initial_information.pop('password')
 
         # Create FirestoreConversation, push to db and get conversation_id
-        fire_convo = FirestoreConversation.from_dict(init_body)
+        fire_convo = FirestoreConversation.from_dict(initial_information)
         print('Is all the information needed for firestoreconversation in init_body?')  # TODO:Check
         conversation_ref = self.firestore_conversation_collection.document()
         conversation_ref.set(fire_convo.to_dict())
         conversation_id = conversation_ref.id
-        print('Conversation id is: ', conversation_id)
 
         # Time
-        webapp_creation_time = datetime.fromisoformat(init_body['created_at'])
+        webapp_creation_time = datetime.fromisoformat(initial_information['created_at'])
         init_timestamp = datetime.now()
         response_time = str(init_timestamp - webapp_creation_time)
 
@@ -124,16 +124,16 @@ class ChatWorld:
                                             firestore_conversation_collection=self.firestore_conversation_collection)
         new_conversation.add_text(fire_msg)
 
-        # Get updated firestoreconversation and update it in database by overwriting
-        fire_convo = new_conversation.get_fire_object()
-        conversation_ref.set(fire_convo.to_dict())
+        # Update the firestore conversation and push it to firestore
+        new_conversation.push_to_firestore()
 
+        # Create response
         response = BrainMessage(conversation_id=conversation_id,
-                                lang=init_body['lang'],
+                                lang=initial_information['lang'],
                                 message=greeting,
                                 is_init_message=True,
                                 is_hardcoded=True,
-                                error_messages='None')
+                                error_messages='')
 
         return response
 
@@ -215,10 +215,8 @@ class ChatWorld:
             # Create BrainMessage
             brain_response = firestore_message_to_brain_message(firestore_message)
 
-            # Get firestore object and push to database
-            fire_conversation = conversation.get_fire_object()
-            conversation_ref = self.firestore_conversation_collection.document(conversation.conversation_id)
-            conversation_ref.set(fire_conversation.to_dict())
+            # Push to firestore
+            conversation.push_to_firestore()
 
             return brain_response
 
@@ -233,17 +231,17 @@ class ChatWorld:
 
             # Get firestore and push to database
             firestore_message = FirestoreMessage(conversation_id=conversation.conversation_id,
-                                        msg_nbr=conversation.nbr_messages, who='bot',
-                                        created_at=str(act_timestamp),
-                                        response_time=response_time,
-                                        lang=conversation.lang, message=bye_sv,
-                                        message_en=bye_en,
-                                        case_type='episode_done',
-                                        recording_used=False, removed_from_message='',
-                                        is_more_information=False,
-                                        is_init_message=False, is_predefined_question=False,
-                                        is_hardcoded=True,
-                                        error_messages='')
+                                                 msg_nbr=conversation.nbr_messages, who='bot',
+                                                 created_at=str(act_timestamp),
+                                                 response_time=response_time,
+                                                 lang=conversation.lang, message=bye_sv,
+                                                 message_en=bye_en,
+                                                 case_type='episode_done',
+                                                 recording_used=False, removed_from_message='',
+                                                 is_more_information=False,
+                                                 is_init_message=False, is_predefined_question=False,
+                                                 is_hardcoded=True,
+                                                 error_messages='')
             conversation.add_text(firestore_message)
             brain_response = firestore_message_to_brain_message(firestore_message)
 
@@ -333,57 +331,94 @@ class InterviewWorld(ChatWorld):
         # TODO: Attribute for brain api
         # self.brain_api = pointer_to_gcp_
 
-        # TODO: Set this locally in observe and act
-        self.firestore_message_collection = None
-
-    def init_conversation(self, conversation_id, name, **kwargs):
+    def init_conversation(self, init_body: InitBody):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
-        job = kwargs['job']
-        name = name.capitalize()
+
+        # Creates greeting message
+        job = init_body.job
+        name = init_body.name.capitalize()
         greeting = random.choice(self.greetings).format(name)
         greeting_en = 'Hello, {}! Welcome to your interview! How are you?'.format(name)
 
-        # Create new fire object
-        interview_fire = InterviewFirestore(conversation_id=conversation_id, name=name, job=job)
-        new_interview = InterviewConversation(fire=interview_fire, tokenizer=self.tokenizer)
-        new_interview.conversation_en.add_bot_text(greeting_en)
-        new_interview.conversation_sv.add_bot_text(greeting)
+        # Convert to dict and remove data not needed
+        initial_information = init_body.dict()
+        initial_information.pop('password')
 
-        # Get updated fire object and push it to firestore_client
-        interview_fire = new_interview.get_fire_object()
-        doc_ref = self.db.document(str(conversation_id))
-        doc_ref.set(interview_fire.to_dict())
+        # Create FirestoreConversation, push to db and get conversation_id
+        fire_convo = FirestoreConversation.from_dict(initial_information)
+        print('Is all the information needed for firestoreconversation in init_body?')  # TODO:Check
+        conversation_ref = self.firestore_conversation_collection.document()
+        conversation_ref.set(fire_convo.to_dict())
+        conversation_id = conversation_ref.id
 
-        return greeting
+        # Time
+        webapp_creation_time = datetime.fromisoformat(initial_information['created_at'])
+        init_timestamp = datetime.now()
+        response_time = str(init_timestamp - webapp_creation_time)
 
-    def observe(self, user_input, conversation_id):
+        # Create FirestoreMessage
+        fire_msg = FirestoreMessage(conversation_id=conversation_id,
+                                    msg_nbr=0, who='bot', created_at=str(init_timestamp), response_time=response_time,
+                                    lang=fire_convo.lang, message=greeting, message_en=greeting_en, case_type='None',
+                                    recording_used=False, removed_from_message='', is_more_information=False,
+                                    is_init_message=True, is_predefined_question=False, is_hardcoded=True,
+                                    error_messages='')
+
+        # Create InterviewConversation
+        new_conversation = InterviewConversation(firestore_conversation=fire_convo, conversation_id=conversation_id,
+                                                 firestore_conversation_collection=self.firestore_conversation_collection)
+        new_conversation.add_text(fire_msg)
+
+        # Update the firestore conversation and push it to firestore
+        new_conversation.push_to_firestore()
+
+        # Create response
+        response = BrainMessage(conversation_id=conversation_id,
+                                lang=initial_information['lang'],
+                                message=greeting,
+                                is_init_message=True,
+                                is_hardcoded=True,
+                                error_messages='')
+
+        return response
+
+    def observe(self, user_request: UserMessage):
         # Observe the user input, translate and update internal states.
         # Returns boolean indicating if interview episode is done
         # We assume the user_input is always grammatically correct!
+        observe_timestamp = datetime.now()
 
-        doc = self.db.document(str(conversation_id)).get()
-        fire_interview = InterviewFirestore.from_dict(doc.to_dict())
+        # Extract information and translate message
+        conversation_id = user_request.conversation_id
+        message = user_request.message
+        message_en = self.translator.translate(message, src='sv', target='en')
 
-        interview = InterviewConversation(fire=fire_interview, tokenizer=self.tokenizer)
+        # Create conversation from firestore data
+        fire_convo = self._get_fire_conversation(conversation_id)
+        interview = InterviewConversation(firestore_conversation=fire_convo, conversation_id=conversation_id,
+                                          firestore_conversation_collection=self.firestore_conversation_collection)
 
-        if '?' in user_input:
+        # Convert user message to firestore message and add it to conversation
+        firestore_message = user_message_to_firestore_message(user_message=user_request,
+                                                              translated_message=message_en,
+                                                              msg_nbr=interview.nbr_messages)
+        interview.add_text(firestore_message)
+
+        # Update states
+        if '?' in message:
             interview.last_input_is_question = True
         else:
             interview.last_input_is_question = False
 
-        translated_input = self.translator.translate(user_input, src='sv', target='en')
-        interview.conversation_sv.add_user_text(user_input)
-        interview.conversation_en.add_user_text(translated_input)
-
         # Set episode done if exit condition is met.
-        if interview.nbr_replies == self.max_replies and len(
-                interview.questions) == 0 \
-                or user_input.lower().replace(' ', '') in self.stop_tokens:
+        if interview.replies_since_last_question == self.max_replies and len(
+                interview.pmrr_interview_questions) == 0 \
+                or message.lower().replace(' ', '') in self.stop_tokens:
             interview.episode_done = True
 
-        return interview.episode_done, interview
+        return interview, observe_timestamp
 
-    def act(self, interview):
+    def act(self, interview: InterviewConversation, observe_timestamp):
         """There are four cases we can encounter that we treat differently:
          1. No more interview questions         --> End conversation
          2. Model has chatted freely for a bit  --> Force next interview questions
@@ -394,77 +429,113 @@ class InterviewWorld(ChatWorld):
 
         if interview.episode_done:
             # Case 1
-            # interview.save()
-            self.db.document(str(interview.conversation_id)).delete()
-            bye = 'Tack för din tid, det var trevligt att få intervjua dig!'
-            return bye
+            case = '1'
+
+            # Data for FireMessage
+            is_hardcoded = True
+            is_predefined_question = False
+            is_more_information = False
+            removed_from_message = ''
+
+            reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig!'
+            reply_en = 'Thanks for your time, it was nice to interview you!'
         elif interview.nbr_replies == self.max_replies and not interview.last_input_is_question:
             # Case 2
+            case = '2'
+
+            # Data for FireMessage
+            is_hardcoded = True
+            is_predefined_question = True
+            is_more_information = False
+            removed_from_message = ''
+
             interview.nbr_replies = 0
-            interview_question = interview.questions.pop(0)
-            interview_question_en = self.translator.translate(interview_question, src='sv', target='en')
-            interview.conversation_sv.add_bot_text(interview_question)
-            interview.conversation_en.add_bot_text(interview_question_en)
+            reply_sv = interview.get_next_interview_question()
+            reply_en = self.translator.translate(reply_sv, src='sv', target='en')
 
-            # Update firestore_client
-            interview_fire = interview.get_fire_object()
-            doc_ref = self.db.document(str(interview.conversation_id))
-            doc_ref.set(interview_fire.to_dict())
-            return interview_question
-        else:
-            context = interview.get_context()
+        else:  # Case 3 or 4 - Model acts
 
+            # Model call
+            context = interview.get_input_with_context()
             # TODO: Call model from other gcp function
             inputs = self.tokenizer([context], return_tensors='pt')
             inputs.to(self.device)
-
             with no_grad():
                 output_tokens = self.model.generate(**inputs)
                 reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
-            # TODO: end
 
-            if self.no_correction:
-                pass
-            else:
-                reply_en = self._correct_reply(reply_en, interview)
+            if not self.no_correction:
+                reply_en, removed_from_message = self._correct_reply(reply_en, interview)
+
             # _correct_reply can return empty string -> force 'more info reply' (commented force new question)
             if len(reply_en) < 3:
-                # interview.nbr_replies = 0
-                # reply_sv = interview.questions.pop(0)
-                if len(interview.questions) == 5:
-                    reply_sv = interview.questions.pop(0)
-                    reply_en = self.translator.translate(reply_sv, src='sv', target='en')
+                # Data for FireMessage
+                is_more_information = True
+                is_hardcoded = True
+                removed_from_message = ''
+
+                # TODO: Handle the greeting stage - we don't want a more info reply in the beginning...
+                reply_sv, contains_question = interview.get_next_more_information()
+                reply_en = self.translator.translate(reply_sv, src='sv', target='en')
+
+                if contains_question:
                     interview.nbr_replies = 0
+                    is_predefined_question = True
                 else:
-                    try:
-                        reply_sv = interview.more_information.pop()
-                    except IndexError:
-                        reply_sv = 'Jag förstår. Kan du berätta lite mer om det?'
-                    reply_en = self.translator.translate(reply_sv, src='sv', target='en')
                     interview.nbr_replies += 1
+                    is_predefined_question = False
+
             elif interview.nbr_replies == self.max_replies and interview.last_input_is_question:
                 # Case 3 - Add new question to end of model reply
-                reply_sv = self.translator.translate(reply_en, src='en', target='sv') + ' ' + interview.questions.pop(0)
+                case = '3'
+
+                # Data for FireMessage
+                is_hardcoded = False
+                is_predefined_question = True
+                is_more_information = False
+
+                reply_sv = self.translator.translate(reply_en, src='en', target='sv') + ' ' + interview.get_next_interview_question()
                 reply_en = self.translator.translate(reply_sv, src='sv', target='en')
                 interview.nbr_replies = 0
             else:
                 # Case 4
+                case = '4'
+
+                # Data for FireMessage
+                is_hardcoded = False
+                is_predefined_question = False
+                is_more_information = False
+
                 interview.nbr_replies += 1
                 reply_sv = self.translator.translate(reply_en, src='en', target='sv')
-            interview.conversation_sv.add_bot_text(reply_sv)
-            interview.conversation_en.add_bot_text(reply_en)
 
-            # Update firestore_client
-            interview_fire = interview.get_fire_object()
-            doc_ref = self.db.document(str(interview.conversation_id))
-            doc_ref.set(interview_fire.to_dict())
-            return reply_sv
+            # Time
+            act_timestamp = datetime.now()
+            response_time = str(act_timestamp - observe_timestamp)
 
-    # TODO: Implement returning removed from message
+            # Create a firestoremessage and add it
+            firestore_message = FirestoreMessage(conversation_id=interview.conversation_id,
+                                                 msg_nbr=interview.nbr_messages, who='bot',
+                                                 created_at=str(act_timestamp),
+                                                 response_time=response_time,
+                                                 lang=interview.lang, message=reply_sv,
+                                                 message_en=reply_en,
+                                                 case_type=case,
+                                                 recording_used=False, removed_from_message=removed_from_message,
+                                                 is_more_information=is_more_information,
+                                                 is_init_message=False, is_predefined_question=is_predefined_question,
+                                                 is_hardcoded=is_hardcoded,
+                                                 error_messages='')
+            brain_response = firestore_message_to_brain_message(firestore_message)
+            interview.add_text(firestore_message)
+            interview.push_to_firestore()
+
+            return brain_response
+
     def _correct_reply(self, reply, conversation):
         # For every bot reply, check what sentences are repetitive and remove that part only.
         # Current check will discard a sentence where she asks something new but with a little detail
-        previous_replies = interview.conversation_en.get_bot_replies()
+        previous_replies = conversation.get_bot_replies()
 
         if len(previous_replies) == 0:
             return reply
@@ -491,7 +562,7 @@ class InterviewWorld(ChatWorld):
                 keep_idx.append(i)
 
         # Emely cannot say that she's also a {job}, add
-        lies = ['I am a {}'.format(interview.job),
+        lies = ['I am a {}'.format(conversation.job),
                 'do you have any hobbies?']
         temp_idx = []
         for i in keep_idx:
@@ -503,16 +574,20 @@ class InterviewWorld(ChatWorld):
         keep_idx = temp_idx
 
         if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
-            return reply
+            return reply, ''
         else:
-            new_reply = ''
-            for i in keep_idx:
-                try:
-                    new_reply = new_reply + sentences[i] + separators[i] + ' '
-                except IndexError:
-                    new_reply = new_reply + sentences[i]
+            new_reply = ''  # Reply without repetitions
+            removed_from_message = ''  # What we remove
+            for i in range(len(sentences)):
+                if i in keep_idx:
+                    try:
+                        new_reply = new_reply + sentences[i] + separators[i] + ' '
+                    except IndexError:
+                        new_reply = new_reply + sentences[i]
+                else:
+                    removed_from_message = removed_from_message + sentences[i] + ' '
 
-            return new_reply
+            return new_reply, removed_from_message
 
     # TODO: Move to super
     def _get_fire_conversation(self, conversation_id):

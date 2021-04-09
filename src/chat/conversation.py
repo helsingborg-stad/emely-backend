@@ -1,5 +1,6 @@
 from dataclasses import dataclass, asdict
 from pathlib import Path
+import random
 
 
 @dataclass
@@ -64,6 +65,7 @@ class FirestoreConversation(object):
     def to_dict(self):
         return asdict(self)
 
+
 # TODO: Write superclasss
 # class Conversation:
 #     """Super class """
@@ -99,10 +101,10 @@ class FikaConversation:
         self.replies_since_last_question = firestore_conversation.replies_since_last_question
 
         # Fika specific - draw from db or file
-        self.pmrr_more_information = [c for c in
-                                      firestore_conversation.pmrr_more_information]  # Split '1234 into ['1','2','3','4']
-        self.change_subject = None
-        self._get_more_information()  # Updates self.change_subject
+        # self.pmrr_more_information = [c for c in
+        # firestore_conversation.pmrr_more_information]  # Split '1234 into ['1','2','3','4']
+        self.change_subject = ['']  # TODO
+        # self._get_more_information()  # Updates self.change_subject
 
         # Firestore
         self.firestore_messages_collection = firestore_conversation_collection.document(conversation_id).collection(
@@ -125,21 +127,8 @@ class FikaConversation:
         doc_ref.set(firestore_message.to_dict())
         return
 
-    # TODO: Retrieve more information from database instead of from file
-    def _get_more_information(self):
-        """ Reads more information utterances from file.
-        self.pmrr_more_information is used to keep track of which are left to use
-        """
-        more_info_path = Path(__file__).resolve().parent.joinpath('more_information.txt')
-        with open(more_info_path, 'r') as f:
-            text = f.read()
-        self.change_subject = text.split('\n')
-        return
-
-
     def get_next_hardcoded_message(self):
-        index = self.pmrr_more_information.pop(0)
-        utterance = self.change_subject[index]
+        utterance = random.choice(self.change_subject)
         return utterance
 
     def get_input_with_context(self):
@@ -165,10 +154,6 @@ class FikaConversation:
         self.firestore_conversation.last_input_is_question = self.last_input_is_question
         self.firestore_conversation.replies_since_last_question = self.replies_since_last_question
 
-        pmrr = ''
-        for c in self.pmrr_more_information:
-            pmrr = pmrr + c
-        self.firestore_conversation.pmrr_more_information = pmrr
         return
 
     def get_fire_object(self):
@@ -205,17 +190,20 @@ class InterviewConversation:
         self.last_input_is_question = firestore_conversation.last_input_is_question
         self.replies_since_last_question = firestore_conversation.replies_since_last_question
 
-        # Fika specific - draw from db or file
+        # Retrieves hard coded messages
         self.pmrr_interview_questions = [c for c in
                                          firestore_conversation.pmrr_more_information]  # Split '1234 into ['1','2','3','4']
+        self.pmrr_more_information = [c for c in firestore_conversation.pmrr_more_information]
+
         self.interview_questions = None
-        self._get_interview_questions()  # Updates self.change_subject
+        self.more_information = None
+        self._get_interview_questions()
+        self._get_more_information()
 
         # Firestore
         self.firestore_messages_collection = firestore_conversation_collection.document(conversation_id).collection(
             'messages')
         self.firestore_conversation_ref = firestore_conversation_collection.document(conversation_id)
-
 
         # Not used currently
         self.persona = ''
@@ -248,12 +236,38 @@ class InterviewConversation:
         self.interview_questions = formatted_questions
         return
 
+    # TODO: Retrieve more information from database instead of from file
+    def _get_more_information(self):
+        """ Reads more information utterances from file.
+        self.pmrr_more_information is used to keep track of which are left to use
+        """
+        more_info_path = Path(__file__).resolve().parent.joinpath('more_information.txt')
+        with open(more_info_path, 'r') as f:
+            text = f.read()
+        self.more_information = text.split('\n')
+        return
+
     def get_next_interview_question(self):
         """Pops the next question index from the pmrr_interview_questions list
            and returns the corresponding question """
-        index = self.pmrr_interview_questions.pop(0)
-        question = self.interview_questions[index]
+        try:
+            index = self.pmrr_interview_questions.pop(0)
+            question = self.interview_questions[index]
+        except IndexError:  # TODO: Remove
+            raise Warning(
+                'Something is not right when checking if the interview is out of questions. Debug InterviewWorld.observe()!')
         return question
+
+    def get_next_more_information(self):
+        """Pops a more information message"""
+        try:
+            index = self.pmrr_more_information.pop()
+            more_info = self.more_information[index]
+            contains_question = False
+        except IndexError:
+            more_info = 'Jag tycker att vi går vidare. ' + self.get_next_interview_question()
+            contains_question = True
+        return more_info, contains_question
 
     def get_input_with_context(self):
         """ Creates input for model: the conversation history since the last predefined question! """
@@ -279,17 +293,22 @@ class InterviewConversation:
         replies = [m['message_en'] for m in messages]
         return replies
 
-
     def _update_fire_object(self):
         self.firestore_conversation.episode_done = self.episode_done
         self.firestore_conversation.nbr_messages = self.nbr_messages
         self.firestore_conversation.last_input_is_question = self.last_input_is_question
         self.firestore_conversation.replies_since_last_question = self.replies_since_last_question
 
-        pmrr = ''
+        pmrr_questions = ''
         for c in self.pmrr_interview_questions:
-            pmrr = pmrr + c
-        self.firestore_conversation.pmrr_interview_questions = pmrr
+            pmrr_questions = pmrr_questions + c
+        self.firestore_conversation.pmrr_interview_questions = pmrr_questions
+
+        pmrr_information = ''
+        for c in self.pmrr_more_information:
+            pmrr_information = pmrr_information + c
+        self.firestore_conversation.pmrr_more_information = pmrr_information
+
         return
 
     def get_fire_object(self):

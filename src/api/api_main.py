@@ -63,29 +63,18 @@ def new_chat(msg: InitBody, response: Response):
 
 @brain.post('/fika')
 def fika(msg: UserMessage):
-    conversation_id = msg.conversation_id
-    # TODO: Not hardcoded
+    # TODO: Check for password and add event loop
     conversation, observe_timestamp = fika_world.observe(user_request=msg)
     brain_response = fika_world.act(conversation, observe_timestamp)
-    return BrainMessage(conversation_id=conversation_id,
-                        lang='sv',
-                        message='This is a hardcoded test message',
-                        is_init_message=False,
-                        is_hardcoded=True,
-                        error_messages='None'
-                        )
+    return brain_response
 
 
 @brain.post('/intervju')
 def interview(msg: UserMessage):
-    conversation_id = msg.conversation_id
-    # TODO: Not hardcoded
-    return BrainMessage(conversation_id=conversation_id,
-                        lang='sv',
-                        message='This is a hardcoded test message',
-                        is_init_message=False,
-                        is_hardcoded=True,
-                        error_messages='None')
+    # TODO: Check for password and add event loop
+    conversation, observe_timestamp = fika_world.observe(user_request=msg)
+    brain_response = fika_world.act(conversation, observe_timestamp)
+    return brain_response
 
 
 # TODO: Deprecate in favour of post to /fika and /intervju

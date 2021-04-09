@@ -25,7 +25,7 @@ class UserMessage(BaseModel):
         schema_extra = {
             "example": {
                 "message": "This is a test message you can change",
-                "conversation_id": "test",
+                "conversation_id": "__CHANGE_ME__",
                 "response_time": '-1',
                 "created_at": '1999-04-07 18:59:24.584658',
                 "recording_used": False,
