@@ -18,7 +18,7 @@ from src.chat.conversation import FikaConversation, InterviewConversation, Fires
 from src.chat.translate import ChatTranslator
 from src.api.utils import is_gcp_instance
 from src.api.bodys import BrainMessage, UserMessage, InitBody
-from src.chat.utils import user_message_to_firestore_message, firestore_message_to_brain_message
+from src.chat.utils import user_message_to_firestore_message, firestore_message_to_brain_message, format_response_time
 from datetime import datetime
 
 
@@ -109,12 +109,12 @@ class ChatWorld:
         # Time
         webapp_creation_time = datetime.fromisoformat(initial_information['created_at'])
         init_timestamp = datetime.now()
-        response_time = str(init_timestamp - webapp_creation_time)
+        response_time = format_response_time(init_timestamp - webapp_creation_time)
 
         # Create FirestoreMessage
         fire_msg = FirestoreMessage(conversation_id=conversation_id,
                                     msg_nbr=0, who='bot', created_at=str(init_timestamp), response_time=response_time,
-                                    lang=fire_convo.lang, message=greeting, message_en=greeting_en, case_type='None',
+                                    lang=fire_convo.lang, message=greeting, message_en=greeting_en, case_type='init',
                                     recording_used=False, removed_from_message='', is_more_information=False,
                                     is_init_message=True, is_predefined_question=False, is_hardcoded=True,
                                     error_messages='')
@@ -197,7 +197,7 @@ class ChatWorld:
 
             # Create FirestoreMessage
             act_timestamp = datetime.now()
-            response_time = str(act_timestamp - observe_timestamp)
+            response_time = format_response_time(act_timestamp - observe_timestamp)
             firestore_message = FirestoreMessage(conversation_id=conversation.conversation_id,
                                                  msg_nbr=conversation.nbr_messages, who='bot',
                                                  created_at=str(act_timestamp),
@@ -223,7 +223,7 @@ class ChatWorld:
         else:  # Episode is done
             # Time
             act_timestamp = datetime.now()
-            response_time = str(act_timestamp - observe_timestamp)
+            response_time = format_response_time(act_timestamp - observe_timestamp)
 
             # Message
             bye_sv = 'Nu måste jag gå. Det var kul att prata med dig! Hejdå!'
@@ -354,12 +354,12 @@ class InterviewWorld(ChatWorld):
         # Time
         webapp_creation_time = datetime.fromisoformat(initial_information['created_at'])
         init_timestamp = datetime.now()
-        response_time = str(init_timestamp - webapp_creation_time)
+        response_time = format_response_time(init_timestamp - webapp_creation_time)
 
         # Create FirestoreMessage
         fire_msg = FirestoreMessage(conversation_id=conversation_id,
                                     msg_nbr=0, who='bot', created_at=str(init_timestamp), response_time=response_time,
-                                    lang=fire_convo.lang, message=greeting, message_en=greeting_en, case_type='None',
+                                    lang=fire_convo.lang, message=greeting, message_en=greeting_en, case_type='init',
                                     recording_used=False, removed_from_message='', is_more_information=False,
                                     is_init_message=True, is_predefined_question=False, is_hardcoded=True,
                                     error_messages='')
@@ -439,7 +439,7 @@ class InterviewWorld(ChatWorld):
 
             reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig!'
             reply_en = 'Thanks for your time, it was nice to interview you!'
-        elif interview.nbr_replies == self.max_replies and not interview.last_input_is_question:
+        elif interview.replies_since_last_question == self.max_replies and not interview.last_input_is_question:
             # Case 2
             case = '2'
 
@@ -449,7 +449,7 @@ class InterviewWorld(ChatWorld):
             is_more_information = False
             removed_from_message = ''
 
-            interview.nbr_replies = 0
+            interview.replies_since_last_question = 0
             reply_sv = interview.get_next_interview_question()
             reply_en = self.translator.translate(reply_sv, src='sv', target='en')
 
@@ -479,13 +479,13 @@ class InterviewWorld(ChatWorld):
                 reply_en = self.translator.translate(reply_sv, src='sv', target='en')
 
                 if contains_question:
-                    interview.nbr_replies = 0
+                    interview.replies_since_last_question = 0
                     is_predefined_question = True
                 else:
-                    interview.nbr_replies += 1
+                    interview.replies_since_last_question += 1
                     is_predefined_question = False
 
-            elif interview.nbr_replies == self.max_replies and interview.last_input_is_question:
+            elif interview.replies_since_last_question == self.max_replies and interview.last_input_is_question:
                 # Case 3 - Add new question to end of model reply
                 case = '3'
 
@@ -496,7 +496,7 @@ class InterviewWorld(ChatWorld):
 
                 reply_sv = self.translator.translate(reply_en, src='en', target='sv') + ' ' + interview.get_next_interview_question()
                 reply_en = self.translator.translate(reply_sv, src='sv', target='en')
-                interview.nbr_replies = 0
+                interview.replies_since_last_question = 0
             else:
                 # Case 4
                 case = '4'
@@ -506,12 +506,12 @@ class InterviewWorld(ChatWorld):
                 is_predefined_question = False
                 is_more_information = False
 
-                interview.nbr_replies += 1
+                interview.replies_since_last_question += 1
                 reply_sv = self.translator.translate(reply_en, src='en', target='sv')
 
             # Time
             act_timestamp = datetime.now()
-            response_time = str(act_timestamp - observe_timestamp)
+            response_time = format_response_time(act_timestamp - observe_timestamp)
 
             # Create a firestoremessage and add it
             firestore_message = FirestoreMessage(conversation_id=interview.conversation_id,

@@ -10,7 +10,7 @@ class FirestoreMessage(object):
     msg_nbr: int
     who: str  # 'user' or 'bot'
     created_at: str
-    response_time: str
+    response_time: float
     lang: str
     message: str
     message_en: str

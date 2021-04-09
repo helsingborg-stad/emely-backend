@@ -1,7 +1,13 @@
 from src.api.bodys import BrainMessage, UserMessage
 from src.chat.conversation import FirestoreMessage
+from datetime import timedelta
 
 """This script holds helper functions for converting data between different object types """
+
+
+def format_response_time(time: timedelta):
+    # Converts timedelta to string with seconds and one decimal place
+    return round(time.seconds + time.microseconds / 1000000, 1)
 
 
 def user_message_to_firestore_message(user_message: UserMessage, translated_message, msg_nbr) -> FirestoreMessage:
@@ -26,5 +32,3 @@ def firestore_message_to_brain_message(fire_msg: FirestoreMessage) -> BrainMessa
                              is_hardcoded=fire_msg.is_hardcoded,
                              error_messages=fire_msg.error_messages)
     return brain_msg
-
-
