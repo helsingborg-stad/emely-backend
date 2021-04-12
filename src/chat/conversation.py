@@ -1,328 +1,334 @@
+from dataclasses import dataclass, asdict
 from pathlib import Path
-from collections import deque
+import random
+
+""" File contents:
+- Firestore objects used for storing data in the database
+- Conversation objects: Classes used for handling a fika or interview conversation
+
+The FirestoreConversation object is basically a data representation of the 
+FikaConversation/InterviewConversation objects.
+"""
 
 
-class InterviewFirestore(object):
-
-    def __init__(self, conversation_id, name, job, episode_done=False, bot_text_sv=[], user_text_sv=[],
-                 bot_text_en=[], user_text_en=[], more_information=None, questions=None, last_input_is_question=False,
-                 nbr_replies=0
-                 ):
-        self.conversation_id = conversation_id
-        self.name = name
-        self.job = job
-
-        self.bot_text_sv = bot_text_sv
-        self.user_text_sv = user_text_sv
-        self.bot_text_en = bot_text_en
-        self.user_text_en = user_text_en
-
-        self.nbr_replies = nbr_replies
-        self.last_input_is_question = last_input_is_question
-        self.episode_done = episode_done
-
-        if questions is None:
-            self.questions = [question.format(self.job) if format_this else question for (question, format_this) in
-                              read_questions((Path(__file__).parent / 'interview_questions.txt'))]
-        else:
-            self.questions = questions
-        if more_information is None:
-            self.more_information = ['Kan du ge mig lite mer information om det?',
-                                     'Kan du berätta mer om det?',
-                                     'Berätta lite mer om det!',
-                                     'Jag vill höra mer om det!',
-                                     'Jag förstår. Kan du berätta lite mer om det?']
-        else:
-            self.more_information = more_information
+@dataclass
+class FirestoreMessage(object):
+    """ Dataclass used to push Message data to the Firestore database """
+    conversation_id: str  # Unique ID assigned by firestore
+    msg_nbr: int  # Starts at 0
+    who: str  # 'user' or 'bot'
+    created_at: str  # Timestamp
+    response_time: float  #
+    lang: str  # Language: 'sv'
+    message: str  # Message in lang
+    message_en: str  # Message in english
+    case_type: str  # Case in worlds.act()
+    recording_used: bool  # Whether the STT-recording was used or not
+    removed_from_message: str  # Message that was removed using world._correct_reply
+    is_more_information: bool  # Specific type of hardcoded message
+    is_init_message: bool  # Specific type of hardcoded message
+    is_predefined_question: bool  # Specific type of hardcoded message
+    is_hardcoded: bool  #
+    error_messages: str  #
 
     @staticmethod
     def from_dict(source):
-        interview_firestore = InterviewFirestore(conversation_id=source['conversation_id'],
-                                                 name=source['name'],
-                                                 job=source['job'])
-        for k, v in source.items():
-            setattr(interview_firestore, k, v)
-        return interview_firestore
+        return FirestoreMessage(**source)
 
     def to_dict(self):
-        attribute_dict = self.__dict__
-        return attribute_dict
-
-    def __repr__(self):
-        return (
-            f'InterviewFirestore(\
-                        name={self.name}, \
-                        conversation_id={self.conversation_id}, \
-                        job={self.job}, \
-                        bot_text_sv={self.bot_text_sv}, \
-                        user_text_sv={self.user_text_sv}, \
-                        bot_text_en={self.bot_text_en}, \
-                        user_text_en={self.user_text_en}, \
-                        episode_done={self.episode_done}, \
-                        nbr_replies = {self.nbr_replies}, \
-                        last_input_is_question = {self.last_input_is_question}, \
-                        questions = {self.questions}, \
-                        more_information = {self.more_information} \
-                    )'
-        )
+        return asdict(self)
 
 
-class FikaFirestore(object):
-    def __init__(self, conversation_id, name, episode_done=False, bot_text_sv=[], user_text_sv=[],
-                 bot_text_en=[], user_text_en=[], change_subject=None
-                 ):
-        self.conversation_id = conversation_id
-        self.name = name
-        self.episode_done = episode_done
-        self.bot_text_sv = bot_text_sv
-        self.user_text_sv = user_text_sv
-        self.bot_text_en = bot_text_en
-        self.user_text_en = user_text_en
-        if change_subject is None:
-            self.change_subject = ['Berätta något annat om dig själv!',
-                                   'Nu tycker jag att vi ska prata om något annat!',
-                                   'Vill du prata om något annat kanske']
-        else:
-            self.change_subject = change_subject
+@dataclass
+class FirestoreConversation(object):
+    """ Dataclass used to push Conversation data to the Firestore database """
+    # Fixed attributes
+    name: str  # Name
+    persona: str  # Emelys persona
+    created_at: str  # Timestamp
+    lang: str  # Language
+    development_testing: bool  # If conversation is an internal test
+    webapp_local: bool  # Locally run webapp
+    webapp_url: str  # Client host of webapp
+    webapp_version: str  #
+    webapp_git_build: str  #
+    user_ip_number: str  #
+    brain_url: str  # Client host of brain
+    brain_version: str  #
+    brain_git_build: str  #
+    job: str = None  # Only used for interview, not fika
+
+    # Updated attributes - Used in Fika/InterviewConversation
+    episode_done: bool = False  # Is the conversation over?
+    nbr_messages: int = 0  #
+    last_input_is_question: bool = False  # Was the last user input a question?
+    model_replies_since_last_question: int = 0  # Used to steer Emely
+    pmrr_interview_questions: str = '01234'  # TODO: FIX this predefined list
+    pmrr_more_information: str = '012'  # TODO: Fix predefined list
 
     @staticmethod
     def from_dict(source):
-        fika_firestore = FikaFirestore(conversation_id=source['conversation_id'],
-                                       name=source['name'])
-        for k, v in source.items():
-            setattr(fika_firestore, k, v)
-        return fika_firestore
+        return FirestoreConversation(**source)
 
     def to_dict(self):
-        attribute_dict = self.__dict__
-        return attribute_dict
-
-    def __repr__(self):
-        return (
-            f'FikaFirestore(\
-                        name={self.name}, \
-                        conversation_id={self.conversation_id}, \
-                        bot_text_sv={self.bot_text_sv}, \
-                        user_text_sv={self.user_text_sv}, \
-                        bot_text_en={self.bot_text_en}, \
-                        user_text_en={self.user_text_en}, \
-                        episode_done={self.episode_done}, \
-                        change_subject={self.change_subject}\
-                    )'
-        )
+        return asdict(self)
 
 
-class OpenConversation:
+# TODO: Write superclasss
+# class Conversation:
+#     """Super class """
+#     def __init__(self):
+#
+#
+#     def add_text(self, firestore_message: FirestoreMessage):
+#         """ Pushes new message to database
+#         """
+#         self.nbr_messages += 1
+#         msg_nbr = firestore_message.msg_nbr
+#         assert msg_nbr == self.nbr_messages - 1, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
+#
+#         doc_ref = self.firestore_messages_collection.document(str(msg_nbr))  #
+#         doc_ref.set(firestore_message.to_dict())
+#         return
 
-    def __init__(self, fire: FikaFirestore, tokenizer):
-        self.fire = fire
-        self.name = fire.name
-        self.conversation_id = fire.conversation_id
 
-        self.conversation_sv = BlenderConversation(user_text=fire.user_text_sv, bot_text=fire.bot_text_sv,
-                                                   tokenizer=tokenizer)
-        self.conversation_en = BlenderConversation(user_text=fire.user_text_en, bot_text=fire.bot_text_en,
-                                                   tokenizer=tokenizer)
+class FikaConversation:
+    """ Class that tracks the states of a conversation with fika Emely.
+    Is initialised with a FirestoreConversation object"""
 
-        self.episode_done = fire.episode_done
-        self.change_subject = fire.change_subject
+    def __init__(self, firestore_conversation: FirestoreConversation, conversation_id,
+                 firestore_conversation_collection):
+        self.firestore_conversation = firestore_conversation
+        self.name = firestore_conversation.name
+        self.conversation_id = conversation_id
+        self.lang = firestore_conversation.lang
 
-        # Non fire params
-        self.tokenizer = tokenizer
+        # Attributes to update
+        self.episode_done = firestore_conversation.episode_done
+        self.nbr_messages = firestore_conversation.nbr_messages
+        self.last_input_is_question = firestore_conversation.last_input_is_question
+        self.model_replies_since_last_question = firestore_conversation.model_replies_since_last_question
+
+        # Fika specific - draw from db or file # TODO:
+        # self.pmrr_more_information = [c for c in
+        # firestore_conversation.pmrr_more_information]  # Split '1234 into ['1','2','3','4']
+        self.change_subject = ['Berätta något annat om dig själv!',
+                               'Nu tycker jag att vi ska prata om något annat!',
+                               'Vill du prata om något annat kanske']
+
+        # Firestore
+        self.firestore_messages_collection = firestore_conversation_collection.document(conversation_id).collection(
+            'messages')
+        self.firestore_conversation_ref = firestore_conversation_collection.document(conversation_id)
+
+        # Not used currently
         self.persona = ''
         self.persona_length = 0  # len(self.tokenizer(self.persona)['input_ids'])
 
-    def get_context(self):
-        context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history(30))
+    # TODO: Move to superclass
+    def add_text(self, firestore_message: FirestoreMessage):
+        """ Adds a message to the conversation by pushing it to firestore """
+        self.nbr_messages += 1
+        msg_nbr = firestore_message.msg_nbr
+        assert msg_nbr + 1 == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
+
+        doc_ref = self.firestore_messages_collection.document(str(msg_nbr))
+        doc_ref.set(firestore_message.to_dict())
+        return
+
+    def get_next_hardcoded_message(self):
+        """ Returns the next hardcoded message that tries to change the subject of the conversation """
+        utterance = random.choice(self.change_subject)
+        return utterance
+
+    def get_input_with_context(self):
+        """ Returns the input for the model, which currently is the last four messages of the conversation """
+        nbr_replies_for_context = 4
+        condition = self.nbr_messages - nbr_replies_for_context - 1
+        docs = self.firestore_messages_collection.where('msg_nbr', '>=', condition).stream()
+        messages = [doc.to_dict() for doc in docs]
+        messages.sort(key=lambda x: x['msg_nbr'])
+        context = ''
+        for i, message in enumerate(messages):
+            if i == len(messages) - 1:  #
+                context = context + message['message_en']
+            else:
+                context = context + message['message_en'] + '\n'
+
         return context
 
-    def get_fire_object(self):
-        fika_firestore = FikaFirestore(conversation_id=self.fire.conversation_id,
-                                       name=self.name,
-                                       episode_done=self.episode_done,
-                                       bot_text_sv=self.conversation_sv.bot_text,
-                                       user_text_sv=self.conversation_sv.user_text,
-                                       bot_text_en=self.conversation_en.bot_text,
-                                       user_text_en=self.conversation_en.user_text,
-                                       change_subject=self.change_subject)
-        return fika_firestore
+    def _update_fire_object(self):
+        """ Helper function: Updates the attributes of the FirestoreConversation object """
+        self.firestore_conversation.episode_done = self.episode_done
+        self.firestore_conversation.nbr_messages = self.nbr_messages
+        self.firestore_conversation.last_input_is_question = self.last_input_is_question
+        self.firestore_conversation.model_replies_since_last_question = self.model_replies_since_last_question
+        return
+
+    # TODO: MOve to superclass
+    def get_bot_replies(self):
+        """ Retrieves all previous bot messages in the conversation and returns them as a list.
+            Is used for _correct_reply in worlds.py """
+        docs = self.firestore_messages_collection.where('who', '==', 'bot').stream()
+        messages = [doc.to_dict() for doc in docs]
+        messages.sort(key=lambda x: x['msg_nbr'])
+        replies = [m['message_en'] for m in messages]
+        return replies
+
+    # TODO: Move to superclass(does it work despite unique update_fire_object fucntions?)
+    def push_to_firestore(self):
+        """ Pushes the updated FirestoreConversation to the firestore database at the end of act() in worlds.py """
+        self._update_fire_object()
+        self.firestore_conversation_ref.set(self.firestore_conversation.to_dict())
+        return
 
 
 class InterviewConversation:
+    """ Class that tracks the states of a conversation with intervju Emely.
+        Is initialised with a FirestoreConversation object. """
 
-    def __init__(self, fire: InterviewFirestore, tokenizer):
-        self.fire = fire
-        self.conversation_id = fire.conversation_id
-        self.name = fire.name
-        self.job = fire.job
+    def __init__(self, firestore_conversation: FirestoreConversation, conversation_id,
+                 firestore_conversation_collection):
+        self.firestore_conversation = firestore_conversation
+        self.name = firestore_conversation.name
+        self.job = firestore_conversation.job
+        self.conversation_id = conversation_id
+        self.lang = firestore_conversation.lang
 
-        self.conversation_sv = BlenderConversation(user_text=fire.user_text_sv, bot_text=fire.bot_text_sv,
-                                                   tokenizer=tokenizer)
-        self.conversation_en = BlenderConversation(user_text=fire.user_text_en, bot_text=fire.bot_text_en,
-                                                   tokenizer=tokenizer)
+        # Attributes to update
+        self.episode_done = firestore_conversation.episode_done
+        self.nbr_messages = firestore_conversation.nbr_messages
+        self.last_input_is_question = firestore_conversation.last_input_is_question
+        self.model_replies_since_last_question = firestore_conversation.model_replies_since_last_question
 
-        self.nbr_replies = fire.nbr_replies
-        self.last_input_is_question = fire.last_input_is_question
-        self.episode_done = fire.episode_done
-        self.questions = fire.questions
-        self.tokenizer = tokenizer
-        self.persona = 'your persona: My name is Emely and I am an AI interviewer'
-        self.persona_length = len(self.tokenizer(self.persona)['input_ids'])
-        self.more_information = fire.more_information
+        # Retrieves hard coded messages
+        self.pmrr_interview_questions = [c for c in
+                                         firestore_conversation.pmrr_interview_questions]  # Split '1234 into ['1','2','3','4']
+        self.pmrr_more_information = [c for c in firestore_conversation.pmrr_more_information]
 
-    def one_step_back(self):
-        self.conversation_sv.pop()
-        self.conversation_sv.pop()
-        self.conversation_en.pop()
-        self.conversation_en.pop()
-        self.nbr_replies -= 1
-        return self.conversation_sv.bot_text[-1]
+        self.interview_questions = None
+        self.more_information = None
+        self._get_interview_questions()
+        self._get_more_information()
 
-    def get_context(self):
-        # context = '{}\n{}'.format(self.persona, self.conversation_en.get_dialogue_history(40))
-        context = self.conversation_en.get_nbr_interactions(self.nbr_replies)
-        return context
+        # Firestore
+        self.firestore_messages_collection = firestore_conversation_collection.document(conversation_id).collection(
+            'messages')
+        self.firestore_conversation_ref = firestore_conversation_collection.document(conversation_id)
 
-    def get_fire_object(self):
-        interview_firestore = InterviewFirestore(conversation_id=self.fire.conversation_id,
-                                                 name=self.name,
-                                                 job=self.job,
-                                                 episode_done=self.episode_done,
-                                                 bot_text_sv=self.conversation_sv.bot_text,
-                                                 user_text_sv=self.conversation_sv.user_text,
-                                                 bot_text_en=self.conversation_en.bot_text,
-                                                 user_text_en=self.conversation_en.user_text,
-                                                 more_information=self.more_information,
-                                                 questions=self.questions,
-                                                 last_input_is_question=self.last_input_is_question,
-                                                 nbr_replies=self.nbr_replies
-                                                 )
-        return interview_firestore
+        # Not used currently
+        self.persona = ''
+        self.persona_length = 0  # len(self.tokenizer(self.persona)['input_ids'])
 
+    # TODO: Move to superclass
+    def add_text(self, firestore_message: FirestoreMessage):
+        """ Adds a message to the conversation by pushing it to firestore """
+        self.nbr_messages += 1
+        msg_nbr = firestore_message.msg_nbr
+        assert msg_nbr + 1 == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
 
-class BlenderConversation:
-
-    def __init__(self, bot_text, user_text, tokenizer):
-        self.bot_text = bot_text
-        self.user_text = user_text
-        self.user_turn = None
-        self.tokenizer = tokenizer
-
-    def add_user_text(self, text):
-        if self.user_turn or self.user_turn is None:
-            self.user_text.append(text)
-            self.user_turn = False
-        else:
-            raise ValueError("It's the bot's turn to add a reply to the conversation")
+        doc_ref = self.firestore_messages_collection.document(str(msg_nbr))
+        doc_ref.set(firestore_message.to_dict())
         return
 
-    def add_bot_text(self, text):
-        if not self.user_turn or self.user_turn is None:
-            self.bot_text.append(text)
-            self.user_turn = True
-        else:
-            raise ValueError("It's the user's turn to add an input to the conversation")
+    # TODO: Draw from database instead
+    # TODO: Implement skill formatting when data is available
+    def _get_interview_questions(self):
+        """ Helper function: Reads and formats interview questions according to the job
+        """
+        interview_questions_path = Path(__file__).resolve().parent.joinpath('interview_questions.txt')
+        with open(interview_questions_path, 'r') as f:
+            text = f.read()
+        lines = text.split('\n')
+        formatted_questions = []
+        for line in lines:  # TODO: Also format skill eventually
+            line = line.replace('_job_', self.job)
+            formatted_questions.append(line)
+        self.interview_questions = formatted_questions
         return
 
-    def pop(self):
-        if self.user_turn:
-            self.bot_text.pop()
-            self.user_turn = False
-        else:
-            self.user_text.pop()
-            self.user_turn = True
+    # TODO: Retrieve more information from database instead of from file
+    def _get_more_information(self):
+        """ Helper function: Reads more information utterances from file.
+        """
+        more_info_path = Path(__file__).resolve().parent.joinpath('more_information.txt')
+        with open(more_info_path, 'r') as f:
+            text = f.read()
+        self.more_information = text.split('\n')
         return
 
-    def get_dialogue_history(self, max_len=120):
-        # Returns string of the dialogue history with bot and user inputs separated with '\n'
-        # max_len set to default 100 as model has max input length 128 and we want some space for new input
-        history = ''
-        tokens_left = max_len
-        if self.user_turn:
-            # Start backwards from bot_text
-            for i in reversed(range(len(self.user_text))):
-                bot_text = self.bot_text[i]
-                user_text = self.user_text[i]
-                nbr_tokens = len(self.tokenizer(bot_text)['input_ids']) + len(self.tokenizer(user_text)['input_ids'])
-                if nbr_tokens < tokens_left:  # This is not fool proof as the model tokenizer tokenizes differently
-                    history = user_text + '\n' + bot_text + '\n' + history
-                    tokens_left -= (nbr_tokens + 2)
-                else:
-                    break
+    def get_next_interview_question(self):
+        """Pops the next question index from the pmrr_interview_questions list
+           and returns the corresponding question """
+        index = int(self.pmrr_interview_questions.pop(0))
+        question = self.interview_questions[index]
+        return question
 
-        else:
-            # Start backwards from user_text
-            history = self.user_text[-1]
-            tokens_left -= len(self.tokenizer(history)['input_ids'])
-            for i in reversed(range(len(self.user_text) - 1)):
-                bot_text = self.bot_text[i]
-                user_text = self.user_text[i]
-                nbr_tokens = len(self.tokenizer(bot_text)['input_ids']) + len(self.tokenizer(user_text)['input_ids'])
-                if nbr_tokens < tokens_left:
-                    history = user_text + '\n' + bot_text + '\n' + history
-                    tokens_left -= (nbr_tokens + 2)
-                else:
-                    break
-        return history
+    def get_next_more_information(self):
+        """Pops a more information message"""
+        try:
+            index = int(self.pmrr_more_information.pop())
+            more_info = self.more_information[index]
+            contains_question = False
+        except IndexError:
+            more_info = 'Jag tycker att vi går vidare. ' + self.get_next_interview_question()
+            contains_question = True
+        return more_info, contains_question
 
-    def to_txt(self, description, file, error=None):
-        # Writes the dialogue to txt file in subdirectory
-        text = '####################################\n' + 'Conversation description: ' + description + '\n\n'
-        if self.user_turn:
-            for i in range(len(self.user_text)):
-                text = text + 'User>>> ' + self.user_text[i] + '\n Bot>>> ' + self.bot_text[i] + '\n'
-        else:
-            for i in range(len(self.bot_text)):
-                text = text + 'User>>> ' + self.user_text[i] + '\n Bot>>> ' + self.bot_text[i] + '\n'
-            text = text + 'User>>> ' + self.user_text[-1]
-
-        if error is None:
-            text = text + '\n\n'
-        else:
-            text = text + '\n' + 'Terminated due to {}'.format(error) + '\n\n'
-
-        with open(file, 'a') as f:
-            f.write(text)
-        return
-
-    def print_dialogue(self):
-        # Prints the dialogue
-        text = ''
-        if self.user_turn:
-            for i in range(len(self.user_text)):
-                text = text + 'User>>> ' + self.user_text[i] + '\n Bot>>> ' + self.bot_text[i] + '\n'
-        else:
-            for i in range(len(self.bot_text)):
-                text = text + 'User>>> ' + self.user_text[i] + '\n Bot>>> ' + self.bot_text[i] + '\n'
-            text = text + 'User>>> ' + self.user_text[-1]
-
-            print(text)
-        return
-
-    def get_nbr_interactions(self, nbr):
-        """Retrieves only the last nbr interactions in the conversation as a string formatted with \n separators"""
-        lines = deque()
-        assert not self.user_turn  # Needs to be bots turn for this method to be used
-        for i in range(nbr + 1):
-            backindex = -1 - i
-            lines.appendleft(self.user_text[backindex])
-            lines.appendleft(self.bot_text[backindex])
+    def get_input_with_context(self):
+        """ Creates input for model: the conversation history since the last predefined question! """
+        nbr_replies_for_context = 2 + self.model_replies_since_last_question * 2
+        condition = self.nbr_messages - nbr_replies_for_context
+        docs = self.firestore_messages_collection.where('msg_nbr', '>=', condition).stream()
+        messages = [doc.to_dict() for doc in docs]
+        messages.sort(key=lambda x: x['msg_nbr'])
         context = ''
-        for line in lines:
-            context = context + line + '\n'
-        context = context.rsplit('\n', 1)[0]
+        for i, message in enumerate(messages):
+            if i == len(messages) - 1:  # We don't want a '\n' after the last line
+                context = context + message['message_en']
+            else:
+                context = context + message['message_en'] + '\n'
+
         return context
 
+    # TODO: MOve to superclass
     def get_bot_replies(self):
-        return self.bot_text
+        """ Retrieves all previous bot messages in the conversation and returns them as a list.
+            Is used for _correct_reply in worlds.py """
+        docs = self.firestore_messages_collection.where('who', '==', 'bot').stream()
+        messages = [doc.to_dict() for doc in docs]
+        messages.sort(key=lambda x: x['msg_nbr'])
+        replies = [m['message_en'] for m in messages]
+        return replies
 
-    def get_user_replies(self):
-        return self.user_text
+    def _update_fire_object(self):
+        """ Helper function: Updates the attributes of the FirestoreConversation object """
+        self.firestore_conversation.episode_done = self.episode_done
+        self.firestore_conversation.nbr_messages = self.nbr_messages
+        self.firestore_conversation.last_input_is_question = self.last_input_is_question
+        self.firestore_conversation.model_replies_since_last_question = self.model_replies_since_last_question
 
+        pmrr_questions = ''
+        for c in self.pmrr_interview_questions:
+            pmrr_questions = pmrr_questions + c
+        self.firestore_conversation.pmrr_interview_questions = pmrr_questions
 
-def read_questions(file_path):
-    # Reads interview questions from a text file, one question per line. '{}' in place where job should be inserted
-    with open(file_path, 'r') as f:
-        questions = f.readlines()
-    format_this = [True if '{}' in question else False for question in questions]
-    return zip(questions, format_this)
+        pmrr_information = ''
+        for c in self.pmrr_more_information:
+            pmrr_information = pmrr_information + c
+        self.firestore_conversation.pmrr_more_information = pmrr_information
+
+        return
+
+    # TODO: Move to superclass(does it work despite unique update_fire_object fucntions?)
+    def push_to_firestore(self):
+        """ Pushes the updated FirestoreConversation to the firestore database at the end of act() in worlds.py """
+        self._update_fire_object()
+        self.firestore_conversation_ref.set(self.firestore_conversation.to_dict())
+        return
+
+    def _print_attr(self):
+        s = "pmrr_interview_questions: {} \n model_replies_since_last_question: {} \n nbr_messages : {} \n pmrr_more_info: {}".format(
+            self.pmrr_interview_questions, self.model_replies_since_last_question, self.nbr_messages,
+            self.pmrr_more_information)
+        print(s)
