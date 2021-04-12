@@ -2,15 +2,17 @@ from src.api.bodys import BrainMessage, UserMessage
 from src.chat.conversation import FirestoreMessage
 from datetime import timedelta
 
-"""This script holds helper functions for converting data between different object types """
+"""File contents:
+- Helper functions """
 
 
 def format_response_time(time: timedelta):
-    # Converts timedelta to string with seconds and one decimal place
+    """ Converts timedelta to string with seconds and one decimal place for database entry """
     return round(time.seconds + time.microseconds / 1000000, 1)
 
 
 def user_message_to_firestore_message(user_message: UserMessage, translated_message, msg_nbr) -> FirestoreMessage:
+    """ Converts a UserMessage to a FirestoreMessage """
     firestore_message = FirestoreMessage(conversation_id=user_message.conversation_id,
                                          msg_nbr=msg_nbr, who='user', created_at=user_message.created_at,
                                          response_time=user_message.response_time,
@@ -25,6 +27,7 @@ def user_message_to_firestore_message(user_message: UserMessage, translated_mess
 
 
 def firestore_message_to_brain_message(fire_msg: FirestoreMessage) -> BrainMessage:
+    """ Converts FirestoreMessage to BrainMessage """
     brain_msg = BrainMessage(conversation_id=fire_msg.conversation_id,
                              msg_id=fire_msg.msg_nbr,
                              lang=fire_msg.lang,

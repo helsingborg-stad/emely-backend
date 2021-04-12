@@ -1,21 +1,35 @@
 import socket
+from src.api.bodys import BrainMessage
+
+""" Helper functions """
+
 
 def is_gcp_instance():
-    """Check if it's GCE instance via DNS lookup to metadata server.
-    """
+    """ Returns true if we're running on a GCP instance. Used for automatic authorization """
     try:
         socket.getaddrinfo('metadata.google.internal', 80)
     except socket.gaierror:
         return False
     return True
 
+
+def create_error_response(error_msg):
+    """ Creates a dummy BrainMessage with the error message inserted"""
+    brain_response = BrainMessage(convesation_id=None,
+                                  msg_id=None,
+                                  lang='en',
+                                  message='',
+                                  is_init=False,
+                                  is_hardcoded=True,
+                                  error_messages=error_msg)
+    return brain_response
+
+
 # TODO: Implement this function
 def update_firestore_conversation(collection_db, firestore_conversation):
     raise NotImplementedError
 
+
 # TODO: Implement
 def update_firestore_message(collection_db, firestore_message):
     raise NotImplementedError
-
-
-

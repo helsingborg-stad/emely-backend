@@ -2,26 +2,34 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 import random
 
+""" File contents:
+- Firestore objects used for storing data in the database
+- Conversation objects: Classes used for handling a fika or interview conversation
+
+The FirestoreConversation object is basically a data representation of the 
+FikaConversation/InterviewConversation objects.
+"""
+
 
 @dataclass
 class FirestoreMessage(object):
     """ Dataclass used to push Message data to the Firestore database """
-    conversation_id: str
-    msg_nbr: int
-    who: str  # 'user' or 'bot'
-    created_at: str
-    response_time: float
-    lang: str
-    message: str
-    message_en: str
-    case_type: str
-    recording_used: bool  # Whether the STT-recording was used or not
-    removed_from_message: str  # Message that was removed using world.correct_reply
-    is_more_information: bool
-    is_init_message: bool
-    is_predefined_question: bool
-    is_hardcoded: bool
-    error_messages: str
+    conversation_id: str                # Unique ID assigned by firestore
+    msg_nbr: int                        # Starts at 0
+    who: str                            # 'user' or 'bot'
+    created_at: str                     # Timestamp
+    response_time: float                #
+    lang: str                           # Language: 'sv'
+    message: str                        # Message in lang
+    message_en: str                     # Message in english
+    case_type: str                      # Case in worlds.act()
+    recording_used: bool                # Whether the STT-recording was used or not
+    removed_from_message: str           # Message that was removed using world._correct_reply
+    is_more_information: bool           # Specific type of hardcoded message
+    is_init_message: bool               # Specific type of hardcoded message
+    is_predefined_question: bool        # Specific type of hardcoded message
+    is_hardcoded: bool                  #
+    error_messages: str                 #
 
     @staticmethod
     def from_dict(source):
@@ -35,28 +43,28 @@ class FirestoreMessage(object):
 class FirestoreConversation(object):
     """ Dataclass used to push Conversation data to the Firestore database """
     # Fixed attributes
-    name: str
-    persona: str
-    created_at: str
-    lang: str
-    development_testing: bool
-    webapp_local: bool
-    webapp_url: str
-    webapp_version: str
-    webapp_git_build: str
-    user_ip_number: str
-    brain_url: str
-    brain_version: str
-    brain_git_build: str
-    job: str = None    # Only used for interview, not fika
+    name: str                           # Name
+    persona: str                        # Emelys persona
+    created_at: str                     # Timestamp
+    lang: str                           # Language
+    development_testing: bool           # If conversation is an internal test
+    webapp_local: bool                  # Locally run webapp
+    webapp_url: str                     # Client host of webapp
+    webapp_version: str                 #
+    webapp_git_build: str               #
+    user_ip_number: str                 #
+    brain_url: str                      # Client host of brain
+    brain_version: str                  #
+    brain_git_build: str                #
+    job: str = None                     # Only used for interview, not fika
 
-    # Updated attributes
-    episode_done: bool = False
-    nbr_messages: int = 0
-    last_input_is_question: bool = False
-    replies_since_last_question: int = -1
-    pmrr_interview_questions: str = '01234'  # TODO: FIX this predefined stuff
-    pmrr_more_information: str = '012'
+    # Updated attributes - Used in Fika/InterviewConversation
+    episode_done: bool = False              # Is the conversation over?
+    nbr_messages: int = 0                   #
+    last_input_is_question: bool = False    # Was the last user input a question?
+    replies_since_last_question: int = -1   # Used to steer Emely
+    pmrr_interview_questions: str = '01234' # TODO: FIX this predefined list
+    pmrr_more_information: str = '012'      # TODO: Fix predefined list
 
     @staticmethod
     def from_dict(source):
@@ -85,13 +93,14 @@ class FirestoreConversation(object):
 
 
 class FikaConversation:
-    """Object that tracks the states of a conversation with fika Emely"""
+    """ Class that tracks the states of a conversation with fika Emely.
+    Is initialised with a FirestoreConversation object"""
 
     def __init__(self, firestore_conversation: FirestoreConversation, conversation_id,
                  firestore_conversation_collection):
         self.firestore_conversation = firestore_conversation
         self.name = firestore_conversation.name
-        self.conversation_id = conversation_id  # TODO: Make sure this is passed
+        self.conversation_id = conversation_id
         self.lang = firestore_conversation.lang
 
         # Attributes to update
@@ -104,7 +113,6 @@ class FikaConversation:
         # self.pmrr_more_information = [c for c in
         # firestore_conversation.pmrr_more_information]  # Split '1234 into ['1','2','3','4']
         self.change_subject = ['']  # TODO
-        # self._get_more_information()  # Updates self.change_subject
 
         # Firestore
         self.firestore_messages_collection = firestore_conversation_collection.document(conversation_id).collection(
@@ -117,8 +125,7 @@ class FikaConversation:
 
     # TODO: Move to superclass
     def add_text(self, firestore_message: FirestoreMessage):
-        """ Pushes new message to database
-        """
+        """ Adds a message to the conversation by pushing it to firestore """
         self.nbr_messages += 1
         msg_nbr = firestore_message.msg_nbr
         assert msg_nbr + 1 == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
@@ -128,12 +135,12 @@ class FikaConversation:
         return
 
     def get_next_hardcoded_message(self):
+        """ Returns the next hardcoded message that tries to change the subject of the conversation """
         utterance = random.choice(self.change_subject)
         return utterance
 
     def get_input_with_context(self):
-        """ Gets the input for the model which is the last four messages of the conversation
-        """
+        """ Returns the input for the model, which currently is the last four messages of the conversation """
         nbr_replies_for_context = 4
         condition = self.nbr_messages - nbr_replies_for_context - 1
         docs = self.firestore_messages_collection.where('msg_nbr', '>=', condition).stream()
@@ -149,19 +156,17 @@ class FikaConversation:
         return context
 
     def _update_fire_object(self):
+        """ Helper function: Updates the attributes of the FirestoreConversation object """
         self.firestore_conversation.episode_done = self.episode_done
         self.firestore_conversation.nbr_messages = self.nbr_messages
         self.firestore_conversation.last_input_is_question = self.last_input_is_question
         self.firestore_conversation.replies_since_last_question = self.replies_since_last_question
-
         return
-
-    def get_fire_object(self):
-        self._update_fire_object()
-        return self.firestore_conversation
 
     # TODO: MOve to superclass
     def get_bot_replies(self):
+        """ Retrieves all previous bot messages in the conversation and returns them as a list.
+            Is used for _correct_reply in worlds.py """
         docs = self.firestore_messages_collection.where('who', '==', 'bot').stream()
         messages = [doc.to_dict() for doc in docs]
         messages.sort(key=lambda x: x['msg_nbr'])
@@ -170,18 +175,22 @@ class FikaConversation:
 
     # TODO: Move to superclass(does it work despite unique update_fire_object fucntions?)
     def push_to_firestore(self):
+        """ Pushes the updated FirestoreConversation to the firestore database at the end of act() in worlds.py """
         self._update_fire_object()
         self.firestore_conversation_ref.set(self.firestore_conversation.to_dict())
         return
 
 
 class InterviewConversation:
+    """ Class that tracks the states of a conversation with intervju Emely.
+        Is initialised with a FirestoreConversation object. """
+
     def __init__(self, firestore_conversation: FirestoreConversation, conversation_id,
                  firestore_conversation_collection):
         self.firestore_conversation = firestore_conversation
         self.name = firestore_conversation.name
         self.job = firestore_conversation.job
-        self.conversation_id = conversation_id  # TODO: Make sure this is passed
+        self.conversation_id = conversation_id
         self.lang = firestore_conversation.lang
 
         # Attributes to update
@@ -211,8 +220,7 @@ class InterviewConversation:
 
     # TODO: Move to superclass
     def add_text(self, firestore_message: FirestoreMessage):
-        """ Pushes new message to database
-        """
+        """ Adds a message to the conversation by pushing it to firestore """
         self.nbr_messages += 1
         msg_nbr = firestore_message.msg_nbr
         assert msg_nbr + 1 == self.nbr_messages, 'Whoopsie daisy: msg nbr in message and total nbr_messages in conversation do not match'
@@ -222,8 +230,9 @@ class InterviewConversation:
         return
 
     # TODO: Draw from database instead
+    # TODO: Implement skill formatting when data is available
     def _get_interview_questions(self):
-        """ Reads and formats interview questions according to the job
+        """ Helper function: Reads and formats interview questions according to the job
         """
         interview_questions_path = Path(__file__).resolve().parent.joinpath('interview_questions.txt')
         with open(interview_questions_path, 'r') as f:
@@ -238,8 +247,7 @@ class InterviewConversation:
 
     # TODO: Retrieve more information from database instead of from file
     def _get_more_information(self):
-        """ Reads more information utterances from file.
-        self.pmrr_more_information is used to keep track of which are left to use
+        """ Helper function: Reads more information utterances from file.
         """
         more_info_path = Path(__file__).resolve().parent.joinpath('more_information.txt')
         with open(more_info_path, 'r') as f:
@@ -287,6 +295,8 @@ class InterviewConversation:
 
     # TODO: MOve to superclass
     def get_bot_replies(self):
+        """ Retrieves all previous bot messages in the conversation and returns them as a list.
+            Is used for _correct_reply in worlds.py """
         docs = self.firestore_messages_collection.where('who', '==', 'bot').stream()
         messages = [doc.to_dict() for doc in docs]
         messages.sort(key=lambda x: x['msg_nbr'])
@@ -294,6 +304,7 @@ class InterviewConversation:
         return replies
 
     def _update_fire_object(self):
+        """ Helper function: Updates the attributes of the FirestoreConversation object """
         self.firestore_conversation.episode_done = self.episode_done
         self.firestore_conversation.nbr_messages = self.nbr_messages
         self.firestore_conversation.last_input_is_question = self.last_input_is_question
@@ -311,12 +322,9 @@ class InterviewConversation:
 
         return
 
-    def get_fire_object(self):
-        self._update_fire_object()
-        return self.firestore_conversation
-
     # TODO: Move to superclass(does it work despite unique update_fire_object fucntions?)
     def push_to_firestore(self):
+        """ Pushes the updated FirestoreConversation to the firestore database at the end of act() in worlds.py """
         self._update_fire_object()
         self.firestore_conversation_ref.set(self.firestore_conversation.to_dict())
         return

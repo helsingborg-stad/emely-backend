@@ -1,11 +1,15 @@
-from src.chat.worlds import InterviewWorld, ChatWorld
+from src.chat.worlds import InterviewWorld, FikaWorld
 from fastapi import FastAPI, Response, status, Request
 from argparse import Namespace
 
 import subprocess
 from src.api.models_from_bucket import download_models
-from src.api.utils import is_gcp_instance
-from src.api.bodys import BrainMessage, UserMessage, InitBody, create_error_response
+from src.api.utils import is_gcp_instance, create_error_response
+from src.api.bodys import BrainMessage, UserMessage, InitBody
+
+""" File contents:
+    FastAPI app brain that handles requests to Emely """
+
 
 brain = FastAPI()
 
@@ -22,24 +26,27 @@ fika_persona = Namespace(model_name='blenderbot_small-90M', local_model=local_mo
                          chat_mode='chat', no_correction=False)
 
 interview_world = InterviewWorld(**vars(interview_persona))
-fika_world = ChatWorld(**vars(fika_persona))
+fika_world = FikaWorld(**vars(fika_persona))
 world = None
 
 
 # Models aren't loaded
 async def init_config():
+    """ Called when app starts """
     # Print config
     print('git build: ', git_build)
     print('local_model: ', local_model)
     print('Latest version: ', git_version)
 
+    # TODO: Deprecate when models are on GCP
     models = ['blenderbot_small-90M', 'blenderbot_small-90M@f70_v2_acc20']
     if is_gcp_instance():
         download_models(models)
         print('Downloading models from bucket')
 
+    # TODO: Deprecate when models are on GCP
     global interview_world, fika_world
-    # interview_world.load_model()
+    interview_world.load_model()
     # fika_world.load_model()
     return
 
@@ -80,7 +87,7 @@ def new_chat(msg: InitBody, response: Response, request: Request):
 
 
 @brain.post('/fika')
-def fika(msg: UserMessage, response: Response):
+async def fika(msg: UserMessage, response: Response):
     # TODO: And add event loop
     if not msg.password == password:
         response.status_code = status.HTTP_401_UNAUTHORIZED
@@ -99,7 +106,7 @@ def fika(msg: UserMessage, response: Response):
 
 
 @brain.post('/intervju')
-def interview(msg: UserMessage, response: Response):
+async def interview(msg: UserMessage, response: Response):
     # TODO: Add event loop
     if not msg.password == password:
         response.status_code = status.HTTP_401_UNAUTHORIZED

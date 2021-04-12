@@ -7,6 +7,13 @@ import logging
 import os
 from pathlib import Path
 
+""" Translates text. Works with: 
+    - Google's official API(costs money)
+    - DeepTranslator(free)
+    - Googletrans(free)
+"""
+
+
 class ChatTranslator:
 
     def __init__(self, default_translator='googletrans'):

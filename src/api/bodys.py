@@ -1,46 +1,24 @@
 from enum import Enum
 from pydantic import BaseModel
 
-"""Classes used to define the request bodies used to communicate with the webapp """
+""" File contents: 
+    Classes used to define the request bodies used to communicate with the webapp """
 
 
 class PersonaEnum(str, Enum):
+    """ Forces the persona field in request bodies to be valid """
     intervju = 'intervju'
     fika = 'fika'
 
 
 class LanguageEnum(str, Enum):
+    """ Forces lang field in request bodies to be valid """
     sv = 'sv'
     en = 'en'
 
 
-class UserMessage(BaseModel):
-    """Standard message from the webapp to the brain """
-    conversation_id: str
-    response_time: float
-    lang: LanguageEnum
-    message: str
-    created_at: str
-    recording_used: bool
-    password: str
-
-    class Config:
-        """Used for the swagger docs"""
-        schema_extra = {
-            "example": {
-                "message": "This is a test message you can change",
-                "conversation_id": "__CHANGE_ME__",
-                "response_time": -1,
-                "created_at": '1999-04-07 18:59:24.584658',
-                "recording_used": False,
-                "lang": "sv",
-                "password": "KYgZfDG6P34H56WJM996CKKcNG4",
-            }
-        }
-
-
 class InitBody(BaseModel):
-    # Defines body for initial contact where a user starts a chat with Emely
+    """ Defines body for initial contact where a user starts a chat with Emely """
     name: str
     job: str
     created_at: str
@@ -56,6 +34,7 @@ class InitBody(BaseModel):
     user_ip_number: str
 
     class Config:
+        """ Used for the swagger docs when testing the api """
         schema_extra = {
             "example": {
                 "name": "Wilma",
@@ -75,7 +54,33 @@ class InitBody(BaseModel):
         }
 
 
+class UserMessage(BaseModel):
+    """Standard message from the webapp to the brain """
+    conversation_id: str
+    response_time: float
+    lang: LanguageEnum
+    message: str
+    created_at: str
+    recording_used: bool
+    password: str
+
+    class Config:
+        """ Used for the swagger docs when testing the api """
+        schema_extra = {
+            "example": {
+                "message": "This is a test message you can change",
+                "conversation_id": "__CHANGE_ME__",
+                "response_time": -1,
+                "created_at": '1999-04-07 18:59:24.584658',
+                "recording_used": False,
+                "lang": "sv",
+                "password": "KYgZfDG6P34H56WJM996CKKcNG4",
+            }
+        }
+
+
 class BrainMessage(BaseModel):
+    """ Response body from the brain to the webapp """
     conversation_id: str
     msg_id: int
     lang: LanguageEnum
@@ -83,15 +88,3 @@ class BrainMessage(BaseModel):
     is_init_message: bool
     is_hardcoded: bool
     error_messages: str
-
-
-def create_error_response(error_msg):
-    # Creates a dummy BrainMessage with the error message inserted
-    brain_response = BrainMessage(convesation_id=None,
-                                  msg_id=None,
-                                  lang='en',
-                                  message='',
-                                  is_init=False,
-                                  is_hardcoded=True,
-                                  error_messages=error_msg)
-    return brain_response
