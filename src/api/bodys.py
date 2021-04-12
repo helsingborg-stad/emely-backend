@@ -1,6 +1,8 @@
 from enum import Enum
 from pydantic import BaseModel
 
+"""Classes used to define the request bodies used to communicate with the webapp """
+
 
 class PersonaEnum(str, Enum):
     intervju = 'intervju'
@@ -12,9 +14,12 @@ class LanguageEnum(str, Enum):
     en = 'en'
 
 
+
+
 class UserMessage(BaseModel):
+    """Standard message from the webapp to the brain """
     conversation_id: str
-    response_time: str
+    response_time: float
     lang: LanguageEnum
     message: str
     created_at: str
@@ -22,11 +27,12 @@ class UserMessage(BaseModel):
     password: str
 
     class Config:
+        """Used for the swagger docs"""
         schema_extra = {
             "example": {
                 "message": "This is a test message you can change",
                 "conversation_id": "__CHANGE_ME__",
-                "response_time": '-1',
+                "response_time": -1,
                 "created_at": '1999-04-07 18:59:24.584658',
                 "recording_used": False,
                 "lang": "sv",
