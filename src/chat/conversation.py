@@ -14,22 +14,22 @@ FikaConversation/InterviewConversation objects.
 @dataclass
 class FirestoreMessage(object):
     """ Dataclass used to push Message data to the Firestore database """
-    conversation_id: str                # Unique ID assigned by firestore
-    msg_nbr: int                        # Starts at 0
-    who: str                            # 'user' or 'bot'
-    created_at: str                     # Timestamp
-    response_time: float                #
-    lang: str                           # Language: 'sv'
-    message: str                        # Message in lang
-    message_en: str                     # Message in english
-    case_type: str                      # Case in worlds.act()
-    recording_used: bool                # Whether the STT-recording was used or not
-    removed_from_message: str           # Message that was removed using world._correct_reply
-    is_more_information: bool           # Specific type of hardcoded message
-    is_init_message: bool               # Specific type of hardcoded message
-    is_predefined_question: bool        # Specific type of hardcoded message
-    is_hardcoded: bool                  #
-    error_messages: str                 #
+    conversation_id: str  # Unique ID assigned by firestore
+    msg_nbr: int  # Starts at 0
+    who: str  # 'user' or 'bot'
+    created_at: str  # Timestamp
+    response_time: float  #
+    lang: str  # Language: 'sv'
+    message: str  # Message in lang
+    message_en: str  # Message in english
+    case_type: str  # Case in worlds.act()
+    recording_used: bool  # Whether the STT-recording was used or not
+    removed_from_message: str  # Message that was removed using world._correct_reply
+    is_more_information: bool  # Specific type of hardcoded message
+    is_init_message: bool  # Specific type of hardcoded message
+    is_predefined_question: bool  # Specific type of hardcoded message
+    is_hardcoded: bool  #
+    error_messages: str  #
 
     @staticmethod
     def from_dict(source):
@@ -43,28 +43,28 @@ class FirestoreMessage(object):
 class FirestoreConversation(object):
     """ Dataclass used to push Conversation data to the Firestore database """
     # Fixed attributes
-    name: str                           # Name
-    persona: str                        # Emelys persona
-    created_at: str                     # Timestamp
-    lang: str                           # Language
-    development_testing: bool           # If conversation is an internal test
-    webapp_local: bool                  # Locally run webapp
-    webapp_url: str                     # Client host of webapp
-    webapp_version: str                 #
-    webapp_git_build: str               #
-    user_ip_number: str                 #
-    brain_url: str                      # Client host of brain
-    brain_version: str                  #
-    brain_git_build: str                #
-    job: str = None                     # Only used for interview, not fika
+    name: str  # Name
+    persona: str  # Emelys persona
+    created_at: str  # Timestamp
+    lang: str  # Language
+    development_testing: bool  # If conversation is an internal test
+    webapp_local: bool  # Locally run webapp
+    webapp_url: str  # Client host of webapp
+    webapp_version: str  #
+    webapp_git_build: str  #
+    user_ip_number: str  #
+    brain_url: str  # Client host of brain
+    brain_version: str  #
+    brain_git_build: str  #
+    job: str = None  # Only used for interview, not fika
 
     # Updated attributes - Used in Fika/InterviewConversation
-    episode_done: bool = False              # Is the conversation over?
-    nbr_messages: int = 0                   #
-    last_input_is_question: bool = False    # Was the last user input a question?
-    replies_since_last_question: int = -1   # Used to steer Emely
-    pmrr_interview_questions: str = '01234' # TODO: FIX this predefined list
-    pmrr_more_information: str = '012'      # TODO: Fix predefined list
+    episode_done: bool = False  # Is the conversation over?
+    nbr_messages: int = 0  #
+    last_input_is_question: bool = False  # Was the last user input a question?
+    model_replies_since_last_question: int = 0  # Used to steer Emely
+    pmrr_interview_questions: str = '01234'  # TODO: FIX this predefined list
+    pmrr_more_information: str = '012'  # TODO: Fix predefined list
 
     @staticmethod
     def from_dict(source):
@@ -107,12 +107,14 @@ class FikaConversation:
         self.episode_done = firestore_conversation.episode_done
         self.nbr_messages = firestore_conversation.nbr_messages
         self.last_input_is_question = firestore_conversation.last_input_is_question
-        self.replies_since_last_question = firestore_conversation.replies_since_last_question
+        self.model_replies_since_last_question = firestore_conversation.model_replies_since_last_question
 
-        # Fika specific - draw from db or file
+        # Fika specific - draw from db or file # TODO:
         # self.pmrr_more_information = [c for c in
         # firestore_conversation.pmrr_more_information]  # Split '1234 into ['1','2','3','4']
-        self.change_subject = ['']  # TODO
+        self.change_subject = ['Berätta något annat om dig själv!',
+                               'Nu tycker jag att vi ska prata om något annat!',
+                               'Vill du prata om något annat kanske']
 
         # Firestore
         self.firestore_messages_collection = firestore_conversation_collection.document(conversation_id).collection(
@@ -160,7 +162,7 @@ class FikaConversation:
         self.firestore_conversation.episode_done = self.episode_done
         self.firestore_conversation.nbr_messages = self.nbr_messages
         self.firestore_conversation.last_input_is_question = self.last_input_is_question
-        self.firestore_conversation.replies_since_last_question = self.replies_since_last_question
+        self.firestore_conversation.model_replies_since_last_question = self.model_replies_since_last_question
         return
 
     # TODO: MOve to superclass
@@ -197,11 +199,11 @@ class InterviewConversation:
         self.episode_done = firestore_conversation.episode_done
         self.nbr_messages = firestore_conversation.nbr_messages
         self.last_input_is_question = firestore_conversation.last_input_is_question
-        self.replies_since_last_question = firestore_conversation.replies_since_last_question
+        self.model_replies_since_last_question = firestore_conversation.model_replies_since_last_question
 
         # Retrieves hard coded messages
         self.pmrr_interview_questions = [c for c in
-                                         firestore_conversation.pmrr_more_information]  # Split '1234 into ['1','2','3','4']
+                                         firestore_conversation.pmrr_interview_questions]  # Split '1234 into ['1','2','3','4']
         self.pmrr_more_information = [c for c in firestore_conversation.pmrr_more_information]
 
         self.interview_questions = None
@@ -258,18 +260,14 @@ class InterviewConversation:
     def get_next_interview_question(self):
         """Pops the next question index from the pmrr_interview_questions list
            and returns the corresponding question """
-        try:
-            index = self.pmrr_interview_questions.pop(0)
-            question = self.interview_questions[index]
-        except IndexError:  # TODO: Remove
-            raise Warning(
-                'Something is not right when checking if the interview is out of questions. Debug InterviewWorld.observe()!')
+        index = int(self.pmrr_interview_questions.pop(0))
+        question = self.interview_questions[index]
         return question
 
     def get_next_more_information(self):
         """Pops a more information message"""
         try:
-            index = self.pmrr_more_information.pop()
+            index = int(self.pmrr_more_information.pop())
             more_info = self.more_information[index]
             contains_question = False
         except IndexError:
@@ -279,7 +277,7 @@ class InterviewConversation:
 
     def get_input_with_context(self):
         """ Creates input for model: the conversation history since the last predefined question! """
-        nbr_replies_for_context = self.replies_since_last_question * 2  #
+        nbr_replies_for_context = 2 + self.model_replies_since_last_question * 2
         condition = self.nbr_messages - nbr_replies_for_context
         docs = self.firestore_messages_collection.where('msg_nbr', '>=', condition).stream()
         messages = [doc.to_dict() for doc in docs]
@@ -308,7 +306,7 @@ class InterviewConversation:
         self.firestore_conversation.episode_done = self.episode_done
         self.firestore_conversation.nbr_messages = self.nbr_messages
         self.firestore_conversation.last_input_is_question = self.last_input_is_question
-        self.firestore_conversation.replies_since_last_question = self.replies_since_last_question
+        self.firestore_conversation.model_replies_since_last_question = self.model_replies_since_last_question
 
         pmrr_questions = ''
         for c in self.pmrr_interview_questions:
@@ -328,3 +326,9 @@ class InterviewConversation:
         self._update_fire_object()
         self.firestore_conversation_ref.set(self.firestore_conversation.to_dict())
         return
+
+    def _print_attr(self):
+        s = "pmrr_interview_questions: {} \n model_replies_since_last_question: {} \n nbr_messages : {} \n pmrr_more_info: {}".format(
+            self.pmrr_interview_questions, self.model_replies_since_last_question, self.nbr_messages,
+            self.pmrr_more_information)
+        print(s)

@@ -117,7 +117,6 @@ class FikaWorld:
 
         # Create FirestoreConversation, push to db and get conversation_id
         fire_convo = FirestoreConversation.from_dict(initial_information)
-        print('Is all the information needed for firestoreconversation in init_body?')  # TODO:Check
         conversation_ref = self.firestore_conversation_collection.document()
         conversation_ref.set(fire_convo.to_dict())
         conversation_id = conversation_ref.id
@@ -335,6 +334,7 @@ class FikaWorld:
 
 class InterviewWorld(FikaWorld):
     """ Handles interview conversations """
+
     def __init__(self, **kwargs):
         # TODO: More sophisticated questions/greeting drawn from txt file(?) and formated with name and job
         super().__init__(**kwargs)
@@ -362,7 +362,6 @@ class InterviewWorld(FikaWorld):
 
         # Create FirestoreConversation, push to db and get conversation_id
         fire_convo = FirestoreConversation.from_dict(initial_information)
-        print('Is all the information needed for firestoreconversation in init_body?')  # TODO:Check
         conversation_ref = self.firestore_conversation_collection.document()
         conversation_ref.set(fire_convo.to_dict())
         conversation_id = conversation_ref.id
@@ -389,7 +388,7 @@ class InterviewWorld(FikaWorld):
         new_conversation.push_to_firestore()
 
         # Create response
-        response = user_message_to_firestore_message(fire_msg)
+        response = firestore_message_to_brain_message(fire_msg)
 
         return response
 
@@ -411,20 +410,21 @@ class InterviewWorld(FikaWorld):
         interview = InterviewConversation(firestore_conversation=fire_convo, conversation_id=conversation_id,
                                           firestore_conversation_collection=self.firestore_conversation_collection)
 
-        # Convert user message to firestore message and add it to conversation
+        # Convert user message to firestore message
         firestore_message = user_message_to_firestore_message(user_message=user_request,
                                                               translated_message=message_en,
                                                               msg_nbr=interview.nbr_messages)
-        interview.add_text(firestore_message)
 
         # Update states
+        interview.add_text(firestore_message)  # Updates nbr_messages
+
         if '?' in message:
             interview.last_input_is_question = True
         else:
             interview.last_input_is_question = False
 
         # Set episode done if exit condition is met.
-        if interview.replies_since_last_question == self.max_replies and len(
+        if interview.model_replies_since_last_question == self.max_replies and len(
                 interview.pmrr_interview_questions) == 0 \
                 or message.lower().replace(' ', '') in self.stop_tokens:
             interview.episode_done = True
@@ -435,12 +435,13 @@ class InterviewWorld(FikaWorld):
         """There are four cases we can encounter that we treat differently:
          1. No more interview questions         --> End conversation
          2. Model has chatted freely for a bit  --> Force next interview questions
-         3. Same as last, but user has just written a question --> return reply + new question
-         4. Model is allowed to chat more
+         3. Model generates a reply that is totally revoked by correct reply and it forces new question instead
+         4. Same as last, but user has just written a question --> return reply + new question
+         5. Model is allowed to chat more
            Code is slightly messy so the four cases are marked with 'Case X' in the code """
 
         if interview.episode_done:
-            # Case 1
+            # Case 1 - No more interview questions --> End conversation
             case = '1'
 
             # Data for FireMessage
@@ -451,8 +452,8 @@ class InterviewWorld(FikaWorld):
 
             reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig!'
             reply_en = 'Thanks for your time, it was nice to interview you!'
-        elif interview.replies_since_last_question == self.max_replies and not interview.last_input_is_question:
-            # Case 2
+        elif interview.model_replies_since_last_question == self.max_replies and not interview.last_input_is_question:
+            # Case 2 - Model has chatted freely for a bit  --> Force next interview questions
             case = '2'
 
             # Data for FireMessage
@@ -461,11 +462,11 @@ class InterviewWorld(FikaWorld):
             is_more_information = False
             removed_from_message = ''
 
-            interview.replies_since_last_question = 0
+            interview.model_replies_since_last_question = 0
             reply_sv = interview.get_next_interview_question()
             reply_en = self.translator.translate(reply_sv, src='sv', target='en')
 
-        else:  # Case 3 or 4 - Model acts
+        else:  # Case 3, 4 or 5 - Model acts
 
             # Model call
             context = interview.get_input_with_context()
@@ -478,9 +479,13 @@ class InterviewWorld(FikaWorld):
 
             if not self.no_correction:
                 reply_en, removed_from_message = self._correct_reply(reply_en, interview)
+            else:
+                removed_from_message = ''
 
             # _correct_reply can return empty string -> force 'more info reply' (commented force new question)
             if len(reply_en) < 3:
+                # Case 3 - Model generates a reply that is totally revoked by correct reply and it forces new question instead
+                case = '3'
                 # Data for FireMessage
                 is_more_information = True
                 is_hardcoded = True
@@ -491,15 +496,15 @@ class InterviewWorld(FikaWorld):
                 reply_en = self.translator.translate(reply_sv, src='sv', target='en')
 
                 if contains_question:
-                    interview.replies_since_last_question = 0
+                    interview.model_replies_since_last_question = 0
                     is_predefined_question = True
                 else:
-                    interview.replies_since_last_question += 1
+                    interview.model_replies_since_last_question += 1
                     is_predefined_question = False
 
-            elif interview.replies_since_last_question == self.max_replies and interview.last_input_is_question:
-                # Case 3 - Add new question to end of model reply
-                case = '3'
+            elif interview.model_replies_since_last_question == self.max_replies and interview.last_input_is_question:
+                # Case 4 - Add new question to end of model reply
+                case = '4'
 
                 # Data for FireMessage
                 is_hardcoded = False
@@ -509,41 +514,41 @@ class InterviewWorld(FikaWorld):
                 reply_sv = self.translator.translate(reply_en, src='en',
                                                      target='sv') + ' ' + interview.get_next_interview_question()
                 reply_en = self.translator.translate(reply_sv, src='sv', target='en')
-                interview.replies_since_last_question = 0
+                interview.model_replies_since_last_question = 0
             else:
-                # Case 4
-                case = '4'
+                # Case 5 - Model is allowed to chat more
+                case = '5'
 
                 # Data for FireMessage
                 is_hardcoded = False
                 is_predefined_question = False
                 is_more_information = False
 
-                interview.replies_since_last_question += 1
+                interview.model_replies_since_last_question += 1
                 reply_sv = self.translator.translate(reply_en, src='en', target='sv')
 
-            # Time
-            act_timestamp = datetime.now()
-            response_time = format_response_time(act_timestamp - observe_timestamp)
+        # Time
+        act_timestamp = datetime.now()
+        response_time = format_response_time(act_timestamp - observe_timestamp)
 
-            # Create a firestoremessage and add it
-            firestore_message = FirestoreMessage(conversation_id=interview.conversation_id,
-                                                 msg_nbr=interview.nbr_messages, who='bot',
-                                                 created_at=str(act_timestamp),
-                                                 response_time=response_time,
-                                                 lang=interview.lang, message=reply_sv,
-                                                 message_en=reply_en,
-                                                 case_type=case,
-                                                 recording_used=False, removed_from_message=removed_from_message,
-                                                 is_more_information=is_more_information,
-                                                 is_init_message=False, is_predefined_question=is_predefined_question,
-                                                 is_hardcoded=is_hardcoded,
-                                                 error_messages='')
-            brain_response = firestore_message_to_brain_message(firestore_message)
-            interview.add_text(firestore_message)
-            interview.push_to_firestore()
+        # Create a firestoremessage and add it
+        firestore_message = FirestoreMessage(conversation_id=interview.conversation_id,
+                                             msg_nbr=interview.nbr_messages, who='bot',
+                                             created_at=str(act_timestamp),
+                                             response_time=response_time,
+                                             lang=interview.lang, message=reply_sv,
+                                             message_en=reply_en,
+                                             case_type=case,
+                                             recording_used=False, removed_from_message=removed_from_message,
+                                             is_more_information=is_more_information,
+                                             is_init_message=False, is_predefined_question=is_predefined_question,
+                                             is_hardcoded=is_hardcoded,
+                                             error_messages='')
+        brain_response = firestore_message_to_brain_message(firestore_message)
+        interview.add_text(firestore_message)
+        interview.push_to_firestore()
 
-            return brain_response
+        return brain_response
 
     def _correct_reply(self, reply, conversation):
         """ Corrects a reply from the blenderbot model.
@@ -578,7 +583,8 @@ class InterviewWorld(FikaWorld):
 
         # Emely cannot say that she's also a {job}, add
         lies = ['I am a {}'.format(conversation.job),
-                'do you have any hobbies?']
+                'do you have any hobbies?',
+                "i'm a stay at home mom"]
         temp_idx = []
         for i in keep_idx:
             combos = list(product([sentences[i]], lies))
