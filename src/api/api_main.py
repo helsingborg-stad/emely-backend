@@ -64,7 +64,7 @@ def new_chat(msg: InitBody, response: Response, request: Request):
         # Data
         global git_build, git_version
         client_host = request.client.host
-        build_data = {'brain_build': git_build, 'brain_version': git_version, 'brain_url': client_host}
+        build_data = {'brain_git_build': git_build, 'brain_version': git_version, 'brain_url': client_host}
 
         # Choose world depending on persona
         if msg.persona == 'fika':
