@@ -1,4 +1,4 @@
-from worlds import InterviewWorld, ChatWorld
+from worlds import InterviewWorld, FikaWorld
 from argparse import ArgumentParser
 
 
@@ -6,7 +6,7 @@ def main(**kwargs):
     if kwargs['chat_mode'].lower() == 'interview':
         world = InterviewWorld(**kwargs)
     elif kwargs['chat_mode'].lower() == 'chat':
-        world = ChatWorld(**kwargs)
+        world = FikaWorld(**kwargs)
     else:
         raise ValueError()
 
