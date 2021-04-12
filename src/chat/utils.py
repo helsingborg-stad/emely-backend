@@ -26,6 +26,7 @@ def user_message_to_firestore_message(user_message: UserMessage, translated_mess
 
 def firestore_message_to_brain_message(fire_msg: FirestoreMessage) -> BrainMessage:
     brain_msg = BrainMessage(conversation_id=fire_msg.conversation_id,
+                             msg_id=fire_msg.msg_nbr,
                              lang=fire_msg.lang,
                              message=fire_msg.message,
                              is_init_message=fire_msg.is_init_message,

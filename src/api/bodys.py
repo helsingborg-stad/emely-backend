@@ -14,8 +14,6 @@ class LanguageEnum(str, Enum):
     en = 'en'
 
 
-
-
 class UserMessage(BaseModel):
     """Standard message from the webapp to the brain """
     conversation_id: str
@@ -79,8 +77,21 @@ class InitBody(BaseModel):
 
 class BrainMessage(BaseModel):
     conversation_id: str
+    msg_id: int
     lang: LanguageEnum
     message: str
     is_init_message: bool
     is_hardcoded: bool
     error_messages: str
+
+
+def create_error_response(error_msg):
+    # Creates a dummy BrainMessage with the error message inserted
+    brain_response = BrainMessage(convesation_id=None,
+                                  msg_id=None,
+                                  lang='en',
+                                  message='',
+                                  is_init=False,
+                                  is_hardcoded=True,
+                                  error_messages=error_msg)
+    return brain_response

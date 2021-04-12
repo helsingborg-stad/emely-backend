@@ -129,12 +129,7 @@ class ChatWorld:
         new_conversation.push_to_firestore()
 
         # Create response
-        response = BrainMessage(conversation_id=conversation_id,
-                                lang=initial_information['lang'],
-                                message=greeting,
-                                is_init_message=True,
-                                is_hardcoded=True,
-                                error_messages='')
+        response = firestore_message_to_brain_message(fire_msg)
 
         return response
 
@@ -375,12 +370,7 @@ class InterviewWorld(ChatWorld):
         new_conversation.push_to_firestore()
 
         # Create response
-        response = BrainMessage(conversation_id=conversation_id,
-                                lang=initial_information['lang'],
-                                message=greeting,
-                                is_init_message=True,
-                                is_hardcoded=True,
-                                error_messages='')
+        response = user_message_to_firestore_message(fire_msg)
 
         return response
 
