@@ -87,7 +87,7 @@ class ChatWorld:
         self.model_loaded = True
         return
 
-    def init_conversation(self, init_body: InitBody):
+    def init_conversation(self, init_body: InitBody, build_data):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
 
         # Creates a greeting message
@@ -95,9 +95,10 @@ class ChatWorld:
         greeting = random.choice(self.greetings).format(name)
         greeting_en = 'Hi {}, my name is Emely. How are you today?'.format(name)
 
-        # Convert to dict and remove data not needed
+        # Convert initialization data to a dict and update with build data
         initial_information = init_body.dict()
-        initial_information.pop('password')
+        initial_information.update(build_data)
+        initial_information.pop('password')  # Not needed
 
         # Create FirestoreConversation, push to db and get conversation_id
         fire_convo = FirestoreConversation.from_dict(initial_information)
@@ -331,7 +332,7 @@ class InterviewWorld(ChatWorld):
         # TODO: Attribute for brain api
         # self.brain_api = pointer_to_gcp_
 
-    def init_conversation(self, init_body: InitBody):
+    def init_conversation(self, init_body: InitBody, build_data):
         """Creates a new empty conversation if the conversation id doesn't already exist"""
 
         # Creates greeting message
@@ -340,9 +341,10 @@ class InterviewWorld(ChatWorld):
         greeting = random.choice(self.greetings).format(name)
         greeting_en = 'Hello, {}! Welcome to your interview! How are you?'.format(name)
 
-        # Convert to dict and remove data not needed
+        # Convert initialization data to a dict and update with build data
         initial_information = init_body.dict()
-        initial_information.pop('password')
+        initial_information.update(build_data)
+        initial_information.pop('password')  # Not needed
 
         # Create FirestoreConversation, push to db and get conversation_id
         fire_convo = FirestoreConversation.from_dict(initial_information)
@@ -494,7 +496,8 @@ class InterviewWorld(ChatWorld):
                 is_predefined_question = True
                 is_more_information = False
 
-                reply_sv = self.translator.translate(reply_en, src='en', target='sv') + ' ' + interview.get_next_interview_question()
+                reply_sv = self.translator.translate(reply_en, src='en',
+                                                     target='sv') + ' ' + interview.get_next_interview_question()
                 reply_en = self.translator.translate(reply_sv, src='sv', target='en')
                 interview.replies_since_last_question = 0
             else:

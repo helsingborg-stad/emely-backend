@@ -34,7 +34,7 @@ class FirestoreMessage(object):
 @dataclass
 class FirestoreConversation(object):
     """ Dataclass used to push Conversation data to the Firestore database """
-    # Fixed attributes  TODO: Remove None for attributes ?
+    # Fixed attributes
     name: str
     persona: str
     created_at: str
@@ -45,10 +45,10 @@ class FirestoreConversation(object):
     webapp_version: str
     webapp_git_build: str
     user_ip_number: str
-    brain_url: str = None
-    brain_version: str = None
-    brain_git_build: str = None
-    job: str = None
+    brain_url: str
+    brain_version: str
+    brain_git_build: str
+    job: str = None    # Only used for interview, not fika
 
     # Updated attributes
     episode_done: bool = False
