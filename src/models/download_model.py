@@ -4,6 +4,7 @@ from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration
 from pathlib import Path
 from argparse import ArgumentParser
 
+""" Used to download huggingface models to /models to avoid caching """
 
 def main(args):
     mname = args.model_name
@@ -15,14 +16,15 @@ def main(args):
         model = BlenderbotForConditionalGeneration.from_pretrained(mname)
         tokenizer = BlenderbotTokenizer.from_pretrained(mname)
 
-    model_dir = Path(__file__).resolve().parent.joinpath(model_name + '/model')
-    token_dir = Path(__file__).resolve().parent.joinpath(model_name + '/tokenizer')
+    model_dir = Path(__file__).resolve().parents[2] / 'models' / model_name / 'model'
+    token_dir = Path(__file__).resolve().parents[2] / 'models' / model_name / 'tokenizer'
 
     model_dir.mkdir(parents=True, exist_ok=True)
     token_dir.mkdir(parents=True, exist_ok=True)
 
     model.save_pretrained(model_dir)
     tokenizer.save_pretrained(token_dir)
+    print('Saved model to ', model_dir)
 
 
 if __name__ == '__main__':
