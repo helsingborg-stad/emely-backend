@@ -21,7 +21,7 @@ if is_gcp_instance():
         git_build = f.read()
 else:
     git_build = subprocess.check_output(["git", "describe"]).strip().decode('utf-8')
-local_model = not is_gcp_instance()
+local_model = True
 password = 'KYgZfDG6P34H56WJM996CKKcNG4'
 
 # Setup
