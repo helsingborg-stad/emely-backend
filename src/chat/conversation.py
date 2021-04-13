@@ -52,10 +52,9 @@ class FirestoreConversation(object):
     webapp_local: bool  # Locally run webapp
     webapp_url: str  # Client host of webapp
     webapp_version: str  #
-    webapp_git_build: str  #
     user_ip_number: str  #
     brain_url: str  # Client host of brain
-    brain_git_build: str  #
+    brain_version: str  #
     job: str = None  # Only used for interview, not fika
 
     # Updated attributes - Used in Fika/InterviewConversation

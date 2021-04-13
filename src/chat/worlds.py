@@ -88,8 +88,6 @@ class FikaWorld:
         elif 'facebook/' in self.model_name:
             model_dir = self.model_name
             token_dir = self.model_name
-        else:
-            self.model_loaded = False
 
         if 'small' in self.model_name:
             self.model = BlenderbotSmallForConditionalGeneration.from_pretrained(model_dir)
