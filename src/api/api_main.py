@@ -16,7 +16,7 @@ brain = FastAPI()
 
 # Variables used in the app
 if is_gcp_instance():
-    file_path = Path(__file__).resolve().parents[2] / 'git_build.txt'
+    file_path = Path(__file__).resolve().parents[2] / 'git_version.txt'
     with open(file_path, 'r') as f:
         git_build = f.read()
 else:
