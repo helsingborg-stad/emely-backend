@@ -12,4 +12,4 @@ RUN mkdir -p models/blenderbot_small-90M/tokenizer
 
 COPY ./src /src
 
-CMD ["uvicorn", "src.api.api_main:brain", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
+CMD ["uvicorn", "src.api.api_main:brain", "--host", "0.0.0.0", "--port", "8080"]
