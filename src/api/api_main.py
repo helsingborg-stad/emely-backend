@@ -6,6 +6,7 @@ import subprocess
 from src.api.models_from_bucket import download_models
 from src.api.utils import is_gcp_instance, create_error_response
 from src.api.bodys import BrainMessage, UserMessage, InitBody
+from pathlib import Path
 
 """ File contents:
     FastAPI app brain that handles requests to Emely """
@@ -14,7 +15,12 @@ from src.api.bodys import BrainMessage, UserMessage, InitBody
 brain = FastAPI()
 
 # Variables used in the app
-git_build = subprocess.check_output(["git", "describe"]).strip().decode('utf-8')
+if is_gcp_instance():
+    file_path = Path(__file__).resolve().parents[2] / 'git_build.txt'
+    with open(file_path, 'r') as f:
+        git_build = f.read()
+else:
+    git_build = subprocess.check_output(["git", "describe"]).strip().decode('utf-8')
 local_model = not is_gcp_instance()
 password = 'KYgZfDG6P34H56WJM996CKKcNG4'
 
