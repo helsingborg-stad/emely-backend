@@ -3,6 +3,10 @@ from pathlib import Path
 import os
 from src.api.utils import is_gcp_instance
 
+""" Downloads models from GCP bucket. Is used as a workaround to solve large Docker containers. 
+    Will be deprecated as soon as models are separate on GCP 
+"""
+
 
 # TODO: Deprecate when models are on GCP. With entire script
 def download_models(model_dirs: list):
