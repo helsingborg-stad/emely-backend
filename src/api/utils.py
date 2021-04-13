@@ -15,7 +15,7 @@ def is_gcp_instance():
 
 def create_error_response(error_msg):
     """ Creates a dummy BrainMessage with the error message inserted"""
-    brain_response = BrainMessage(convesation_id=None,
+    brain_response = BrainMessage(conversation_id=None,
                                   msg_id=None,
                                   lang='en',
                                   message='',

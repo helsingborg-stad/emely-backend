@@ -9,6 +9,8 @@ import pytorch_lightning as pl
 import torch
 from pytorch_lightning.callbacks import ModelCheckpoint
 
+""" Pytorch lightning model of blenderbot for training with pytorch lightning"""
+
 
 class LitBlenderbot(pl.LightningModule):
     def __init__(self, tokenizer, mname, hparams):

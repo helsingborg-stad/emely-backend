@@ -3,8 +3,11 @@ from pathlib import Path
 from transformers import BlenderbotTokenizer, BlenderbotSmallTokenizer
 from argparse import Namespace, ArgumentParser
 
+"""" Loads a pytorch lightning checkpoint from training and saves tokenizer and model 
+     as bin in same directory under /models so it can be used for Emely
+"""
+
 if __name__ == '__main__':
-    """" Loads a lightning checkpoint and saves tokenizer and model as bin in same directory"""
     parser = ArgumentParser()
     parser.add_argument('--model_dir', type=str, required=True,
                         help='directory with pytorch lightning checkpoint')
