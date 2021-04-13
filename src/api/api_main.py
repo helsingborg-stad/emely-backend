@@ -14,8 +14,7 @@ from src.api.bodys import BrainMessage, UserMessage, InitBody
 brain = FastAPI()
 
 # Variables used in the app
-git_build = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip().decode('utf-8')
-git_version = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"]).strip().decode('utf-8')
+git_build = subprocess.check_output(["git", "describe"]).strip().decode('utf-8')
 local_model = not is_gcp_instance()
 password = 'KYgZfDG6P34H56WJM996CKKcNG4'
 
@@ -36,7 +35,6 @@ async def init_config():
     # Print config
     print('git build: ', git_build)
     print('local_model: ', local_model)
-    print('Latest version: ', git_version)
 
     # TODO: Deprecate when models are on GCP
     models = ['blenderbot_small-90M', 'blenderbot_small-90M@f70_v2_acc20']
@@ -47,7 +45,7 @@ async def init_config():
     # TODO: Deprecate when models are on GCP
     global interview_world, fika_world
     interview_world.load_model()
-    # fika_world.load_model()
+    fika_world.load_model()
     return
 
 
@@ -64,7 +62,7 @@ def new_chat(msg: InitBody, response: Response, request: Request):
         # Data
         global git_build, git_version
         client_host = request.client.host
-        build_data = {'brain_git_build': git_build, 'brain_version': git_version, 'brain_url': client_host}
+        build_data = {'brain_git_build': git_build, 'brain_url': client_host}
 
         # Choose world depending on persona
         if msg.persona == 'fika':

@@ -54,7 +54,6 @@ class FirestoreConversation(object):
     webapp_git_build: str  #
     user_ip_number: str  #
     brain_url: str  # Client host of brain
-    brain_version: str  #
     brain_git_build: str  #
     job: str = None  # Only used for interview, not fika
 
