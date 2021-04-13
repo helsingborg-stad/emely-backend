@@ -4,9 +4,13 @@ Once this process is finnished, automatic configuration of the data will be run 
 have been taken, a single text file with all the interactions has been created. This text file may then be used to train
 the model using the ParlAI interface.
 
+The data from Otter is located in OneDrive - NordAxon\NORDAXON\AI ML PROJECTS\Emely\Data\Open Data\Otter
+The raw data files are find in each sub folder.
+
 Step 1. Run the script src/data/rull_all_editing.py
         Aligns the tags (emely or user) with the corresponding text so that there is not a linebreak after the tag.
-Step 2. Manually add episode_start and episode_stop of the edited files, where it is appropriate. The only requirement is that
+Step 2. Manually add episode_start and episode_stop of the edited files, where it is appropriate.
+        Name this file <file_name>_edited_formated.txt
 Step 3. Run the script src/data/read_dialouge_data.
         Extract the conversations to .json files. This should be placed in data/json/ and the input text-files should be
         in data/raw/. But it is possible to use some other structure. Remember that the .json files are assigned a random
