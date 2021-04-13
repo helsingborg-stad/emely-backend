@@ -26,12 +26,15 @@ def format_line(line: str):
     """Formats the line into a tuple """
 
 
-    if "emely" in line:
+    if "emely:" in line or "Emely:" in line:
         output = ("e", line.replace("emely:", ""))
-    elif "user" in line:
+    elif "user:" in line or "User: " in line:
         output = ("u", line.replace("user:", ""))
+    elif line == "\n":
+        # If there is a line break, remove it.
+        return False
     else:
-        #
+        # Raise an error if there is something wrong with the format.
         raise ValueError("Line is not in the correct format.: {0}. Make sure that the input file"
                          "is formatted according to the instructions".format(line))
     return output
@@ -74,10 +77,8 @@ def run_data_extraction(lines, output_path):
             # If the episode is done add the data
             # Initialise the Dialouge
 
-            if current_lines[0][0] == "e":
-                emely_start = True
-            else:
-                emely_start = False
+            if current_lines[0][0] == "e": emely_start = True
+            else: emely_start = False
             # Create the dialouge object.
             dialouge = Dialogue(len=len(current_lines),
                                 position=current_position,
@@ -94,40 +95,71 @@ def run_data_extraction(lines, output_path):
         if append_lines:
             # transform the line to the correct format.
             line_f = format_line(line)
-            current_lines.append(line_f)
+            if line_f:
+                current_lines.append(line_f)
 
         # Check if there is an episode start so that data should be appended.
         if "episode_start" in line:
             append_lines = True
 
 
-def main(input_file, store_path):
+def remove_json(path: Path):
+    """ Removes all .json files in the Path path. This is used in order to not create dubplicates"""
+
+    for p in path.glob('**/*'):
+        if ".json" in str(p):
+            p.unlink()
+            print("Removed file: {0}".format(str(p)))
+
+
+def main(input_path, store_path, run_remove=False):
+    """
+    Goes through all files in the input path and turns the dialoges to .json files.
+    """
 
     # The path for the rawdata must be here.
-    data_dir = Path(__file__).resolve().parents[2].joinpath('data')
-    input_path = data_dir / 'raw' / Path(input_file)
+    data_dir = Path(__file__).resolve().parents[2]# .joinpath('data')
+    input_path = data_dir / input_path# Path(input_path)
     output_path = data_dir / store_path
 
     # Check if the output path exists. If not make it.
+    output_path = Path(output_path)
+    if not output_path.is_dir():
+        output_path.mkdir(parents=True, exist_ok=True)
 
-    if not Path(output_path).is_dir():
-        Path(output_path).mkdir(parents=True, exist_ok=True)
+    # Check if existing data should be removed.
+    if run_remove:
+        remove_json(output_path)
+    # Remove all .json-files if there are any in the output path.
 
-    # Read the lines.
-    with open(input_path) as fp:
-        lines = fp.readlines()
+    # p = Path(input_path)
 
-    run_data_extraction(lines, output_path)
+    # Go through all files in the input_path.
+    for i in input_path.glob('**/*'):
+        # Read the lines.
+
+        with open(i) as fp:
+            lines = fp.readlines()
+
+        run_data_extraction(lines, output_path)
 
 
 if __name__ == "__main__":
     # To call the function from the terminal supply two input arguments.
-    # --input_file: The filename to the input file. It is assumed that this is located in root/data/raw/.
-    # --output_file: The name of the subdirectory where the .json-files should be stored. The file-names are randomly generated.
+    # --input_file: The filename to the input file.
+    # --output_path: The name of the subdirectory where the .json-files should be stored. The file-names are randomly generated.
     #                If this path does not exist, it will be created. The default name should be json
+    # --run_remove: Boolean. If true, it removes all files with the .json ending in the output path.
+
     parser = ArgumentParser()
-    parser.add_argument('--input_file', type=str, required=True)
-    parser.add_argument('--output_file', type=str, required=True)
+    parser.add_argument('--input_path', type=str, required=True)
+    parser.add_argument('--output_path', type=str, required=True)
+    parser.add_argument("--run_remove", dest='run_remove', action='store_true')
+    parser.set_defaults(run_remove=False)
     args = parser.parse_args()
-    main(args.input_file, args.output_file)
+    if args.run_remove:
+        main(args.input_path, args.output_path, args.run_remove)
+    else:
+        main(args.input_path, args.output_path)
+
 
