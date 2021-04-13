@@ -1,0 +1,9 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/emelybrainapi/emelybackend:$SHORT_SHA', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/emelybrainapi/emelybackend:$SHORT_SHA']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/my-project-id/myimage', '.']
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['run', 'deploy', 'emely-chat-service-api-staging', '--image', 'gcr.io/emelybrainapi/emelybackend:$SHORT_SHA', '--platform managed', '--region=europe-west1', '--allow-unauthenticated', '--memory 4Gi', '--max-instances 1']
