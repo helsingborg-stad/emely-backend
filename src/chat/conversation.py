@@ -14,22 +14,23 @@ FikaConversation/InterviewConversation objects.
 @dataclass
 class FirestoreMessage(object):
     """ Dataclass used to push Message data to the Firestore database """
-    conversation_id: str  # Unique ID assigned by firestore
-    msg_nbr: int  # Starts at 0
-    who: str  # 'user' or 'bot'
-    created_at: str  # Timestamp
-    response_time: float  #
-    lang: str  # Language: 'sv'
-    message: str  # Message in lang
-    message_en: str  # Message in english
-    case_type: str  # Case in worlds.act()
-    recording_used: bool  # Whether the STT-recording was used or not
-    removed_from_message: str  # Message that was removed using world._correct_reply
-    is_more_information: bool  # Specific type of hardcoded message
-    is_init_message: bool  # Specific type of hardcoded message
-    is_predefined_question: bool  # Specific type of hardcoded message
-    is_hardcoded: bool  #
-    error_messages: str  #
+    conversation_id: str    # Unique ID assigned by firestore
+    msg_nbr: int            # Starts at 0
+    who: str                # 'user' or 'bot'
+    created_at: str         # Timestamp
+    response_time: float    #
+    lang: str               # Language: 'sv'
+    message: str            # Message in lang
+    message_en: str         # Message in english
+    case_type: str          # Case in worlds.act()
+    recording_used: bool    # Whether the STT-recording was used or not
+    removed_from_message: str       # Message that was removed using world._correct_reply
+    is_more_information: bool       # Specific type of hardcoded message
+    is_init_message: bool           # Specific type of hardcoded message
+    is_predefined_question: bool    # Specific type of hardcoded message
+    is_hardcoded: bool      #
+    error_messages: str     #
+    message_rating: int = 0  # Used for feedback in webapp, possibly reinforcement learning later on
 
     @staticmethod
     def from_dict(source):
