@@ -9,7 +9,7 @@ RUN mkdir -p models/blenderbot_small-90M@f70_v2_acc20/model
 RUN mkdir -p models/blenderbot_small-90M@f70_v2_acc20/tokenizer
 RUN mkdir -p models/blenderbot_small-90M/model
 RUN mkdir -p models/blenderbot_small-90M/tokenizer
-RUN git describe > git_build.txt
+COPY ./git_build.txt /git_build.txt
 
 COPY ./src /src
 
