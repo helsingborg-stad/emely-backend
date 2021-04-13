@@ -36,7 +36,7 @@ def main(**kwargs):
                          lang='sv',
                          password='KYgZfDG6P34H56WJM996CKKcNG4',
                          user_ip_number='None')
-    build_data = {'brain_git_build': git_build, 'brain_version': git_version, 'brain_url': 'None'}
+    build_data = {'brain_git_build': git_build, 'brain_url': 'None'}
     episode_done = False
     brain_message = world.init_conversation(init_body=init_body, build_data=build_data)
     conversation_id = brain_message.conversation_id
