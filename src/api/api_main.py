@@ -16,11 +16,11 @@ brain = FastAPI()
 
 # Variables used in the app
 if is_gcp_instance():
-    file_path = Path(__file__).resolve().parents[2] / 'git_build.txt'
+    file_path = Path(__file__).resolve().parents[2] / 'git_version.txt'
     with open(file_path, 'r') as f:
-        git_build = f.read()
+        git_version = f.read()
 else:
-    git_build = subprocess.check_output(["git", "describe"]).strip().decode('utf-8')
+    git_version = subprocess.check_output(["git", "describe"]).strip().decode('utf-8')
 local_model = True
 password = 'KYgZfDG6P34H56WJM996CKKcNG4'
 
@@ -39,7 +39,7 @@ world = None
 async def init_config():
     """ Called when app starts """
     # Print config
-    print('git build: ', git_build)
+    print('brain build: ', git_version)
     print('local_model: ', local_model)
 
     # TODO: Deprecate when models are on GCP
@@ -66,9 +66,9 @@ def new_chat(msg: InitBody, response: Response, request: Request):
         brain_response = create_error_response(error)
     else:  # All checks pass
         # Data
-        global git_build, git_version
+        global git_version
         client_host = request.client.host
-        build_data = {'brain_git_build': git_build, 'brain_url': client_host}
+        build_data = {'brain_version': git_version, 'brain_url': client_host}
 
         # Choose world depending on persona
         if msg.persona == 'fika':
