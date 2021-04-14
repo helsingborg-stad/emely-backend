@@ -1,7 +1,6 @@
 """
 Script for preprocessing the dialouge data where there are multiple interactions between Emely and the user.
 
-The files are stored
 """
 
 import secrets
