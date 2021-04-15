@@ -3,7 +3,7 @@ Transforms data from the .json format to a .txt-file that can be used when train
 """
 import json
 import random
-
+from argparse import ArgumentParser
 from pathlib import Path
 
 
@@ -38,7 +38,7 @@ def extract_data(data):
     k = 1
     # Go through all the dialouge string.
     # Skip the first entry as this is one of the basic questions asked by Emely.
-    for data_tup in data["dialouge"]: #[1:]:
+    for data_tup in data["dialouge"]:
 
         u_or_e = data_tup[0]
         text = data_tup[1].replace("\n", "")  # Remove the line break.
@@ -67,7 +67,6 @@ def main(input_path, output_path):
     data_dir = Path(__file__).resolve().parents[2]
     # Go through all the .json files.
 
-
     out_path = data_dir / output_path
 
     if not out_path.is_dir():
@@ -95,13 +94,8 @@ if __name__ == "__main__":
                    the original file with the ending <filename>_edited.txt 
     """
 
-    main("data\json", "data\ParlAI")
-
-    """
     parser = ArgumentParser()
     parser.add_argument('--root_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
     args = parser.parse_args()
     main(args.root_path, args.output_path)
-        
-    """

@@ -173,13 +173,7 @@ if __name__ == "__main__":
     # --output_path: The name of the subdirectory where the .json-files should be stored. The file-names are randomly generated.
     #                If this path does not exist, it will be created. The default name should be json
     # --run_remove: Boolean. If true, it removes all files with the .json ending in the output path.
-    """
-    input_path = r"data\raw\Processed"
-    output_path = r"data\json"
-    main(input_path, output_path, True)
-    """
 
-    # """
     parser = ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
@@ -190,5 +184,4 @@ if __name__ == "__main__":
         main(args.input_path, args.output_path, args.run_remove)
     else:
         main(args.input_path, args.output_path)
-    # """
 
