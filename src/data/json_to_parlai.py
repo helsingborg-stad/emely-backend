@@ -50,7 +50,14 @@ def extract_data(data):
         tag = tags[u_or_e]
         end = ending[u_or_e]
         if k == conv_length:
-            output += "{0}: {1} \t episode_done:True {2}".format(tag, text, end)
+            # Check if the last tag is a text or a label:
+            if tag == "labels":
+                output += "{0}: {1} \t episode_done:True \n".format(tag, text)
+            elif tag == "text":
+                # Remove the last line break.
+                # TODO: This is a hotfix for when the last input is a text and not a label.
+                output= output[:-1]
+                output += "episode_done:True \n"
         else:
             output += "{0}: {1} {2}".format(tag, text, end)
         k += 1
