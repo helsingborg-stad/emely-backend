@@ -96,13 +96,13 @@ def main(input_path, output_path):
 if __name__ == "__main__":
     """
     Goes through all the files in the data directory and adds the edited files in the same directory. 
-    --root_path: The path to the root-directory where all the .json files are stored. 
+    --input_path: The path to the input-directory where all the .json files are stored. 
     --output_path: The path where the data should be be stored. If it says "same", it is stored in the same directory as
                    the original file with the ending <filename>_edited.txt 
     """
 
     parser = ArgumentParser()
-    parser.add_argument('--root_path', type=str, required=True)
+    parser.add_argument('--input_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
     args = parser.parse_args()
-    main(args.root_path, args.output_path)
+    main(args.input_path, args.output_path)
