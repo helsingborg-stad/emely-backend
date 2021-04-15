@@ -2,9 +2,23 @@
 Transforms data from the .json format to a .txt-file that can be used when training Parlai.
 """
 import json
-from argparse import ArgumentParser
+import random
 
 from pathlib import Path
+
+
+def get_first_data():
+    """Returns the first data to each interaction as a string."""
+    # TODO: Add better examples than just an empty string. For example have a list
+    # TODO: of opening lines and sample from these.
+
+    input_list = ["Thanks for having me!", \
+                 "I'm excited about this interview.", \
+                 "I'm a little nervous but we can start the interview now.",
+                  " "]
+    i = random.randint(0, len(input_list)-1)
+    return "text: {0} \t".format(input_list[i])  # Begin each new dialouge with an empty string as input.
+
 
 def open_json(path):
     """Opens the .json-files"""
@@ -13,19 +27,26 @@ def open_json(path):
     data = json.loads(data_str)
     return data
 
+
 def extract_data(data):
     conv_length = data["len"]
     tags = {"u": "text", "e": "labels"}
     ending = {"u": "\t", "e": "\n"}
-    output = ""
 
-    k = 2
+    output = get_first_data()
+
+    k = 1
     # Go through all the dialouge string.
     # Skip the first entry as this is one of the basic questions asked by Emely.
-    for data_tup in data["dialouge"][1:]:
+    for data_tup in data["dialouge"]: #[1:]:
 
         u_or_e = data_tup[0]
         text = data_tup[1].replace("\n", "")  # Remove the line break.
+        # Check if the interaction contains XXX. This is a placeholder for the text
+        # and if it is contained in the text, the entire dialouge should be thrown out.
+        if "XXX" in text:
+            return "", False
+
         tag = tags[u_or_e]
         end = ending[u_or_e]
         if k == conv_length:
@@ -33,7 +54,7 @@ def extract_data(data):
         else:
             output += "{0}: {1} {2}".format(tag, text, end)
         k += 1
-    return output
+    return output, True
 
 
 def main(input_path, output_path):
@@ -57,7 +78,10 @@ def main(input_path, output_path):
    # Go through all the .json files.
     for i in Path(data_dir / input_path).glob('**/*'):
         data = open_json(i)
-        output = extract_data(data)  # Get the correctly formated data
+        output, data_bool = extract_data(data)  # Get the correctly formated data
+        # Check if the data should be appended.
+        if not data_bool:
+            Warning("The data:\n {0}\n  contained XXX. Not adding data.".format(data))
         output_string += output  # Append the output.
 
     f = open(store_path + r"\\training_for_parlai.txt", "w")
@@ -71,8 +95,13 @@ if __name__ == "__main__":
                    the original file with the ending <filename>_edited.txt 
     """
 
+    main("data\json", "data\ParlAI")
+
+    """
     parser = ArgumentParser()
     parser.add_argument('--root_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
     args = parser.parse_args()
     main(args.root_path, args.output_path)
+        
+    """
