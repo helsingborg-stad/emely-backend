@@ -27,7 +27,6 @@ class InitBody(BaseModel):
     webapp_local: bool
     webapp_url: str
     webapp_version: str
-    webapp_git_build: str
     brain_url: str
     lang: LanguageEnum
     password: str
@@ -45,7 +44,6 @@ class InitBody(BaseModel):
                 "webapp_local": True,
                 "webapp_url": "swaggerdocs",
                 "webapp_version": "NA",
-                "webapp_git_build": "NA",
                 "brain_url": "NA",
                 "lang": "sv",
                 "password": "KYgZfDG6P34H56WJM996CKKcNG4",
