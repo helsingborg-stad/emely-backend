@@ -39,7 +39,7 @@ world = None
 async def init_config():
     """ Called when app starts """
     # Print config
-    print('brain build: ', git_version)
+    print('brain_version: ', git_version)
     print('local_model: ', local_model)
 
     # TODO: Deprecate when models are on GCP

@@ -1,6 +1,7 @@
 """
 This script formats data generated from Otter.AI
 """
+from pathlib import Path
 
 def find_tag(line):
     """Finds the tag of the current line. The tag is either emely or user"""
@@ -22,10 +23,11 @@ def find_text(line):
     return is_text
 
 
-def editing(input_path, output_path):
+def editing(input_path, filename, output_path):
     """
     The main function for editing the Otter data so that it is in the correct format.
     --input_path: The path of the data including the file_name. The file_name must be a .txt
+    --filename: The filename of the file that is stored.
     --output_path: The output path including the filename.  The file_name must be a .txt
     """
 
@@ -34,8 +36,7 @@ def editing(input_path, output_path):
 
     output = ""  # The output which is written into the file
     current_tag = ""  # The current conversation tag.
-    last_tag = ""  # The last conversation tag. If this is the same as the last conversation tag,
-                   # the current line without the tag should be appended.
+
     for line in lines:
         # Find if the line contains a tag, and use this tag.
         is_tag, tag_temp = find_tag(line)
@@ -44,20 +45,18 @@ def editing(input_path, output_path):
         is_text = find_text(line)
         # FIXME: Add a function that concatenates multiple entries from the same tag.
         if is_text:
-            #if current_tag == last_tag:
-            #    print("if")
-            #output += line.replace("\n", "")
-            #else:
-            #    print("else")
+
                 output += current_tag + line
-        # Update the last tag.
-        if current_tag is not None:
-            last_tag = current_tag
 
     # Write the output file to the desired path.
-    f = open(output_path, "w")
-    f.write(output)
 
+    if not output_path.is_dir():
+        output_path.mkdir(parents=True, exist_ok=True)
+
+    print("Data used stored at: ".format(str(output_path) + filename))
+    f = open(str(output_path) + filename, "w")
+    f.write(output)
+    f.close()
 
 
 

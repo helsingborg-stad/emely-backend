@@ -1,7 +1,6 @@
 """
 Script for preprocessing the dialouge data where there are multiple interactions between Emely and the user.
 
-The files are stored
 """
 
 import secrets
@@ -34,14 +33,32 @@ def format_line(line: str):
         # If there is a line break, remove it.
         return False
     else:
-        # Raise an error if there is something wrong with the format.
-        raise ValueError("Line is not in the correct format.: {0}. Make sure that the input file"
-                         "is formatted according to the instructions".format(line))
+
+        # Raise a warning if there is something wrong with the format.
+        #
+        return "raise_warning"
     return output
 
+def check_emely_first(dialouge):
+    """Checks so that the first entry is from Emely.
+    --dialouge: A dialouge obejct
+    """
+
+    tag = dialouge.dialouge[0][0]
+    if tag == "e":
+        return True
+    elif tag == "u":
+        return False
+    else:
+        raise ValueError("The tag {0} is not in the correct format.".format(tag))
 
 def store_data(dialouge, output_path):
     """Saves the data in the desried file"""
+
+    # Check so that the first response is from Emely.
+    if not check_emely_first(dialouge):
+        # If it is not in the correct format, the data will not be stored.
+        return False
 
     # Generate a random name.
     name = str(secrets.token_hex(nbytes=4)) + ".json"
@@ -57,9 +74,9 @@ def store_data(dialouge, output_path):
 
     with open(save_path.as_posix(), "w") as fp:
         json.dump(json_str, fp)
+    return True
 
-
-def run_data_extraction(lines, output_path):
+def run_data_extraction(lines, output_path, file_path):
     """Goes through all lines and stores each interaction to a .json-file"""
     current_lines = []
 
@@ -85,7 +102,11 @@ def run_data_extraction(lines, output_path):
                                 dialouge=current_lines,
                                 emely_start=emely_start)
             #Store the data.
-            store_data(dialouge, output_path)
+            store_bool = store_data(dialouge, output_path)
+            # If the data storing is not correct, print the incorrect file
+            if not store_bool:
+                Warning("The file {0} \n is incorrectly formatted at line {1}. \n Data is excluded from analysis."
+                      .format(file_path, k))
             # Reset the current lines.
             current_lines = []
             # Reset the append lines.
@@ -95,9 +116,12 @@ def run_data_extraction(lines, output_path):
         if append_lines:
             # transform the line to the correct format.
             line_f = format_line(line)
-            if line_f:
-                current_lines.append(line_f)
 
+            if line_f =="raise_warning":
+
+                print("Warning detected at in file \n{0} \n at line {1}.".format(file_path, k))
+            elif line_f:
+                current_lines.append(line_f)
         # Check if there is an episode start so that data should be appended.
         if "episode_start" in line:
             append_lines = True
@@ -132,16 +156,15 @@ def main(input_path, store_path, run_remove=False):
         remove_json(output_path)
     # Remove all .json-files if there are any in the output path.
 
-    # p = Path(input_path)
-
     # Go through all files in the input_path.
     for i in input_path.glob('**/*'):
         # Read the lines.
 
         with open(i) as fp:
+
             lines = fp.readlines()
 
-        run_data_extraction(lines, output_path)
+        run_data_extraction(lines, output_path, i)
 
 
 if __name__ == "__main__":
@@ -161,5 +184,4 @@ if __name__ == "__main__":
         main(args.input_path, args.output_path, args.run_remove)
     else:
         main(args.input_path, args.output_path)
-
 

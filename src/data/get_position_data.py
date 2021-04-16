@@ -63,7 +63,7 @@ def main(input_file, output_file):
     # Read the lines.
     with open(input_path) as fp:
         lines = fp.readlines()
-    # Check if the output path exsits.
+    # Check if the output path exits.
 
     # If not, create the path.
     run_data_extraction(lines, output_path)
