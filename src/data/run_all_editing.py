@@ -21,8 +21,6 @@ def edit_files(path, filename, output_path):
 
         # Check what the output path should be. If the out
 
-        if output_path == "same": output_path = path
-
         fn = filename.replace(".txt", "_edited") + ".txt"
 
         editing(str(path_str) + str(filename), fn, output_path)

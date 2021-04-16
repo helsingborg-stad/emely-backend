@@ -53,7 +53,7 @@ def editing(input_path, filename, output_path):
     if not output_path.is_dir():
         output_path.mkdir(parents=True, exist_ok=True)
 
-    print("Data used stored at: ".format(str(output_path) + filename))
+    print("Data used stored at: {0}".format(str(output_path) + filename))
     f = open(str(output_path) + filename, "w")
     f.write(output)
     f.close()
