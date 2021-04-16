@@ -1,4 +1,8 @@
+
+
 steps:
+- name: 'ubuntu'
+  args: ['echo', '$SHORT_SHA', '>', 'git_version.txt']
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'gcr.io/emelybrainapi/emelybackend:$SHORT_SHA', '.']
 - name: 'gcr.io/cloud-builders/docker'
