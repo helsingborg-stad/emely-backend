@@ -8,7 +8,7 @@ import json
 
 from pathlib import Path
 from argparse import ArgumentParser
-
+import warnings
 from pydantic import BaseModel
 from typing import Union
 
@@ -83,7 +83,11 @@ def run_data_extraction(lines, output_path, file_path):
     append_lines = False
     current_position = None  # The current job position.
 
+    last_episode = "done"  # This is used to check what the last episode was.
+
+    # TODO: Fix so that the functions checks that episode_done and episode_start alternates.
     for k, line in enumerate(lines):
+
         # Test if there there is a new position
 
         if "position: " in line:
@@ -93,6 +97,12 @@ def run_data_extraction(lines, output_path, file_path):
         if "episode_done" in line:
             # If the episode is done add the data
             # Initialise the Dialouge
+            if not last_episode == "start":
+                warnings.warn("There is not alternation between episode_start and episode_done. \n File {0} at line {1} "
+                              "is excluded from analysis.".format(file_path, k))
+                append_lines = False
+                continue
+
 
             if current_lines[0][0] == "e": emely_start = True
             else: emely_start = False
@@ -105,12 +115,13 @@ def run_data_extraction(lines, output_path, file_path):
             store_bool = store_data(dialouge, output_path)
             # If the data storing is not correct, print the incorrect file
             if not store_bool:
-                Warning("The file {0} \n is incorrectly formatted at line {1}. \n Data is excluded from analysis."
+                warnings.warn("The file {0} \n is incorrectly formatted at line {1}. \n Data is excluded from analysis."
                       .format(file_path, k))
             # Reset the current lines.
             current_lines = []
             # Reset the append lines.
             append_lines = False
+            last_episode = "done"
 
         # Append the current line
         if append_lines:
@@ -118,12 +129,17 @@ def run_data_extraction(lines, output_path, file_path):
             line_f = format_line(line)
 
             if line_f =="raise_warning":
-
                 print("Warning detected at in file \n{0} \n at line {1}.".format(file_path, k))
             elif line_f:
                 current_lines.append(line_f)
+
         # Check if there is an episode start so that data should be appended.
         if "episode_start" in line:
+            if last_episode != "done":
+                warnings.warn(
+                    "There is not alternation between episode_start and episode_done. \n File {0} at line {1} "
+                    "is excluded from analysis.".format(file_path, k))
+            last_episode = "start"
             append_lines = True
 
 
@@ -169,7 +185,7 @@ def main(input_path, store_path, run_remove=False):
 
 if __name__ == "__main__":
     # To call the function from the terminal supply two input arguments.
-    # --input_file: The filename to the input file.
+    # --input_path: The path to the input file(s).
     # --output_path: The name of the subdirectory where the .json-files should be stored. The file-names are randomly generated.
     #                If this path does not exist, it will be created. The default name should be json
     # --run_remove: Boolean. If true, it removes all files with the .json ending in the output path.
@@ -184,4 +200,5 @@ if __name__ == "__main__":
         main(args.input_path, args.output_path, args.run_remove)
     else:
         main(args.input_path, args.output_path)
+
 
