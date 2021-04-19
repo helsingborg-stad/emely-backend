@@ -139,6 +139,7 @@ def run_data_extraction(lines, output_path, file_path):
                 warnings.warn(
                     "There is not alternation between episode_start and episode_done. \n File {0} at line {1} "
                     "is excluded from analysis.".format(file_path, k))
+                continue
             last_episode = "start"
             append_lines = True
 
