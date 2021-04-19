@@ -111,12 +111,12 @@ def run_data_extraction(lines, output_path, file_path):
                                 position=current_position,
                                 dialouge=current_lines,
                                 emely_start=emely_start)
-            #Store the data.
+            # Store the data.
             store_bool = store_data(dialouge, output_path)
             # If the data storing is not correct, print the incorrect file
             if not store_bool:
-                warnings.warn("The file {0} \n is incorrectly formatted at line {1}. \n Data is excluded from analysis."
-                      .format(file_path, k))
+                warning_msg = "The file {0} \n is incorrectly formatted at line {1}. \n Data is excluded from analysis.".format(file_path, k)
+                warnings.warn(warning_msg)
             # Reset the current lines.
             current_lines = []
             # Reset the append lines.

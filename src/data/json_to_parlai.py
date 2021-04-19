@@ -69,7 +69,7 @@ def extract_data(data):
     return output, True
 
 
-def main(input_path, output_path):
+def main(input_path, output_filename):
     """ Main function that loops through all .json files in the desired directory.
         --input_path: The path to the .json-files
         --output_path: The path where the text-file is stored.
@@ -79,12 +79,11 @@ def main(input_path, output_path):
     data_dir = Path(__file__).resolve().parents[2]
     # Go through all the .json files.
 
-    out_path = data_dir / output_path
+    out_path = data_dir / 'data/parlai'
 
     if not out_path.is_dir():
         out_path.mkdir(parents=True, exist_ok=True)
 
-    store_path = str(out_path)
 
     # Go through all the .json files.
     for i in Path(data_dir / input_path).glob('**/*'):
@@ -95,8 +94,10 @@ def main(input_path, output_path):
             Warning("The data:\n {0}\n  contained XXX. Not adding data.".format(data))
         output_string += output  # Append the output.
 
-    f = open(store_path + r"\\training_for_parlai.txt", "w")
+    store_path = out_path.joinpath(output_filename)
+    f = open(store_path, "w")
     f.write(output_string)
+    f.close()
 
 
 if __name__ == "__main__":
@@ -109,6 +110,6 @@ if __name__ == "__main__":
 
     parser = ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)
-    parser.add_argument('--output_path', type=str, required=True)
+    parser.add_argument('--output_filename', type=str, required=True)
     args = parser.parse_args()
-    main(args.input_path, args.output_path)
+    main(args.input_path, args.output_filename)
