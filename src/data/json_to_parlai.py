@@ -7,17 +7,18 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 
-def get_first_data():
+def get_first_data(position):
     """Returns the first data to each interaction as a string."""
     # TODO: Add better examples than just an empty string. For example have a list
     # TODO: of opening lines and sample from these.
+    # TODO: Posibly format with position here! Check if it is empty or not though
 
     input_list = ["Thanks for having me!", \
-                 "I'm excited about this interview.", \
-                 "I'm a little nervous but we can start the interview now.",
+                  "I'm excited about this interview.", \
+                  "I'm a little nervous but we can start the interview now.",
                   " "]
-    i = random.randint(0, len(input_list)-1)
-    return "text: {0} \t".format(input_list[i])  # Begin each new dialouge with an empty string as input.
+    i = random.randint(0, len(input_list) - 1)
+    return "text:{0}\t".format(input_list[i])  # Begin each new dialouge with an empty string as input.
 
 
 def open_json(path):
@@ -33,7 +34,10 @@ def extract_data(data):
     tags = {"u": "text", "e": "labels"}
     ending = {"u": "\t", "e": "\n"}
 
-    output = get_first_data()
+    if data['emely_start']:
+        output = get_first_data(data['position'])
+    else:
+        output = ''
 
     k = 1
     # Go through all the dialouge string.
@@ -42,6 +46,7 @@ def extract_data(data):
 
         u_or_e = data_tup[0]
         text = data_tup[1].replace("\n", "")  # Remove the line break.
+        text = text.strip()  # Trim whitespaces
         # Check if the interaction contains XXX. This is a placeholder for the text
         # and if it is contained in the text, the entire dialouge should be thrown out.
         if "XXX" in text:
@@ -52,14 +57,14 @@ def extract_data(data):
         if k == conv_length:
             # Check if the last tag is a text or a label:
             if tag == "labels":
-                output += "{0}: {1} \t episode_done:True \n".format(tag, text)
+                output += "{0}:{1}\tepisode_done:True\n".format(tag, text)
             elif tag == "text":
                 # Remove the last line break.
                 # TODO: This is a hotfix for when the last input is a text and not a label.
-                output= output[:-1]
-                output += "episode_done:True \n"
+                output = output[:-1]
+                output += "episode_done:True\n"
         else:
-            output += "{0}: {1} {2}".format(tag, text, end)
+            output += "{0}:{1}{2}".format(tag, text, end)
         k += 1
     return output, True
 
@@ -81,10 +86,10 @@ def main(input_path, output_path):
 
     store_path = str(out_path)
 
-   # Go through all the .json files.
+    # Go through all the .json files.
     for i in Path(data_dir / input_path).glob('**/*'):
         data = open_json(i)
-        output, data_bool = extract_data(data)  # Get the correctly formated data
+        output, data_bool = extract_data(data)  # Get the correctly formatted data
         # Check if the data should be appended.
         if not data_bool:
             Warning("The data:\n {0}\n  contained XXX. Not adding data.".format(data))
@@ -92,6 +97,7 @@ def main(input_path, output_path):
 
     f = open(store_path + r"\\training_for_parlai.txt", "w")
     f.write(output_string)
+
 
 if __name__ == "__main__":
     """
