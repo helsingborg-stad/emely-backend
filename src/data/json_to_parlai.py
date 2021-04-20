@@ -5,7 +5,7 @@ import json
 import random
 from argparse import ArgumentParser
 from pathlib import Path
-
+import warnings
 
 def get_first_data():
     """Returns the first data to each interaction as a string."""
@@ -56,7 +56,7 @@ def extract_data(data):
             elif tag == "text":
                 # Remove the last line break.
 
-                print("Last tag is text")
+                warnings.warn("Last tag is text")
                 output -= output[:-1]
                 output += "\t episode_done:True \n"
         else:
@@ -88,7 +88,7 @@ def main(input_path, output_path):
         output, data_bool = extract_data(data)  # Get the correctly formated data
         # Check if the data should be appended.
         if not data_bool:
-            Warning("The data:\n {0}\n  {1}. Not adding data.".format(data, output))
+            warnings.warn("The data:\n {0}\n  {1}. Not adding data.".format(data, output))
         output_string += output  # Append the output.data
 
     f = open(store_path + r"\\training_for_parlai.txt", "w")
