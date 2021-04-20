@@ -45,7 +45,7 @@ def extract_data(data):
         # Check if the interaction contains XXX. This is a placeholder for the text
         # and if it is contained in the text, the entire dialouge should be thrown out.
         if "XXX" in text:
-            return "", False
+            return "contained XXX", False
 
         tag = tags[u_or_e]
         end = ending[u_or_e]
@@ -55,9 +55,10 @@ def extract_data(data):
                 output += "{0}: {1} \t episode_done:True \n".format(tag, text)
             elif tag == "text":
                 # Remove the last line break.
-                # TODO: This is a hotfix for when the last input is a text and not a label.
-                output= output[:-1]
-                output += "episode_done:True \n"
+
+                print("Last tag is text")
+                output -= output[:-1]
+                output += "\t episode_done:True \n"
         else:
             output += "{0}: {1} {2}".format(tag, text, end)
         k += 1
@@ -87,8 +88,8 @@ def main(input_path, output_path):
         output, data_bool = extract_data(data)  # Get the correctly formated data
         # Check if the data should be appended.
         if not data_bool:
-            Warning("The data:\n {0}\n  contained XXX. Not adding data.".format(data))
-        output_string += output  # Append the output.
+            Warning("The data:\n {0}\n  {1}. Not adding data.".format(data, output))
+        output_string += output  # Append the output.data
 
     f = open(store_path + r"\\training_for_parlai.txt", "w")
     f.write(output_string)

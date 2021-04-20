@@ -42,29 +42,42 @@ def format_line(line: str):
 def check_emely_first_and_alternating(dialouge):
     """Checks so that the first entry is from Emely.
     --dialouge: A dialouge obejct
+    return: Bool, warning message.
     """
-    #Check that the first tag is not user.
+    # Check that the first tag is emely.
     tag = dialouge.dialouge[0][0]
-    if tag == "u":
-        return False
+    add_data = False
+
+    if tag != "e":
+
+        return add_data, "Wrong first tag."
+    # Check that the last tag is Emely. If not, remove the last entry.
+    if dialouge.dialouge[-1][0] != "e":
+        dialouge.dialouge = dialouge.dialouge[:-1]
+        dialouge.len = len(dialouge.dialouge)
+        # return add_data, "Wrong last tag"
+
     # Check that the tags are alternating.
     last_tag = ""
     for k in range(len(dialouge.dialouge)):
         tag = dialouge.dialouge[k][0]
         if last_tag == tag:
             # Two tags in a row, which means that there is something wrong with the format.
-            return False
+            return add_data, "Not alternating tags"
         last_tag = tag
-    #Everyting is fine.
-    return True
+
+    # Everyting is fine.
+    add_data = True
+    return add_data, ""
 
 def store_data(dialouge, output_path):
     """Saves the data in the desried file"""
 
     # Check so that the first response is from Emely.
-    if not check_emely_first_and_alternating(dialouge):
+    add_data, error_message = check_emely_first_and_alternating(dialouge)
+    if not add_data:
         # If it is not in the correct format, the data will not be stored.
-        return False
+        return False, error_message
     # check so that every other tag is emely and every other is tag is user.
 
 
@@ -82,7 +95,7 @@ def store_data(dialouge, output_path):
 
     with open(save_path.as_posix(), "w") as fp:
         json.dump(json_str, fp)
-    return True
+    return add_data, error_message
 
 def run_data_extraction(lines, output_path, file_path):
     """Goes through all lines and stores each interaction to a .json-file"""
@@ -120,11 +133,11 @@ def run_data_extraction(lines, output_path, file_path):
                                 dialouge=current_lines,
                                 emely_start=emely_start)
             #Store the data.
-            store_bool = store_data(dialouge, output_path)
+            store_bool, error_message = store_data(dialouge, output_path)
             # If the data storing is not correct, print the incorrect file
             if not store_bool:
-                warnings.warn("The file {0} \n is incorrectly formatted at line {1}. \n Data is excluded from analysis."
-                      .format(file_path, k))
+                warnings.warn("{0}. The file {1} \n is incorrectly formatted at line {2}. \n Data is excluded from analysis."
+                      .format( error_message, file_path, k))
             # Reset the current lines.
             current_lines = []
             # Reset the append lines.
@@ -210,5 +223,6 @@ if __name__ == "__main__":
         main(args.input_path, args.output_path, args.run_remove)
     else:
         main(args.input_path, args.output_path)
+
 
 
