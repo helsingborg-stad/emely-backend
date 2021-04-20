@@ -12,6 +12,7 @@ def get_first_data():
     """Returns the first data to each interaction as a string."""
     # TODO: Add better examples than just an empty string. For example have a list
     # TODO: of opening lines and sample from these.
+    # TODO: format with position
 
     input_list = ["Thanks for having me!", \
                   "I'm excited about this interview.", \
@@ -29,17 +30,27 @@ def open_json(path):
     return data
 
 
-def extract_data(data):
+def extract_data(data, args):
     conv_length = data["len"]
     tags = {"u": "text", "e": "labels"}
     ending = {"u": "\t", "e": "\n"}
 
-    output = get_first_data()
+    #  Different ways of creating the beginning of the parlai formatted data
+    if args.no_hardcoded_question:
+        output = ''
+    elif data['emely_start']:
+        output = get_first_data()
+    else:
+        output = ''
 
     k = 1
     # Go through all the dialouge string.
     # Skip the first entry as this is one of the basic questions asked by Emely.
     for data_tup in data["dialouge"]:
+
+        if args.no_hardcoded_question and k == 1:
+            k += 1
+            continue  # We skip the first question and go to first user reply
 
         u_or_e = data_tup[0]
         text = data_tup[1].replace("\n", "")  # Remove the line break.
@@ -66,7 +77,7 @@ def extract_data(data):
     return output, True
 
 
-def main(input_path, output_path):
+def main(input_path, output_path, args):
     """ Main function that loops through all .json files in the desired directory.
         --input_path: The path to the .json-files
         --output_path: The path where the text-file is stored.
@@ -86,7 +97,7 @@ def main(input_path, output_path):
     # Go through all the .json files.
     for i in Path(data_dir / input_path).glob('**/*'):
         data = open_json(i)
-        output, data_bool = extract_data(data)  # Get the correctly formated data
+        output, data_bool = extract_data(data, args)  # Get the correctly formated data
         # Check if the data should be appended.
         if not data_bool:
             warnings.warn("The data:\n {0}\n  {1}. Not adding data.".format(data, output))
@@ -112,4 +123,4 @@ if __name__ == "__main__":
                         help='Skips hardcoded question in parlai data')
     parser.set_defaults(no_hardcoded_question=False)
     args = parser.parse_args()
-    main(args.root_path, args.output_path)
+    main(args.root_path, args.output_path, args)
