@@ -7,17 +7,18 @@ from argparse import ArgumentParser
 from pathlib import Path
 import warnings
 
+
 def get_first_data():
     """Returns the first data to each interaction as a string."""
     # TODO: Add better examples than just an empty string. For example have a list
     # TODO: of opening lines and sample from these.
 
     input_list = ["Thanks for having me!", \
-                 "I'm excited about this interview.", \
-                 "I'm a little nervous but we can start the interview now.",
+                  "I'm excited about this interview.", \
+                  "I'm a little nervous but we can start the interview now.",
                   " "]
-    i = random.randint(0, len(input_list)-1)
-    return "text: {0} \t".format(input_list[i])  # Begin each new dialouge with an empty string as input.
+    i = random.randint(0, len(input_list) - 1)
+    return "text:{0}\t".format(input_list[i])  # Begin each new dialouge with an empty string as input.
 
 
 def open_json(path):
@@ -52,15 +53,15 @@ def extract_data(data):
         if k == conv_length:
             # Check if the last tag is a text or a label:
             if tag == "labels":
-                output += "{0}: {1} \t episode_done:True \n".format(tag, text)
+                output += "{0}:{1}\tepisode_done:True\n".format(tag, text)
             elif tag == "text":
                 # Remove the last line break.
 
                 warnings.warn("Last tag is text")
                 output -= output[:-1]
-                output += "\t episode_done:True \n"
+                output += "\tepisode_done:True\n"
         else:
-            output += "{0}: {1} {2}".format(tag, text, end)
+            output += "{0}:{1}{2}".format(tag, text, end)
         k += 1
     return output, True
 
@@ -82,7 +83,7 @@ def main(input_path, output_path):
 
     store_path = str(out_path)
 
-   # Go through all the .json files.
+    # Go through all the .json files.
     for i in Path(data_dir / input_path).glob('**/*'):
         data = open_json(i)
         output, data_bool = extract_data(data)  # Get the correctly formated data
@@ -94,16 +95,21 @@ def main(input_path, output_path):
     f = open(store_path + r"\\training_for_parlai.txt", "w")
     f.write(output_string)
 
+
 if __name__ == "__main__":
     """
     Goes through all the files in the data directory and adds the edited files in the same directory. 
     --root_path: The path to the root-directory where all the .json files are stored. 
     --output_path: The path where the data should be be stored. If it says "same", it is stored in the same directory as
                    the original file with the ending <filename>_edited.txt 
+    --no_hardcoded_question: Skips the first question in the dialogue
     """
 
     parser = ArgumentParser()
     parser.add_argument('--root_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
+    parser.add_argument('--no_hardcoded_question', action='store_true', required=False,
+                        help='Skips hardcoded question in parlai data')
+    parser.set_defaults(no_hardcoded_question=False)
     args = parser.parse_args()
     main(args.root_path, args.output_path)
