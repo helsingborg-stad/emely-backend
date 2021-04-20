@@ -51,11 +51,8 @@ def check_emely_first_and_alternating(dialouge):
     if tag != "e":
 
         return add_data, "Wrong first tag."
-    # Check that the last tag is Emely. If not, remove the last entry.
-    if dialouge.dialouge[-1][0] != "e":
-        dialouge.dialouge = dialouge.dialouge[:-1]
-        dialouge.len = len(dialouge.dialouge)
-        # return add_data, "Wrong last tag"
+
+
 
     # Check that the tags are alternating.
     last_tag = ""
@@ -65,6 +62,11 @@ def check_emely_first_and_alternating(dialouge):
             # Two tags in a row, which means that there is something wrong with the format.
             return add_data, "Not alternating tags"
         last_tag = tag
+
+    # Check that the last tag is Emely. If not, remove the last entry.
+    if dialouge.dialouge[-1][0] != "e":
+        dialouge.dialouge = dialouge.dialouge[:-1]
+        dialouge.len = len(dialouge.dialouge)
 
     # Everyting is fine.
     add_data = True
