@@ -150,7 +150,7 @@ def run_data_extraction(lines, output_path, file_path):
             line_f = format_line(line)
 
             if line_f =="raise_warning":
-                print("Warning detected at in file \n{0} \n at line {1}.".format(file_path, k))
+                warnings.warn("Warning detected at in file \n{0} \n at line {1}.".format(file_path, k))
             elif line_f:
                 current_lines.append(line_f)
 
