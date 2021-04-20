@@ -18,12 +18,11 @@ class Dialogue(BaseModel):
     len: int  # The number of interactions between Emely and the User.
     emely_start: bool  # Determines if Emely starts of not.
     dialouge: list  # [str]
-    position: Union[None, str]  #If there is a job position, this should be entered as a string, otherwise enter None.
+    position: Union[None, str]   # If there is a job position, this should be entered as a string, otherwise enter None.
 
 
 def format_line(line: str):
     """Formats the line into a tuple """
-
 
     if "emely:" in line or "Emely:" in line:
         output = ("e", line.replace("emely:", ""))
@@ -39,11 +38,12 @@ def format_line(line: str):
         return "raise_warning"
     return output
 
+
 def check_emely_first_and_alternating(dialouge):
     """Checks so that the first entry is from Emely.
     --dialouge: A dialouge obejct
     """
-    #Check that the first tag is not user.
+    # Check that the first tag is not user.
     tag = dialouge.dialouge[0][0]
     if tag == "u":
         return False
@@ -55,8 +55,10 @@ def check_emely_first_and_alternating(dialouge):
             # Two tags in a row, which means that there is something wrong with the format.
             return False
         last_tag = tag
-    #Everyting is fine.
+
+    # Everyting is fine.
     return True
+
 
 def store_data(dialouge, output_path):
     """Saves the data in the desried file"""
@@ -66,7 +68,6 @@ def store_data(dialouge, output_path):
         # If it is not in the correct format, the data will not be stored.
         return False
     # check so that every other tag is emely and every other is tag is user.
-
 
     # Generate a random name.
     name = str(secrets.token_hex(nbytes=4)) + ".json"
@@ -84,6 +85,7 @@ def store_data(dialouge, output_path):
         json.dump(json_str, fp)
     return True
 
+
 def run_data_extraction(lines, output_path, file_path):
     """Goes through all lines and stores each interaction to a .json-file"""
     current_lines = []
@@ -95,7 +97,6 @@ def run_data_extraction(lines, output_path, file_path):
 
     # TODO: Fix so that the functions checks that episode_done and episode_start alternates.
     for k, line in enumerate(lines):
-
         # Test if there there is a new position
 
         if "position: " in line:
@@ -110,7 +111,6 @@ def run_data_extraction(lines, output_path, file_path):
                               "is excluded from analysis.".format(file_path, k))
                 append_lines = False
                 continue
-
 
             if current_lines[0][0] == "e": emely_start = True
             else: emely_start = False
@@ -167,8 +167,8 @@ def main(input_path, store_path, run_remove=False):
     """
 
     # The path for the rawdata must be here.
-    data_dir = Path(__file__).resolve().parents[2]# .joinpath('data')
-    input_path = data_dir / input_path# Path(input_path)
+    data_dir = Path(__file__).resolve().parents[2]
+    input_path = data_dir / input_path
     output_path = data_dir / store_path
 
     # Check if the output path exists. If not make it.
@@ -195,10 +195,10 @@ def main(input_path, store_path, run_remove=False):
 if __name__ == "__main__":
     # To call the function from the terminal supply two input arguments.
     # --input_path: The path to the input file(s).
-    # --output_path: The name of the subdirectory where the .json-files should be stored. The file-names are randomly generated.
+    # --output_path: The name of the subdirectory where the .json-files should be stored. The file-names are
+    # randomly generated.
     #                If this path does not exist, it will be created. The default name should be json
     # --run_remove: Boolean. If true, it removes all files with the .json ending in the output path.
-
 
     parser = ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)
@@ -210,5 +210,3 @@ if __name__ == "__main__":
         main(args.input_path, args.output_path, args.run_remove)
     else:
         main(args.input_path, args.output_path)
-
-
