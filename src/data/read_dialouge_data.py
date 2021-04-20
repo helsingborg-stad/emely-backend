@@ -39,26 +39,34 @@ def format_line(line: str):
         return "raise_warning"
     return output
 
-def check_emely_first(dialouge):
+def check_emely_first_and_alternating(dialouge):
     """Checks so that the first entry is from Emely.
     --dialouge: A dialouge obejct
     """
-
+    #Check that the first tag is not user.
     tag = dialouge.dialouge[0][0]
-    if tag == "e":
-        return True
-    elif tag == "u":
+    if tag == "u":
         return False
-    else:
-        raise ValueError("The tag {0} is not in the correct format.".format(tag))
+    # Check that the tags are alternating.
+    last_tag = ""
+    for k in range(len(dialouge.dialouge)):
+        tag = dialouge.dialouge[k][0]
+        if last_tag == tag:
+            # Two tags in a row, which means that there is something wrong with the format.
+            return False
+        last_tag = tag
+    #Everyting is fine.
+    return True
 
 def store_data(dialouge, output_path):
     """Saves the data in the desried file"""
 
     # Check so that the first response is from Emely.
-    if not check_emely_first(dialouge):
+    if not check_emely_first_and_alternating(dialouge):
         # If it is not in the correct format, the data will not be stored.
         return False
+    # check so that every other tag is emely and every other is tag is user.
+
 
     # Generate a random name.
     name = str(secrets.token_hex(nbytes=4)) + ".json"
@@ -190,6 +198,7 @@ if __name__ == "__main__":
     # --output_path: The name of the subdirectory where the .json-files should be stored. The file-names are randomly generated.
     #                If this path does not exist, it will be created. The default name should be json
     # --run_remove: Boolean. If true, it removes all files with the .json ending in the output path.
+
 
     parser = ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)
