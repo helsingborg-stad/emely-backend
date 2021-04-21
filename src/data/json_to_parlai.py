@@ -1,6 +1,8 @@
 """
 Transforms data from the .json format to a .txt-file that can be used when training Parlai.
 """
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import json
 import random
 from argparse import ArgumentParser
@@ -90,14 +92,16 @@ def main(input_path, output_filename, args):
     if not out_path.is_dir():
         out_path.mkdir(parents=True, exist_ok=True)
 
-
     # Go through all the .json files.
     for i in Path(data_dir / input_path).glob('**/*'):
         data = open_json(i)
         output, data_bool = extract_data(data, args)  # Get the correctly formated data
         # Check if the data should be appended.
+
         if not data_bool:
-            warnings.warn("The data:\n {0}\n  {1}. Not adding data.".format(data, output))
+            warning_string = "The data:\n {0}\n  {1}. Not adding data.".format(data, output)
+            warnings.warn(warning_string)
+            continue
         output_string += output  # Append the output.data
 
     f = open(store_path, "w")
