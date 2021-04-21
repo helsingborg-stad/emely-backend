@@ -201,19 +201,22 @@ def main(input_path, store_path, run_remove=False):
         # Read the lines.
 
         with open(i) as fp:
-
-            lines = fp.readlines()
-
+            try:
+                lines = fp.readlines()
+            except:
+                print("Could not open file {0}. Not analysing data".format(i))
+                continue
         run_data_extraction(lines, output_path, i)
 
 
 if __name__ == "__main__":
-    # To call the function from the terminal supply two input arguments.
-    # --input_path: The path to the input file(s).
-    # --output_path: The name of the subdirectory where the .json-files should be stored. The file-names are randomly generated.
-    #                If this path does not exist, it will be created. The default name should be json
-    # --run_remove: Boolean. If true, it removes all files with the .json ending in the output path.
-
+    """
+    To call the function from the terminal supply two input arguments.
+    --input_path: The path to the input file(s).
+    --output_path: The name of the subdirectory where the .json-files should be stored. The file-names are randomly generated.
+                    If this path does not exist, it will be created. The default name should be json
+    --run_remove: Boolean. If true, it removes all files with the .json ending in the output path.
+    """
 
     parser = ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)

@@ -109,10 +109,10 @@ if __name__ == "__main__":
     """
     Goes through all the files in the data directory and adds the edited files in the same directory. 
     --input_path: The path to the input-directory where all the .json files are stored. 
-    --output_path: The path where the data should be be stored. If it says "same", it is stored in the same directory as
-                   the original file with the ending <filename>_edited.txt 
+    --output_filename: The path where the data should be be stored. 
     --no_hardcoded_question: Skips the first question in the dialogue
     """
+
 
     parser = ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)
@@ -122,3 +122,4 @@ if __name__ == "__main__":
     parser.set_defaults(no_hardcoded_question=False)
     args = parser.parse_args()
     main(args.input_path, args.output_filename, args)
+
