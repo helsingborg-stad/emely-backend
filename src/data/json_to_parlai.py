@@ -50,24 +50,31 @@ def extract_data(data, args):
         output = ''
     elif data['emely_start'] and args.add_position_context:
         output = get_first_data(job=data['position'])
+    elif args.hardcoded_question_as_context and data['emely_start']:
+
     elif data['emely_start']:
         output = get_first_data()
     else:
         output = ''
 
     k = 1
-    # Go through all the dialouge string.
+    # Go through all the dialogue string.
     # Skip the first entry as this is one of the basic questions asked by Emely.
-    for data_tup in data["dialouge"]:
+    for data_tup in data["dialogue"]:
         if args.no_hardcoded_question and k == 1:
             k += 1
             continue
+        elif args.hardcoded_question_as_context and data['emely_start'] and k==1:
+            # We want the first part of the episode to be: text:**emelys hardcoded question**\n**the users reply**
+            output = 'text:{}\n{}'.format(data_tup[1])
+            k = 3 # We skip the two first iterations since we've done em here
+
 
         u_or_e = data_tup[0]
         text = data_tup[1].replace("\n", "")  # Remove the line break.
         text = text.strip()  # Trim whitespaces
         # Check if the interaction contains XXX(literally XXX). This is a placeholder for the text
-        # and if it is contained in the text, the entire dialouge should be thrown out.
+        # and if it is contained in the text, the entire dialogue should be thrown out.
         if "XXX" in text:
             return "contained XXX", False
 
@@ -137,8 +144,10 @@ if __name__ == "__main__":
     parser.add_argument('--no_hardcoded_question', action='store_true', required=False,
                         help='Skips hardcoded question in parlai data')
     parser.add_argument('--add_position_context', action='store_true', required=False)
+    parser.add_argument('--hardcoded_question_as_context', action='store_true', required=False)
     parser.set_defaults(no_hardcoded_question=False,
-                        add_position_context=False)
+                        add_position_context=False,
+                        hardcoded_question_as_context=False)
     args = parser.parse_args()
     main(args.input_path, args.output_filename, args)
 

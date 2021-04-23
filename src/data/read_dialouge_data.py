@@ -1,5 +1,5 @@
 """
-Script for preprocessing the dialouge data where there are multiple interactions between Emely and the user.
+Script for preprocessing the dialogue data where there are multiple interactions between Emely and the user.
 
 """
 #!/usr/bin/env python
@@ -20,7 +20,7 @@ class Dialogue(BaseModel):
     # Dialouge class used to store each interaction.
     len: int  # The number of interactions between Emely and the User.
     emely_start: bool  # Determines if Emely starts of not.
-    dialouge: list  # [str]
+    dialogue: list  # [str]
     position: Union[None, str]  # If there is a job position, this should be entered as a string, otherwise enter None.
 
 
@@ -46,11 +46,11 @@ def format_line(line: str):
 
 def check_emely_first_and_alternating(dialouge):
     """Checks so that the first entry is from Emely.
-    --dialouge: A dialouge obejct
+    --dialogue: A dialogue obejct
     return: Bool, warning message.
     """
     # Check that the first tag is emely.
-    tag = dialouge.dialouge[0][0]
+    tag = dialouge.dialogue[0][0]
     add_data = False
 
     if tag != "e":
@@ -58,17 +58,17 @@ def check_emely_first_and_alternating(dialouge):
 
     # Check that the tags are alternating.
     last_tag = ""
-    for k in range(len(dialouge.dialouge)):
-        tag = dialouge.dialouge[k][0]
+    for k in range(len(dialouge.dialogue)):
+        tag = dialouge.dialogue[k][0]
         if last_tag == tag:
             # Two tags in a row, which means that there is something wrong with the format.
             return add_data, "Not alternating tags"
         last_tag = tag
 
     # Check that the last tag is Emely. If not, remove the last entry.
-    if dialouge.dialouge[-1][0] != "e":
-        dialouge.dialouge = dialouge.dialouge[:-1]
-        dialouge.len = len(dialouge.dialouge)
+    if dialouge.dialogue[-1][0] != "e":
+        dialouge.dialogue = dialouge.dialogue[:-1]
+        dialouge.len = len(dialouge.dialogue)
 
     # Everyting is fine.
     add_data = True
@@ -90,7 +90,7 @@ def store_data(dialouge, output_path):
     # Create the savepath
     save_path = Path(output_path).joinpath(name)
     # print(save_path)
-    # Convert the dialouge object to a dict.
+    # Convert the dialogue object to a dict.
     json_str = json.dumps(dialouge.__dict__)
 
     # Store the .json-file. In order to access the data, the stored file must be open with json.load, which
@@ -132,7 +132,7 @@ def run_data_extraction(lines, output_path, file_path):
 
             if current_lines[0][0] == "e": emely_start = True
             else: emely_start = False
-            # Create the dialouge object.
+            # Create the dialogue object.
             dialouge = Dialogue(len=len(current_lines),
                                 position=current_position,
                                 dialouge=current_lines,

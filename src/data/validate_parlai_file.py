@@ -7,7 +7,6 @@ import re
 
 
 def validate(file):
-
     file_path = Path(__file__).resolve().parents[2] / 'data/parlai' / file
     print('looking for file ', file_path.as_posix())
     assert file_path.exists(), "Couldn't find file {}".format(file_path)
@@ -35,7 +34,6 @@ def validate(file):
             print(episode)
             continue
 
-
         if 'text:' not in messages[0]:
             warnings.warn('Did not find text: in the beginning of the episode')
 
@@ -54,8 +52,6 @@ def validate(file):
                 print('Message was: {}'.format(message))
 
     print('Looks like it is all in order')
-
-
 
 
 if __name__ == '__main__':
