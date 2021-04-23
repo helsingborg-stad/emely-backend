@@ -31,7 +31,7 @@ def main(input_path, output_path):
     The main function for running the data editing.
     """
     # Go through all the directories and check which of them that are directories.
-    data_dir = Path(__file__).resolve().parents[2]#.joinpath('data')
+    data_dir = Path(__file__).resolve().parents[2].joinpath('data')
     path = data_dir / Path(input_path)
     store_path = data_dir / Path(output_path)
 
