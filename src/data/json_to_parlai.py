@@ -1,7 +1,7 @@
 """
 Transforms data from the .json format to a .txt-file that can be used when training Parlai.
 """
-#!/usr/bin/env python
+# !/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
 import random
@@ -51,7 +51,7 @@ def extract_data(data, args):
     elif data['emely_start'] and args.add_position_context:
         output = get_first_data(job=data['position'])
     elif args.hardcoded_question_as_context and data['emely_start']:
-
+        output = ''
     elif data['emely_start']:
         output = get_first_data()
     else:
@@ -64,11 +64,19 @@ def extract_data(data, args):
         if args.no_hardcoded_question and k == 1:
             k += 1
             continue
-        elif args.hardcoded_question_as_context and data['emely_start'] and k==1:
-            # We want the first part of the episode to be: text:**emelys hardcoded question**\n**the users reply**
-            output = 'text:{}\n{}'.format(data_tup[1])
-            k = 3 # We skip the two first iterations since we've done em here
-
+        elif args.hardcoded_question_as_context and data['emely_start']:
+            # We want the first part of the episode to be: text:<emelys hardcoded question>\n<user reply>
+            if k == 1:
+                hardcoded_question = data_tup[1].strip('\n').strip()
+                k += 1
+                continue
+            elif k == 2:
+                question_reply = data_tup[1].strip('\n').strip()
+                output = 'text:{}\n{}\t'.format(hardcoded_question, question_reply)
+                k += 1  # We skip the two first iterations since we've done em here
+                continue
+            else:
+                pass
 
         u_or_e = data_tup[0]
         text = data_tup[1].replace("\n", "")  # Remove the line break.
@@ -137,7 +145,6 @@ if __name__ == "__main__":
     --add_position_context: Adds something before emelys question
     """
 
-
     parser = ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)
     parser.add_argument('--output_filename', type=str, required=True)
@@ -150,4 +157,3 @@ if __name__ == "__main__":
                         hardcoded_question_as_context=False)
     args = parser.parse_args()
     main(args.input_path, args.output_filename, args)
-
