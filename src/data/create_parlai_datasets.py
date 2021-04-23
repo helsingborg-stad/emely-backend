@@ -71,9 +71,11 @@ def main(files, dataset_name):
     train_set, val_set, test_set = create_datasets(all_episodes)
 
     dataset_name = Path(dataset_name).name
-    train_path = data_dir.joinpath(dataset_name + '_train.txt')
-    val_path = data_dir.joinpath(dataset_name + '_valid.txt')
-    test_path = data_dir.joinpath(dataset_name + '_test.txt')
+    dataset_path = data_dir.joinpath(dataset_name)
+    dataset_path.mkdir(exist_ok=True, parents=True)
+    train_path = dataset_path / 'train.txt'
+    val_path = dataset_path / 'valid.txt'
+    test_path = dataset_path / 'test.txt'
 
     # Write them to file
     with open(train_path, 'w') as f:
@@ -87,7 +89,7 @@ def main(files, dataset_name):
 
 
 if __name__ == '__main__':
-    """ Makes train/val/test split of parlai datasets"""
+    """ Creates a folder with train/val/test split of a file containing """
 
     parser = ArgumentParser()
     parser.add_argument('-f', '--files', nargs='+',
