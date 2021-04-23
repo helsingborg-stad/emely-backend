@@ -17,7 +17,7 @@ from typing import Union
 
 
 class Dialogue(BaseModel):
-    # Dialouge class used to store each interaction.
+    # Dialogue class used to store each interaction.
     len: int  # The number of interactions between Emely and the User.
     emely_start: bool  # Determines if Emely starts of not.
     dialogue: list  # [str]
@@ -44,13 +44,13 @@ def format_line(line: str):
     return output
 
 
-def check_emely_first_and_alternating(dialouge):
+def check_emely_first_and_alternating(dialogue):
     """Checks so that the first entry is from Emely.
     --dialogue: A dialogue obejct
     return: Bool, warning message.
     """
     # Check that the first tag is emely.
-    tag = dialouge.dialogue[0][0]
+    tag = dialogue.dialogue[0][0]
     add_data = False
 
     if tag != "e":
@@ -58,28 +58,28 @@ def check_emely_first_and_alternating(dialouge):
 
     # Check that the tags are alternating.
     last_tag = ""
-    for k in range(len(dialouge.dialogue)):
-        tag = dialouge.dialogue[k][0]
+    for k in range(len(dialogue.dialogue)):
+        tag = dialogue.dialogue[k][0]
         if last_tag == tag:
             # Two tags in a row, which means that there is something wrong with the format.
             return add_data, "Not alternating tags"
         last_tag = tag
 
     # Check that the last tag is Emely. If not, remove the last entry.
-    if dialouge.dialogue[-1][0] != "e":
-        dialouge.dialogue = dialouge.dialogue[:-1]
-        dialouge.len = len(dialouge.dialogue)
+    if dialogue.dialogue[-1][0] != "e":
+        dialogue.dialogue = dialogue.dialogue[:-1]
+        dialogue.len = len(dialogue.dialogue)
 
     # Everyting is fine.
     add_data = True
     return add_data, ""
 
 
-def store_data(dialouge, output_path):
+def store_data(dialogue, output_path):
     """Saves the data in the desried file"""
 
     # Check so that the first response is from Emely.
-    add_data, error_message = check_emely_first_and_alternating(dialouge)
+    add_data, error_message = check_emely_first_and_alternating(dialogue)
     if not add_data:
         # If it is not in the correct format, the data will not be stored.
         return False, error_message
@@ -91,7 +91,7 @@ def store_data(dialouge, output_path):
     save_path = Path(output_path).joinpath(name)
     # print(save_path)
     # Convert the dialogue object to a dict.
-    json_str = json.dumps(dialouge.__dict__)
+    json_str = json.dumps(dialogue.__dict__)
 
     # Store the .json-file. In order to access the data, the stored file must be open with json.load, which
     # is a string. In order to access the dict, the json.loads() must be used on the string.
@@ -122,7 +122,7 @@ def run_data_extraction(lines, output_path, file_path):
         # Check if the episode is finnished.
         if "episode_done" in line:
             # If the episode is done add the data
-            # Initialise the Dialouge
+            # Initialise the Dialogue
             if not last_episode == "start":
                 warning_string = "There is not alternation between episode_start and episode_done." \
                                  " \n File {0} at line {1} is excluded from analysis.".format(file_path, k)
@@ -133,12 +133,12 @@ def run_data_extraction(lines, output_path, file_path):
             if current_lines[0][0] == "e": emely_start = True
             else: emely_start = False
             # Create the dialogue object.
-            dialouge = Dialogue(len=len(current_lines),
+            dialogue = Dialogue(len=len(current_lines),
                                 position=current_position,
-                                dialouge=current_lines,
+                                dialogue=current_lines,
                                 emely_start=emely_start)
             #Store the data.
-            store_bool, error_message = store_data(dialouge, output_path)
+            store_bool, error_message = store_data(dialogue, output_path)
             # If the data storing is not correct, print the incorrect file
             if not store_bool:
                 warning_string = "{0}. The file {1} \n is incorrectly formatted at line {2}. " \
