@@ -1,6 +1,8 @@
 """
 Transforms data from the .json format to a .txt-file that can be used when training Parlai.
 """
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import json
 import random
 from argparse import ArgumentParser
@@ -106,8 +108,11 @@ def main(input_path, output_filename, args):
         data = open_json(i)
         output, data_bool = extract_data(data, args)  # Get the correctly formated data
         # Check if the data should be appended.
+
         if not data_bool:
-            warnings.warn("The data:\n {0}\n  {1}. Not adding data.".format(data, output))
+            warning_string = "The data:\n {0}\n  {1}. Not adding data.".format(data, output)
+            warnings.warn(warning_string)
+            continue
         else:
             output_string += output  # Append the output.data
 
@@ -120,11 +125,11 @@ if __name__ == "__main__":
     """
     Goes through all the files in the data directory and adds the edited files in the same directory. 
     --input_path: The path to the input-directory where all the .json files are stored. 
-    --output_path: The path where the data should be be stored. If it says "same", it is stored in the same directory as
-                   the original file with the ending <filename>_edited.txt 
+    --output_filename: The path where the data should be be stored. 
     --no_hardcoded_question: Skips the first question in the dialogue
     --add_position_context: Adds something before emelys question
     """
+
 
     parser = ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)
@@ -136,3 +141,4 @@ if __name__ == "__main__":
                         add_position_context=False)
     args = parser.parse_args()
     main(args.input_path, args.output_filename, args)
+
