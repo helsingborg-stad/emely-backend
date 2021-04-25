@@ -72,7 +72,8 @@ def extract_data(data, args):
                 continue
             elif k == 2:
                 question_reply = data_tup[1].strip('\n').strip()
-                output = 'text:{}\n{}\t'.format(hardcoded_question, question_reply)
+                output = 'text:{}{}{}\t'.format(hardcoded_question, r'\n',
+                                                question_reply)  # We format with a literal \n here. Important!
                 k += 1  # We skip the two first iterations since we've done em here
                 continue
             else:
@@ -143,6 +144,7 @@ if __name__ == "__main__":
     --output_filename: The path where the data should be be stored. 
     --no_hardcoded_question: Skips the first question in the dialogue
     --add_position_context: Adds something before emelys question
+    --hardcoded_question_as_context: Formats the data similarly to blended_skill_talk where the the model gets two interactions as context
     """
 
     parser = ArgumentParser()
@@ -154,6 +156,6 @@ if __name__ == "__main__":
     parser.add_argument('--hardcoded_question_as_context', action='store_true', required=False)
     parser.set_defaults(no_hardcoded_question=False,
                         add_position_context=False,
-                        hardcoded_question_as_context=False)
+                        hardcoded_question_as_context=True)
     args = parser.parse_args()
     main(args.input_path, args.output_filename, args)
