@@ -3,8 +3,12 @@ from sklearn.model_selection import train_test_split
 from pathlib import Path
 import re
 
+""" Creates a folder with train/val/test split of a file containing parlai formatted data """
+
 
 def split_parlai_in_episodes(text):
+    """ Splits a string into dialogue episodes """
+
     episodes = text.split('episode_done:True\n')
     new_episodes = []
     for i, episode in enumerate(episodes):
@@ -30,7 +34,7 @@ def episode_to_parlai(episodes):
 
 
 def create_datasets(episodes):
-    """ Splits data set twice into 90%, 9%, 1% """
+    """ Splits data set twice into 90%, 9%, 1% sets used for train, validation, test respectively"""
     train_episodes, other_episodes = train_test_split(episodes, train_size=0.9, test_size=0.1)
     val_episodes, test_episodes = train_test_split(other_episodes, train_size=0.9, test_size=0.1)
 
@@ -46,6 +50,7 @@ def main(files, dataset_name):
     data_dir = project_dir / 'data/parlai'
     assert data_dir.exists()
 
+    # Retrieve file paths from argparse arguments
     file_paths = []
     for file in files:
         f = Path(file)
@@ -60,6 +65,7 @@ def main(files, dataset_name):
         assert path_to_file.exists(), 'data/parlai/{} did not exist'.format(file)
         file_paths.append(path_to_file)
 
+    # Add dialogue episodes from the files
     all_episodes = []
     for file in file_paths:
         with open(file, 'r') as f:
@@ -68,6 +74,7 @@ def main(files, dataset_name):
         episodes = split_parlai_in_episodes(text)
         all_episodes.extend(episodes)
 
+    # Split the episodes into train, validation, test sets
     train_set, val_set, test_set = create_datasets(all_episodes)
 
     dataset_name = Path(dataset_name).name
@@ -89,8 +96,6 @@ def main(files, dataset_name):
 
 
 if __name__ == '__main__':
-    """ Creates a folder with train/val/test split of a file containing """
-
     parser = ArgumentParser()
     parser.add_argument('-f', '--files', nargs='+',
                         help='Files in data/parlai to include in the dataset split. Separate with space', required=True)

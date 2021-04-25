@@ -3,7 +3,13 @@ from argparse import ArgumentParser
 import warnings
 import re
 
-""" This script checks a txt file and validates that it's in the correct parlai format """
+""" This script checks a txt file and validates that it's in the correct parlai format, e.g:
+
+    text:Hello my name is Earl\tlabels:That's not true!\n
+    text:You got me, I lied\tlabels:Shame on you.\tepisode_done:True\n
+    ...
+    and so on
+"""
 
 
 def validate(file):
