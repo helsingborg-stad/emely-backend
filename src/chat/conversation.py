@@ -142,7 +142,7 @@ class FikaConversation:
 
     def get_input_with_context(self):
         """ Returns the input for the model, which currently is the last four messages of the conversation """
-        nbr_replies_for_context = 4
+        nbr_replies_for_context = 6
         condition = self.nbr_messages - nbr_replies_for_context - 1
         docs = self.firestore_messages_collection.where('msg_nbr', '>=', condition).stream()
         messages = [doc.to_dict() for doc in docs]
@@ -152,7 +152,7 @@ class FikaConversation:
             if i == len(messages) - 1:  #
                 context = context + message['message_en']
             else:
-                context = context + message['message_en'] + '\n'
+                context = context + message['message_en'] + r'\n'
 
         return context
 
@@ -286,7 +286,7 @@ class InterviewConversation:
             if i == len(messages) - 1:  # We don't want a '\n' after the last line
                 context = context + message['message_en']
             else:
-                context = context + message['message_en'] + '\n'
+                context = context + message['message_en'] + r'\n'
 
         return context
 
