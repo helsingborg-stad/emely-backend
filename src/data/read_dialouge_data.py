@@ -15,6 +15,10 @@ import warnings
 from pydantic import BaseModel
 from typing import Union
 
+from src.data.utils import remove_json, open_with_errors
+
+# Define characters that shoudl be removed from each string. These are characters that are not possible to encode.
+special_characters = ["’", "“", "—", "”"]
 
 class Dialogue(BaseModel):
     # Dialogue class used to store each interaction.
@@ -29,7 +33,9 @@ def remove_special_characters(line: str):
         Example of characters: ’, “, —
         --line: The input that has the incorrect formation
         --output: A new line with the invalid characters replaced."""
-    new_line = line.replace("’", "",).replace("“", '"').replace("—", ",").replace("”", '"')
+    new_line = line
+    for sp in special_characters:
+        new_line = new_line.replace(sp, "",)
     return new_line
 
 
@@ -70,7 +76,7 @@ def check_emely_first_and_alternating(dialogue):
         dialogue.dialogue = dialogue.dialogue[:-1]
         dialogue.len = len(dialogue.dialogue)
 
-    # Everyting is fine.
+    # Everything is fine.
     add_data = True
     return add_data, ""
 
@@ -172,21 +178,6 @@ def run_data_extraction(lines, output_path, file_path):
             append_lines = True
 
 
-def remove_json(path: Path):
-    """ Removes all .json files in the Path path. This is used in order to not create dubplicates"""
-
-    for p in path.glob('**/*'):
-        if ".json" in str(p):
-            p.unlink()
-            print("Removed file: {0}".format(str(p)))
-
-
-def open_with_errors(input_path):
-
-    with codecs.open(input_path, 'r', encoding='utf-8', errors='ignore') as fdata:
-        data = fdata.readlines()
-    return data
-
 def main(input_path, store_path, run_remove=False):
     """
     Goes through all files in the input path and turns the dialoges to .json files.
@@ -194,7 +185,7 @@ def main(input_path, store_path, run_remove=False):
 
     # The path for the rawdata must be here.
     data_dir = Path(__file__).resolve().parents[2].joinpath('data')
-    input_path = data_dir / input_path# Path(input_path)
+    input_path = data_dir / input_path
     output_path = data_dir / store_path
 
     # Check if the output path exists. If not make it.
@@ -231,9 +222,6 @@ if __name__ == "__main__":
     --run_remove: Boolean. If true, it removes all files with the .json ending in the output path.
     """
 
-    #main(r"raw\edited", r"json", True)
-
-    # """
     parser = ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
@@ -244,7 +232,7 @@ if __name__ == "__main__":
         main(args.input_path, args.output_path, args.run_remove)
     else:
         main(args.input_path, args.output_path)
-    # """
+
 
 
 
