@@ -9,6 +9,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 import warnings
 
+
 def get_first_data():
     """Returns the first data to each interaction as a string."""
     # TODO: Add better examples than just an empty string. For example have a list
