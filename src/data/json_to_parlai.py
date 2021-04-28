@@ -43,7 +43,7 @@ def open_json(path):
 def extract_data(data, args):
     conv_length = data["len"]
     tags = {"u": "text", "e": "labels"}
-    ending = {"u": "\t ", "e": "\n"}
+    ending = {"u": "\t", "e": "\n"}
 
     #  Different ways of creating the beginning of the parlai formatted data
     if args.no_hardcoded_question:
