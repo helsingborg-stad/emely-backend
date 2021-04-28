@@ -43,7 +43,7 @@ def open_json(path):
 def extract_data(data, args):
     conv_length = data["len"]
     tags = {"u": "text", "e": "labels"}
-    ending = {"u": "\t", "e": "\n"}
+    ending = {"u": "\t ", "e": "\n"}
 
     #  Different ways of creating the beginning of the parlai formatted data
     if args.no_hardcoded_question:
@@ -60,7 +60,7 @@ def extract_data(data, args):
     k = 1
     # Go through all the dialogue string.
     # Skip the first entry as this is one of the basic questions asked by Emely.
-    for data_tup in data["dialogue"]:
+    for data_tup in data["dialog"]:
         if args.no_hardcoded_question and k == 1:
             k += 1
             continue
