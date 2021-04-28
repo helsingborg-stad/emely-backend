@@ -34,9 +34,13 @@ def episode_to_parlai(episodes):
 
 
 def create_datasets(episodes):
-    """ Splits data set twice into 90%, 9%, 1% sets used for train, validation, test respectively"""
-    train_episodes, other_episodes = train_test_split(episodes, train_size=0.9, test_size=0.1)
-    val_episodes, test_episodes = train_test_split(other_episodes, train_size=0.9, test_size=0.1)
+    """ Splits data set twice into 95%, 5%, 0% sets used for train, validation, test respectively
+        - Due to low amounts of data we set the test and valid sets to be equal!!!
+    """
+    train_episodes, other_episodes = train_test_split(episodes, train_size=0.95, test_size=0.05)
+    #val_episodes, test_episodes = train_test_split(other_episodes, train_size=0.9, test_size=0.1)
+    val_episodes = other_episodes
+    test_episodes = other_episodes
 
     train_text = episode_to_parlai(train_episodes)
     val_text = episode_to_parlai(val_episodes)
