@@ -36,9 +36,12 @@ def validate(file):
         messages = re.split(r'[\n\t]', episode)
         messages = list(filter(None, messages))  # FIlter out potential empty strings
         if len(messages) == 0:
-            warnings.warn('Found empty episode')
-            print(episode)
-            continue
+            if episode == episodes[-1]:  # Last one will be empty
+                continue
+            else:
+                warnings.warn('Found empty episode')
+                print(episode)
+                continue
 
         if 'text:' not in messages[0]:
             warnings.warn('Did not find text: in the beginning of the episode')
@@ -57,7 +60,6 @@ def validate(file):
                 print('Unexpected token was {}'.format(unexpected_token))
                 print('Message was: {}'.format(message))
 
-    print('Looks like it is all in order')
 
 
 if __name__ == '__main__':
