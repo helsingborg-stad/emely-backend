@@ -1,7 +1,7 @@
 from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration, BlenderbotSmallTokenizer, \
     BlenderbotSmallForConditionalGeneration
-from torch import no_grad
-import torch
+import requests
+from src.api.bodys import ApiMessage
 
 import re
 from itertools import product
@@ -45,13 +45,12 @@ class FikaWorld:
         self.model_name = kwargs['model_name']
         self.local_model = kwargs['local_model']
         self.no_correction = kwargs['no_correction']
+        self.on_gcp = is_gcp_instance()
         # TODO: deprecate device, model, but not tokenizer!
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = None
         self.tokenizer = None
-        self.model_loaded = False
+        self.model_url = 'https://fika-model-ef5bmjer3q-ew.a.run.app/inference' if self.on_gcp else "http://127.0.0.1:7000/inference"
 
-        if is_gcp_instance():
+        if self.on_gcp:
             if not firebase_admin._apps:
                 cred = credentials.ApplicationDefault()
                 firebase_admin.initialize_app(cred, {
@@ -78,27 +77,14 @@ class FikaWorld:
                           'Hej {}! Mitt namn är Emely. Vad vill du prata om idag?',
                           'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!']
 
-    # TODO: Deprecate function after deploying models to gcp!
-    def load_model(self):
-        """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
-        if self.local_model:
-            model_dir = Path(__file__).parents[2] / 'models' / self.model_name / 'model'
-            token_dir = Path(__file__).parents[2] / 'models' / self.model_name / 'tokenizer'
-            assert model_dir.exists() and token_dir.exists()
-        elif 'facebook/' in self.model_name:
-            model_dir = self.model_name
-            token_dir = self.model_name
+    def call_model(self, context):
+        """ Sends context to model and gets a reply back """
+        context_json = ApiMessage(text=context).json()
+        response = requests.post(url=self.model_url, data=context_json)
+        json_response = response.json()
+        reply = json_response['text']
+        return reply
 
-        if 'small' in self.model_name:
-            self.model = BlenderbotSmallForConditionalGeneration.from_pretrained(model_dir)
-            self.tokenizer = BlenderbotSmallTokenizer.from_pretrained(token_dir)
-        else:
-            self.model = BlenderbotForConditionalGeneration.from_pretrained(model_dir)
-            self.tokenizer = BlenderbotTokenizer.from_pretrained(token_dir)
-
-        self.model.to(self.device)
-        self.model_loaded = True
-        return
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new fika conversation that is pushed to firestore and replies with a greeting"""
@@ -177,13 +163,9 @@ class FikaWorld:
     def act(self, conversation: FikaConversation, observe_timestamp: datetime) -> BrainMessage:
         """ Creates a response for the conversation """
         if not conversation.episode_done:
-            # Preparation for model
+            # Request answer from model
             context = conversation.get_input_with_context()
-            inputs = self.tokenizer([context], return_tensors='pt')  # TODO: Replace with call to model on gcp funciton
-            inputs.to(self.device)
-            with no_grad():
-                output_tokens = self.model.generate(**inputs)
-            reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
+            reply_en = self.call_model(context)
 
             if self.no_correction:  # Reply isn't checked/modified in any way. Used for testing purposes
                 reply_sv = self.translator.translate(reply_en, src='en', target='sv')
@@ -342,7 +324,7 @@ class InterviewWorld(FikaWorld):
                           'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?'
                           ]
         # TODO: Attribute for brain api
-        # self.brain_api = pointer_to_gcp_
+        self.model_url = "http://127.0.0.1:8000/inference"
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new interview conversation that is pushed to firestore and replies with a greeting"""
@@ -468,12 +450,7 @@ class InterviewWorld(FikaWorld):
 
             # Model call
             context = interview.get_input_with_context()
-            # TODO: Call model from other gcp function
-            inputs = self.tokenizer([context], return_tensors='pt')
-            inputs.to(self.device)
-            with no_grad():
-                output_tokens = self.model.generate(**inputs)
-                reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
+            reply_en = self.call_model(context)
 
             if not self.no_correction:
                 reply_en, removed_from_message = self._correct_reply(reply_en, interview)

@@ -86,3 +86,7 @@ class BrainMessage(BaseModel):
     is_init_message: bool
     is_hardcoded: bool
     error_messages: str
+
+class ApiMessage(BaseModel):
+    """ Used to send requests to models """
+    text: str
