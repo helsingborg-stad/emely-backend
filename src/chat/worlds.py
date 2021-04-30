@@ -1,5 +1,3 @@
-from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration, BlenderbotSmallTokenizer, \
-    BlenderbotSmallForConditionalGeneration
 import requests
 from src.api.bodys import ApiMessage
 
