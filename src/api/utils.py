@@ -1,5 +1,5 @@
 import socket
-from src.api.bodys import BrainMessage
+from src.api.bodies import BrainMessage
 
 """ Helper functions """
 

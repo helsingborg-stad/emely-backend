@@ -113,7 +113,7 @@ class FikaConversation:
         # firestore_conversation.pmrr_more_information]  # Split '1234 into ['1','2','3','4']
         self.change_subject = ['Berätta något annat om dig själv!',
                                'Nu tycker jag att vi ska prata om något annat!',
-                               'Vill du prata om något annat kanske']
+                               'Vill du prata om något annat kanske?']
 
         # Firestore
         self.firestore_messages_collection = firestore_conversation_collection.document(conversation_id).collection(

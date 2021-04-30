@@ -1,6 +1,6 @@
 from worlds import InterviewWorld, FikaWorld
 from argparse import ArgumentParser
-from src.api.bodys import *
+from src.api.bodies import *
 from datetime import datetime
 import subprocess
 

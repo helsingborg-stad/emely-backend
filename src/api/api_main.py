@@ -5,7 +5,7 @@ from argparse import Namespace
 import subprocess
 from src.api.models_from_bucket import download_models
 from src.api.utils import is_gcp_instance, create_error_response
-from src.api.bodys import BrainMessage, UserMessage, InitBody
+from src.api.bodies import BrainMessage, UserMessage, InitBody
 from pathlib import Path
 
 """ File contents:
@@ -25,10 +25,14 @@ local_model = True
 password = 'KYgZfDG6P34H56WJM996CKKcNG4'
 
 # Setup
-interview_persona = Namespace(model_name='blenderbot_small-90M@f70_v2_acc20', local_model=local_model,
-                              chat_mode='interview', no_correction=False)
-fika_persona = Namespace(model_name='blenderbot_small-90M', local_model=local_model,
-                         chat_mode='chat', no_correction=False)
+interview_persona = Namespace(model_name='blenderbot_small-90M@f70_v2_acc20',
+                              local_model=local_model,
+                              chat_mode='interview',
+                              no_correction=False)
+fika_persona = Namespace(model_name='blenderbot_small-90M',
+                         local_model=local_model,
+                         chat_mode='chat',
+                         no_correction=False)
 
 interview_world = InterviewWorld(**vars(interview_persona))
 fika_world = FikaWorld(**vars(fika_persona))
@@ -63,7 +67,8 @@ def new_chat(msg: InitBody, response: Response, request: Request):
     if not msg.password == password:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         error = 'Wrong password'
-        brain_response = create_error_response(error)
+        error_response = create_error_response(error)
+        return error_response
     else:  # All checks pass
         # Data
         global git_version
@@ -76,7 +81,10 @@ def new_chat(msg: InitBody, response: Response, request: Request):
         elif msg.persona == 'intervju':
             world = interview_world
         else:
-            raise NotImplementedError('There are only two personas implemented')
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            error = "Invalid persona: only fika and intervju available"
+            error_response = create_error_response(error)
+            return error_response
 
         try:
             brain_response = world.init_conversation(msg, build_data=build_data)
@@ -96,17 +104,19 @@ async def fika(msg: UserMessage, response: Response):
     if not msg.password == password:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         error = 'Wrong password'
-        brain_response = create_error_response(error)
+        error_response = create_error_response(error)
+        return error_response
     else:
         try:
             conversation, observe_timestamp = fika_world.observe(user_request=msg)
             brain_response = fika_world.act(conversation, observe_timestamp)
+            return brain_response
         except Exception as e:
             print(e)
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             error_msg = str(e)
-            brain_response = create_error_response(error_msg)
-    return brain_response
+            error_response = create_error_response(error_msg)
+            return error_response
 
 
 @brain.post('/intervju')
@@ -115,16 +125,16 @@ async def interview(msg: UserMessage, response: Response):
     if not msg.password == password:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         error = 'Wrong password'
-        brain_response = create_error_response(error)
+        error_response = create_error_response(error)
+        return error_response
     else:
         try:
             conversation, observe_timestamp = interview_world.observe(user_request=msg)
             brain_response = interview_world.act(conversation, observe_timestamp)
+            return brain_response
         except Exception as e:
             print(e)
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             error_msg = str(e)
-            brain_response = create_error_response(error_msg)
-    return brain_response
-
-
+            error_response = create_error_response(error_msg)
+            return error_response

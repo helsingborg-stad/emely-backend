@@ -33,7 +33,7 @@ class InitBody(BaseModel):
     user_ip_number: str
 
     class Config:
-        """ Used for the swagger docs when testing the api """
+        """ Default values sent when testing through swagger docs """
         schema_extra = {
             "example": {
                 "name": "Wilma",

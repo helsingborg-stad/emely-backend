@@ -17,7 +17,7 @@ from firebase_admin import firestore
 from src.chat.conversation import FikaConversation, InterviewConversation, FirestoreConversation, FirestoreMessage
 from src.chat.translate import ChatTranslator
 from src.api.utils import is_gcp_instance
-from src.api.bodys import BrainMessage, UserMessage, InitBody
+from src.api.bodies import BrainMessage, UserMessage, InitBody
 from src.chat.utils import user_message_to_firestore_message, firestore_message_to_brain_message, format_response_time
 from datetime import datetime
 
@@ -582,7 +582,8 @@ class InterviewWorld(FikaWorld):
         # Emely cannot say that she's also a {job}, add
         lies = ['I am a {}'.format(conversation.job),
                 'do you have any hobbies?',
-                "i'm a stay at home mom"]
+                "i'm a stay at home mom",
+                "i'm unemployed"]
         temp_idx = []
         for i in keep_idx:
             combos = list(product([sentences[i]], lies))
