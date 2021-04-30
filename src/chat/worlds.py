@@ -85,7 +85,6 @@ class FikaWorld:
         reply = json_response['text']
         return reply
 
-
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new fika conversation that is pushed to firestore and replies with a greeting"""
 
@@ -323,6 +322,7 @@ class InterviewWorld(FikaWorld):
                           'Hej {}, Emely heter jag och det är jag som ska intervjua dig. Hur är det med dig idag?',
                           'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?'
                           ]
+        self.question_markers = ['?', 'vad', 'hur', 'när', 'varför', 'vem']
         # TODO: Attribute for brain api
         self.model_url = "http://127.0.0.1:8000/inference"
 
@@ -398,7 +398,7 @@ class InterviewWorld(FikaWorld):
         # Update states
         interview.add_text(firestore_message)  # Updates nbr_messages
 
-        if '?' in message:
+        if any(marker in message.lower() for marker in self.question_markers):
             interview.last_input_is_question = True
         else:
             interview.last_input_is_question = False
