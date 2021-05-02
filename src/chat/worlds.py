@@ -322,7 +322,7 @@ class InterviewWorld(FikaWorld):
                           ]
         self.question_markers = ['?', 'vad', 'hur', 'när', 'varför', 'vem']
         # TODO: Attribute for brain api
-        self.model_url = "http://127.0.0.1:8000/inference"
+        self.model_url = 'https://interview8080-ef5bmjer3q-ew.a.run.app/inference' if self.on_gcp else "http://127.0.0.1:7000/inference"
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new interview conversation that is pushed to firestore and replies with a greeting"""
