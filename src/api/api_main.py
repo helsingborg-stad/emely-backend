@@ -11,11 +11,11 @@ from pathlib import Path
 """ File contents:
     FastAPI app brain that handles requests to Emely """
 
-
 brain = FastAPI()
 
 # Variables used in the app
 if is_gcp_instance():
+    # TODO: Solve smoother
     file_path = Path(__file__).resolve().parents[2] / 'git_version.txt'
     with open(file_path, 'r') as f:
         git_version = f.read()
@@ -24,34 +24,26 @@ else:
 local_model = True
 password = 'KYgZfDG6P34H56WJM996CKKcNG4'
 
-# Setup
-interview_persona = Namespace(model_name='blenderbot_small-90M@f70_v2_acc20', local_model=local_model,
-                              chat_mode='interview', no_correction=False)
-fika_persona = Namespace(model_name='blenderbot_small-90M', local_model=local_model,
-                         chat_mode='chat', no_correction=False)
-
-interview_world = InterviewWorld(**vars(interview_persona))
-fika_world = FikaWorld(**vars(fika_persona))
+interview_world: InterviewWorld
+fika_world: FikaWorld
 world = None
 
 
-# Models aren't loaded
 async def init_config():
     """ Called when app starts """
     # Print config
     print('brain_version: ', git_version)
     print('local_model: ', local_model)
 
-    # TODO: Deprecate when models are on GCP
-    models = ['blenderbot_small-90M', 'blenderbot_small-90M@f70_v2_acc20']
-    if is_gcp_instance():
-        download_models(models)
-        print('Downloading models from bucket')
+    # Setup
+    interview_persona = Namespace(model_name='blenderbot_small-90M@f70_v2_acc20', local_model=local_model,
+                                  chat_mode='interview', no_correction=False)
+    fika_persona = Namespace(model_name='blenderbot_small-90M', local_model=local_model,
+                             chat_mode='chat', no_correction=False)
 
-    # TODO: Deprecate when models are on GCP
     global interview_world, fika_world
-    interview_world.load_model()
-    fika_world.load_model()
+    interview_world = InterviewWorld(**vars(interview_persona))
+    fika_world = FikaWorld(**vars(fika_persona))
     return
 
 
@@ -126,5 +118,3 @@ async def interview(msg: UserMessage, response: Response):
             error_msg = str(e)
             brain_response = create_error_response(error_msg)
     return brain_response
-
-
