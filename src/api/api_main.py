@@ -7,11 +7,14 @@ from src.api.models_from_bucket import download_models
 from src.api.utils import is_gcp_instance, create_error_response
 from src.api.bodys import BrainMessage, UserMessage, InitBody
 from pathlib import Path
+import logging
+import timeit
 
 """ File contents:
     FastAPI app brain that handles requests to Emely """
 
 brain = FastAPI()
+logging.basicConfig(level=logging.NOTSET)
 
 # Variables used in the app
 if is_gcp_instance():
@@ -85,6 +88,8 @@ def new_chat(msg: InitBody, response: Response, request: Request):
 @brain.post('/fika')
 async def fika(msg: UserMessage, response: Response):
     # TODO: And add event loop
+    start_time = timeit.default_timer()
+
     if not msg.password == password:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         error = 'Wrong password'
@@ -98,12 +103,17 @@ async def fika(msg: UserMessage, response: Response):
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             error_msg = str(e)
             brain_response = create_error_response(error_msg)
+
+    elapsed_time = timeit.default_timer() - start_time
+    logging.info(f'Fika message time: {elapsed_time}')
     return brain_response
 
 
 @brain.post('/intervju')
 async def interview(msg: UserMessage, response: Response):
     # TODO: Add event loop
+    start_time = timeit.default_timer()
+
     if not msg.password == password:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         error = 'Wrong password'
@@ -117,4 +127,8 @@ async def interview(msg: UserMessage, response: Response):
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             error_msg = str(e)
             brain_response = create_error_response(error_msg)
+
+    elapsed_time = timeit.default_timer() - start_time
+    logging.info(f'Intervju message time: {elapsed_time}')
     return brain_response
+
