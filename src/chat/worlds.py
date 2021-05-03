@@ -328,7 +328,7 @@ class InterviewWorld(FikaWorld):
         """ Creates a new interview conversation that is pushed to firestore and replies with a greeting"""
 
         # Creates greeting message
-        job = init_body.job
+        job = init_body.job.lower()
         name = init_body.name.capitalize()
         greeting = random.choice(self.greetings).format(name)
         greeting_en = 'Hello, {}! Welcome to your interview! How are you?'.format(name)
