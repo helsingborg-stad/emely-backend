@@ -1,5 +1,5 @@
 import requests
-from src.api.bodys import ApiMessage
+from src.api.bodies import ApiMessage
 
 import re
 from itertools import product
