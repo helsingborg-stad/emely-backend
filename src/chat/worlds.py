@@ -19,6 +19,8 @@ from src.api.bodys import BrainMessage, UserMessage, InitBody
 from src.chat.utils import user_message_to_firestore_message, firestore_message_to_brain_message, format_response_time
 from datetime import datetime
 
+import logging
+
 """ File contents
  - FikaWorld: Handles fika conversation with Emely
  - InterviewWorld: Handles interview conversation with Emely 
@@ -46,7 +48,7 @@ class FikaWorld:
         self.on_gcp = is_gcp_instance()
         # TODO: deprecate device, model, but not tokenizer!
         self.tokenizer = None
-        self.model_url = 'https://fika-model-ef5bmjer3q-ew.a.run.app/inference' if self.on_gcp else "http://127.0.0.1:7000/inference"
+        self.model_url = 'https://fika-model-ef5bmjer3q-ew.a.run.app/inference' if True else "http://127.0.0.1:7000/inference"
 
         if self.on_gcp:
             if not firebase_admin._apps:
@@ -269,17 +271,17 @@ class FikaWorld:
         for i in range(len(sentences)):
             combos = list(product([sentences[i]], previous_sentences))
             ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(ratios) < 0.75:
+            if max(ratios) < 0.85:
                 keep_idx.append(i)
 
         # Emely cannot say that she's also a {job}, add
-        lies = ['I am Emely',
-                'My name is Emely']
+        lies = ['I hate you']
+
         temp_idx = []
         for i in keep_idx:
             combos = list(product([sentences[i]], lies))
             lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(lie_probabilities) < 0.65:
+            if max(lie_probabilities) < 0.9:
                 temp_idx.append(i)
 
         keep_idx = temp_idx
@@ -297,7 +299,8 @@ class FikaWorld:
                         new_reply = new_reply + sentences[i]
                 else:
                     removed_from_message = removed_from_message + sentences[i] + ' '
-
+            logging.info('Pruned message. Removed sentence(s):\n{}\nCorrected reply:\n{}'.format(removed_from_message,
+                                                                                                 new_reply))
             return new_reply, removed_from_message
 
     # TODO: Move to super
@@ -322,7 +325,7 @@ class InterviewWorld(FikaWorld):
                           ]
         self.question_markers = ['?', 'vad', 'hur', 'när', 'varför', 'vem']
         # TODO: Attribute for brain api
-        self.model_url = 'https://interview8080-ef5bmjer3q-ew.a.run.app/inference' if self.on_gcp else "http://127.0.0.1:7000/inference"
+        self.model_url = 'https://interview8080-ef5bmjer3q-ew.a.run.app/inference' if True else "http://127.0.0.1:7000/inference"
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new interview conversation that is pushed to firestore and replies with a greeting"""
@@ -414,7 +417,7 @@ class InterviewWorld(FikaWorld):
          1. No more interview questions         --> End conversation
          2. Model has chatted freely for a bit  --> Force next interview questions
          3. Model generates a reply that is totally revoked by correct reply and it forces new question instead
-         4. Same as last, but user has just written a question --> return reply + new question
+         4. Model should force new question, but user has just written a question --> return reply + new question
          5. Model is allowed to chat more
            Code is slightly messy so the four cases are marked with 'Case X' in the code """
 
@@ -450,7 +453,7 @@ class InterviewWorld(FikaWorld):
             context = interview.get_input_with_context()
             reply_en = self.call_model(context)
 
-            if not self.no_correction:
+            if not self.no_correction or len(interview.pmrr_interview_questions) == 5:
                 reply_en, removed_from_message = self._correct_reply(reply_en, interview)
             else:
                 removed_from_message = ''
@@ -551,7 +554,7 @@ class InterviewWorld(FikaWorld):
         for i in range(len(sentences)):
             combos = list(product([sentences[i]], previous_sentences))
             ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(ratios) < 0.5:
+            if max(ratios) < 0.8:
                 keep_idx.append(i)
 
         # Emely cannot say that she's also a {job}, add
@@ -562,7 +565,7 @@ class InterviewWorld(FikaWorld):
         for i in keep_idx:
             combos = list(product([sentences[i]], lies))
             lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(lie_probabilities) < 0.75:
+            if max(lie_probabilities) < 0.9:
                 temp_idx.append(i)
 
         keep_idx = temp_idx
@@ -581,6 +584,8 @@ class InterviewWorld(FikaWorld):
                 else:
                     removed_from_message = removed_from_message + sentences[i] + ' '
 
+            logging.info('Pruned message. Removed sentence(s):\n{}\nCorrected reply:\n{}'.format(removed_from_message,
+                                                                                                 new_reply))
             return new_reply, removed_from_message
 
     # TODO: Move to super
