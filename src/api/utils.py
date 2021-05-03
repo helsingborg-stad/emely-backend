@@ -27,11 +27,11 @@ def create_error_response(error_msg):
     return brain_response
 
 
-# TODO: Implement this function
+# TODO: Implement this helper function?
 def update_firestore_conversation(collection_db, firestore_conversation):
     raise NotImplementedError
 
 
-# TODO: Implement
+# TODO: Implement this helper function?
 def update_firestore_message(collection_db, firestore_message):
     raise NotImplementedError

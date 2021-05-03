@@ -3,7 +3,6 @@ from fastapi import FastAPI, Response, status, Request
 from argparse import Namespace
 
 import subprocess
-from src.api.models_from_bucket import download_models
 from src.api.utils import is_gcp_instance, create_error_response
 from src.api.bodies import BrainMessage, UserMessage, InitBody
 from pathlib import Path
