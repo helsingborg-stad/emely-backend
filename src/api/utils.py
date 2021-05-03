@@ -1,5 +1,6 @@
 import socket
 from src.api.bodies import BrainMessage
+import logging
 
 """ Helper functions """
 
@@ -15,6 +16,7 @@ def is_gcp_instance():
 
 def create_error_response(error_msg):
     """ Creates a dummy BrainMessage with the error message inserted"""
+    logging.warn(error_msg)
     brain_response = BrainMessage(conversation_id='',
                                   msg_id=0,
                                   lang='en',
