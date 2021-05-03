@@ -1,7 +1,5 @@
-from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration, BlenderbotSmallTokenizer, \
-    BlenderbotSmallForConditionalGeneration
-from torch import no_grad
-import torch
+import requests
+from src.api.bodies import ApiMessage
 
 import re
 from itertools import product
@@ -17,9 +15,11 @@ from firebase_admin import firestore
 from src.chat.conversation import FikaConversation, InterviewConversation, FirestoreConversation, FirestoreMessage
 from src.chat.translate import ChatTranslator
 from src.api.utils import is_gcp_instance
-from src.api.bodys import BrainMessage, UserMessage, InitBody
+from src.api.bodies import BrainMessage, UserMessage, InitBody
 from src.chat.utils import user_message_to_firestore_message, firestore_message_to_brain_message, format_response_time
 from datetime import datetime
+
+import logging
 
 """ File contents
  - FikaWorld: Handles fika conversation with Emely
@@ -42,16 +42,11 @@ class FikaWorld:
 
     def __init__(self, **kwargs):
         # Attributes common for both FikaWorld and InterviewWorld
-        self.model_name = kwargs['model_name']
-        self.local_model = kwargs['local_model']
         self.no_correction = kwargs['no_correction']
-        # TODO: deprecate device, model, but not tokenizer!
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = None
-        self.tokenizer = None
-        self.model_loaded = False
+        self.on_gcp = is_gcp_instance()
+        self.model_url = 'https://fika-model-ef5bmjer3q-ew.a.run.app/inference' if True else "http://127.0.0.1:7000/inference"
 
-        if is_gcp_instance():
+        if self.on_gcp:
             if not firebase_admin._apps:
                 cred = credentials.ApplicationDefault()
                 firebase_admin.initialize_app(cred, {
@@ -78,27 +73,13 @@ class FikaWorld:
                           'Hej {}! Mitt namn är Emely. Vad vill du prata om idag?',
                           'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!']
 
-    # TODO: Deprecate function after deploying models to gcp!
-    def load_model(self):
-        """Loads model from huggingface or locally. Works with both BlenderbotSmall and regular"""
-        if self.local_model:
-            model_dir = Path(__file__).parents[2] / 'models' / self.model_name / 'model'
-            token_dir = Path(__file__).parents[2] / 'models' / self.model_name / 'tokenizer'
-            assert model_dir.exists() and token_dir.exists()
-        elif 'facebook/' in self.model_name:
-            model_dir = self.model_name
-            token_dir = self.model_name
-
-        if 'small' in self.model_name:
-            self.model = BlenderbotSmallForConditionalGeneration.from_pretrained(model_dir)
-            self.tokenizer = BlenderbotSmallTokenizer.from_pretrained(token_dir)
-        else:
-            self.model = BlenderbotForConditionalGeneration.from_pretrained(model_dir)
-            self.tokenizer = BlenderbotTokenizer.from_pretrained(token_dir)
-
-        self.model.to(self.device)
-        self.model_loaded = True
-        return
+    def call_model(self, context):
+        """ Sends context to model and gets a reply back """
+        context_json = ApiMessage(text=context).json()
+        response = requests.post(url=self.model_url, data=context_json)
+        json_response = response.json()
+        reply = json_response['text']
+        return reply
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new fika conversation that is pushed to firestore and replies with a greeting"""
@@ -177,13 +158,9 @@ class FikaWorld:
     def act(self, conversation: FikaConversation, observe_timestamp: datetime) -> BrainMessage:
         """ Creates a response for the conversation """
         if not conversation.episode_done:
-            # Preparation for model
+            # Request answer from model
             context = conversation.get_input_with_context()
-            inputs = self.tokenizer([context], return_tensors='pt')  # TODO: Replace with call to model on gcp funciton
-            inputs.to(self.device)
-            with no_grad():
-                output_tokens = self.model.generate(**inputs)
-            reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
+            reply_en = self.call_model(context)
 
             if self.no_correction:  # Reply isn't checked/modified in any way. Used for testing purposes
                 reply_sv = self.translator.translate(reply_en, src='en', target='sv')
@@ -290,17 +267,17 @@ class FikaWorld:
         for i in range(len(sentences)):
             combos = list(product([sentences[i]], previous_sentences))
             ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(ratios) < 0.75:
+            if max(ratios) < 0.85:
                 keep_idx.append(i)
 
         # Emely cannot say that she's also a {job}, add
-        lies = ['I am Emely',
-                'My name is Emely']
+        lies = ['I hate you']
+
         temp_idx = []
         for i in keep_idx:
             combos = list(product([sentences[i]], lies))
             lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(lie_probabilities) < 0.65:
+            if max(lie_probabilities) < 0.9:
                 temp_idx.append(i)
 
         keep_idx = temp_idx
@@ -318,7 +295,8 @@ class FikaWorld:
                         new_reply = new_reply + sentences[i]
                 else:
                     removed_from_message = removed_from_message + sentences[i] + ' '
-
+            logging.info('Pruned message. Removed sentence(s):\n{}\nCorrected reply:\n{}'.format(removed_from_message,
+                                                                                                 new_reply))
             return new_reply, removed_from_message
 
     # TODO: Move to super
@@ -341,8 +319,9 @@ class InterviewWorld(FikaWorld):
                           'Hej {}, Emely heter jag och det är jag som ska intervjua dig. Hur är det med dig idag?',
                           'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?'
                           ]
+        self.question_markers = ['?', 'vad', 'hur', 'när', 'varför', 'vem']
         # TODO: Attribute for brain api
-        # self.brain_api = pointer_to_gcp_
+        self.model_url = 'https://interview8080-ef5bmjer3q-ew.a.run.app/inference' if True else "http://127.0.0.1:7000/inference"
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new interview conversation that is pushed to firestore and replies with a greeting"""
@@ -416,7 +395,7 @@ class InterviewWorld(FikaWorld):
         # Update states
         interview.add_text(firestore_message)  # Updates nbr_messages
 
-        if '?' in message:
+        if any(marker in message.lower() for marker in self.question_markers):
             interview.last_input_is_question = True
         else:
             interview.last_input_is_question = False
@@ -434,7 +413,7 @@ class InterviewWorld(FikaWorld):
          1. No more interview questions         --> End conversation
          2. Model has chatted freely for a bit  --> Force next interview questions
          3. Model generates a reply that is totally revoked by correct reply and it forces new question instead
-         4. Same as last, but user has just written a question --> return reply + new question
+         4. Model should force new question, but user has just written a question --> return reply + new question
          5. Model is allowed to chat more
            Code is slightly messy so the four cases are marked with 'Case X' in the code """
 
@@ -468,14 +447,9 @@ class InterviewWorld(FikaWorld):
 
             # Model call
             context = interview.get_input_with_context()
-            # TODO: Call model from other gcp function
-            inputs = self.tokenizer([context], return_tensors='pt')
-            inputs.to(self.device)
-            with no_grad():
-                output_tokens = self.model.generate(**inputs)
-                reply_en = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
+            reply_en = self.call_model(context)
 
-            if not self.no_correction:
+            if not self.no_correction or len(interview.pmrr_interview_questions) == 5:
                 reply_en, removed_from_message = self._correct_reply(reply_en, interview)
             else:
                 removed_from_message = ''
@@ -576,18 +550,19 @@ class InterviewWorld(FikaWorld):
         for i in range(len(sentences)):
             combos = list(product([sentences[i]], previous_sentences))
             ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(ratios) < 0.5:
+            if max(ratios) < 0.8:
                 keep_idx.append(i)
 
         # Emely cannot say that she's also a {job}, add
         lies = ['I am a {}'.format(conversation.job),
                 'do you have any hobbies?',
-                "i'm a stay at home mom"]
+                "i'm a stay at home mom",
+                "i'm unemployed"]
         temp_idx = []
         for i in keep_idx:
             combos = list(product([sentences[i]], lies))
             lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(lie_probabilities) < 0.75:
+            if max(lie_probabilities) < 0.9:
                 temp_idx.append(i)
 
         keep_idx = temp_idx
@@ -606,6 +581,8 @@ class InterviewWorld(FikaWorld):
                 else:
                     removed_from_message = removed_from_message + sentences[i] + ' '
 
+            logging.info('Pruned message. Removed sentence(s):\n{}\nCorrected reply:\n{}'.format(removed_from_message,
+                                                                                                 new_reply))
             return new_reply, removed_from_message
 
     # TODO: Move to super

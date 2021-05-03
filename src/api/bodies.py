@@ -33,7 +33,7 @@ class InitBody(BaseModel):
     user_ip_number: str
 
     class Config:
-        """ Used for the swagger docs when testing the api """
+        """ Default values sent when testing through swagger docs """
         schema_extra = {
             "example": {
                 "name": "Wilma",
@@ -86,3 +86,7 @@ class BrainMessage(BaseModel):
     is_init_message: bool
     is_hardcoded: bool
     error_messages: str
+
+class ApiMessage(BaseModel):
+    """ Used to send requests to models """
+    text: str

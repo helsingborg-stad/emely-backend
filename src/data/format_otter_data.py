@@ -1,7 +1,9 @@
 """
 This script formats data generated from Otter.AI
 """
-from pathlib import Path
+
+from src.data.utils import store_as_txt
+
 
 def find_tag(line):
     """Finds the tag of the current line. The tag is either emely or user"""
@@ -11,6 +13,7 @@ def find_tag(line):
     elif "user: " in line:
         return True, "user: "
     return is_tag, None
+
 
 def find_text(line):
     is_text = True
@@ -23,7 +26,7 @@ def find_text(line):
     return is_text
 
 
-def editing(input_path, filename, output_path):
+def editing(input_path, file_name, output_path):
     """
     The main function for editing the Otter data so that it is in the correct format.
     --input_path: The path of the data including the file_name. The file_name must be a .txt
@@ -45,7 +48,6 @@ def editing(input_path, filename, output_path):
         is_text = find_text(line)
         # FIXME: Add a function that concatenates multiple entries from the same tag.
         if is_text:
-
                 output += current_tag + line
 
     # Write the output file to the desired path.
@@ -53,12 +55,6 @@ def editing(input_path, filename, output_path):
     if not output_path.is_dir():
         output_path.mkdir(parents=True, exist_ok=True)
 
-    print("Data used stored at: ".format(str(output_path) + filename))
-    f = open(str(output_path) + filename, "w")
-    f.write(output)
-    f.close()
-
-
-
-
-
+    store_path = str(output_path) + file_name
+    store_as_txt(output, store_path)
+    print("Data used stored at: {0}".format(str(output_path) + file_name))

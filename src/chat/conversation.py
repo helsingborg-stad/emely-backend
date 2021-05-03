@@ -113,7 +113,7 @@ class FikaConversation:
         # firestore_conversation.pmrr_more_information]  # Split '1234 into ['1','2','3','4']
         self.change_subject = ['Berätta något annat om dig själv!',
                                'Nu tycker jag att vi ska prata om något annat!',
-                               'Vill du prata om något annat kanske']
+                               'Vill du prata om något annat kanske?']
 
         # Firestore
         self.firestore_messages_collection = firestore_conversation_collection.document(conversation_id).collection(
@@ -142,7 +142,7 @@ class FikaConversation:
 
     def get_input_with_context(self):
         """ Returns the input for the model, which currently is the last four messages of the conversation """
-        nbr_replies_for_context = 4
+        nbr_replies_for_context = 6
         condition = self.nbr_messages - nbr_replies_for_context - 1
         docs = self.firestore_messages_collection.where('msg_nbr', '>=', condition).stream()
         messages = [doc.to_dict() for doc in docs]

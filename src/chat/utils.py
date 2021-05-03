@@ -1,4 +1,4 @@
-from src.api.bodys import BrainMessage, UserMessage
+from src.api.bodies import BrainMessage, UserMessage
 from src.chat.conversation import FirestoreMessage
 from datetime import timedelta
 

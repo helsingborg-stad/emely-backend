@@ -5,53 +5,45 @@ from argparse import Namespace
 import subprocess
 from src.api.models_from_bucket import download_models
 from src.api.utils import is_gcp_instance, create_error_response
-from src.api.bodys import BrainMessage, UserMessage, InitBody
+from src.api.bodies import BrainMessage, UserMessage, InitBody
 from pathlib import Path
+import logging
+import timeit
 
 """ File contents:
     FastAPI app brain that handles requests to Emely """
 
-
 brain = FastAPI()
+logging.basicConfig(level=logging.NOTSET)
 
 # Variables used in the app
 if is_gcp_instance():
+    # TODO: Solve smoother
     file_path = Path(__file__).resolve().parents[2] / 'git_version.txt'
     with open(file_path, 'r') as f:
         git_version = f.read()
 else:
     git_version = subprocess.check_output(["git", "describe"]).strip().decode('utf-8')
-local_model = True
 password = 'KYgZfDG6P34H56WJM996CKKcNG4'
 
-# Setup
-interview_persona = Namespace(model_name='blenderbot_small-90M@f70_v2_acc20', local_model=local_model,
-                              chat_mode='interview', no_correction=False)
-fika_persona = Namespace(model_name='blenderbot_small-90M', local_model=local_model,
-                         chat_mode='chat', no_correction=False)
-
-interview_world = InterviewWorld(**vars(interview_persona))
-fika_world = FikaWorld(**vars(fika_persona))
+interview_world: InterviewWorld
+fika_world: FikaWorld
 world = None
 
 
-# Models aren't loaded
 async def init_config():
     """ Called when app starts """
     # Print config
     print('brain_version: ', git_version)
-    print('local_model: ', local_model)
 
-    # TODO: Deprecate when models are on GCP
-    models = ['blenderbot_small-90M', 'blenderbot_small-90M@f70_v2_acc20']
-    if is_gcp_instance():
-        download_models(models)
-        print('Downloading models from bucket')
+    # TODO: Time to deprecate this functionallity?
+    # Setup
+    interview_persona = Namespace(no_correction=False)
+    fika_persona = Namespace(no_correction=False)
 
-    # TODO: Deprecate when models are on GCP
     global interview_world, fika_world
-    interview_world.load_model()
-    fika_world.load_model()
+    interview_world = InterviewWorld(**vars(interview_persona))
+    fika_world = FikaWorld(**vars(fika_persona))
     return
 
 
@@ -63,7 +55,8 @@ def new_chat(msg: InitBody, response: Response, request: Request):
     if not msg.password == password:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         error = 'Wrong password'
-        brain_response = create_error_response(error)
+        error_response = create_error_response(error)
+        return error_response
     else:  # All checks pass
         # Data
         global git_version
@@ -76,7 +69,10 @@ def new_chat(msg: InitBody, response: Response, request: Request):
         elif msg.persona == 'intervju':
             world = interview_world
         else:
-            raise NotImplementedError('There are only two personas implemented')
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            error = "Invalid persona: only fika and intervju available"
+            error_response = create_error_response(error)
+            return error_response
 
         try:
             brain_response = world.init_conversation(msg, build_data=build_data)
@@ -93,38 +89,50 @@ def new_chat(msg: InitBody, response: Response, request: Request):
 @brain.post('/fika')
 async def fika(msg: UserMessage, response: Response):
     # TODO: And add event loop
+    start_time = timeit.default_timer()
+
     if not msg.password == password:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         error = 'Wrong password'
-        brain_response = create_error_response(error)
+        error_response = create_error_response(error)
+        return error_response
     else:
         try:
             conversation, observe_timestamp = fika_world.observe(user_request=msg)
             brain_response = fika_world.act(conversation, observe_timestamp)
+            return brain_response
         except Exception as e:
-            print(e)
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             error_msg = str(e)
-            brain_response = create_error_response(error_msg)
+            error_response = create_error_response(error_msg)
+            return error_response
+
+    elapsed_time = timeit.default_timer() - start_time
+    logging.info(f'Fika message time: {elapsed_time}')
     return brain_response
 
 
 @brain.post('/intervju')
 async def interview(msg: UserMessage, response: Response):
     # TODO: Add event loop
+    start_time = timeit.default_timer()
+
     if not msg.password == password:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         error = 'Wrong password'
-        brain_response = create_error_response(error)
+        error_response = create_error_response(error)
+        return error_response
     else:
         try:
             conversation, observe_timestamp = interview_world.observe(user_request=msg)
             brain_response = interview_world.act(conversation, observe_timestamp)
+            return brain_response
         except Exception as e:
-            print(e)
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             error_msg = str(e)
-            brain_response = create_error_response(error_msg)
+            error_response = create_error_response(error_msg)
+            return error_response
+
+    elapsed_time = timeit.default_timer() - start_time
+    logging.info(f'Intervju message time: {elapsed_time}')
     return brain_response
-
-
