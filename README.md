@@ -3,18 +3,13 @@ Emely
 
 ## Get started - first time
 1. create a new virtual environment
-2. Install pytorch separately via https://pytorch.org/get-started/locally/
-3. run $pip install -r requirements.txt
-4. run $python setup.py develop 
+2. pip install -e .
 
 ## Running the brain app
 To run the fastAPI app on 127.0.0.1:8000
-1. from models/ $python download_model.py --model_name facebook/blenderbot_small-90M
-2. from src/api $uvicorn api_main:brain 
-3. Check the docs and try the http requests at 127.0.0.1:8000/docs
+1. from src/api $uvicorn api_main:brain 
+2. Check the docs and try the http requests at 127.0.0.1:8000/docs
 
-To run the model locally in the console
-1. from src/chat $python chat_main.py --help
 
 
 Project Organization
@@ -40,8 +35,6 @@ Project Organization
     │   ├── api            <- Code related to the api and hosting the brain backend
     │   │
     │   ├── chat           <- Code used to handle conversations with Emely
-    │   │
-    │   ├── models         <- Scripts to train models and then transform them back to huggingface transformers models
     │   │
     │   ├── data           <- Scripts to process data
     │   │
