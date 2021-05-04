@@ -261,6 +261,7 @@ class InterviewConversation:
            and returns the corresponding question """
         index = int(self.pmrr_interview_questions.pop(0))
         question = self.interview_questions[index]
+        self.model_replies_since_last_question = 0
         return question
 
     def get_next_more_information(self):
