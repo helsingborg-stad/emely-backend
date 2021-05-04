@@ -264,9 +264,15 @@ class InterviewConversation:
     def get_next_interview_question(self):
         """Pops the next question index from the pmrr_interview_questions list
            and returns the corresponding question """
-        index = int(self.pmrr_interview_questions.pop(0))
-        question = self.interview_questions[index]
-        self.model_replies_since_last_question = 0
+        try:
+            index = int(self.pmrr_interview_questions.pop(0))
+            question = self.interview_questions[index]
+            self.model_replies_since_last_question = 0
+        except Exception as e:
+            # TODO: This should not happen preferably. Try to solve it in another way
+            print(e)
+            self.episode_done = True
+            return 'Oj jag måste tyvärr absluta intervjun lite tidigt men tack för din tid!'
         return question
 
     def get_next_more_information(self):
