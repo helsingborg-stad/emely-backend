@@ -73,7 +73,15 @@ class FikaWorld:
         self.stop_tokens = ['hejdå', 'bye', 'hej då']
         self.greetings = ['Hej {}, jag heter Emely! Hur är det med dig?',
                           'Hej {}! Mitt namn är Emely. Vad vill du prata om idag?',
-                          'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!']
+                          'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!',
+                          'Trevligt att träffas {}, jag heter Emely. Hur läget med dig idag?',
+                          'Hej på dig {}, vad kul att få prata lite med dig. Jag heter Emely. Är allt bra med dig?',
+                          'Hej, jag heter Emely. vad trevligt att du ville prata med mig. Hur mår du idag, {}?',
+                          'Hej {}, hoppas att du har en bra dag. Har det hänt något roligt på sistone du vill prata om?',
+                          'Hej. Hoppas allt är bra med dig, {}. Jag heter Emely. Vad är du sugen på att prata med mig om?',
+                          'Hej {}, vad kul det ska bli att få prata med dig. Jag heter Emely. Du är kanske också nyfiken på att fråga mig om någonting?',
+                          'Hej {}, vad fint att kunna få en liten pratstund med dig. Hur är läget?',
+                          'Goddag {}, mitt namn är Emely. Hur står det till med dig idag?']
 
     def call_model(self, context):
         """ Sends context to model and gets a reply back """
