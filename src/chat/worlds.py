@@ -327,8 +327,16 @@ class InterviewWorld(FikaWorld):
         self.max_replies = 2  # Maximum number of replies back and forth for each question
         self.greetings = ['Hej, {}! Välkommen till din intervju! Hur är det med dig?',
                           'Hej {}, Emely heter jag och det är jag som ska intervjua dig. Hur är det med dig idag?',
-                          'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?'
-                          ]
+                          'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?',
+                          'Hej och välkommen till denna arbetsintervju {}. Jag heter Emely. Är allt bra med dig idag?',
+                          'Hej {}. Jag heter Emely och kommer att hålla denna intervju med dig. Har du någon fråga innan vi sätter igång?',
+                          'Hej {}, vad trevligt att du är intresserad av denna position. Hur står det till med dig idag?',
+                          'Välkommen {}. Jag heter Emely och kommer att intervjua dig idag. Hur är det med dig?',
+                          'Hej och välkommen till denna arbetsintervju {}. Jag heter Emely. Kan du börja med att berätta lite om dig själv?',
+                          'Välkommen {}, jag heter Emely och kommer intervjua dig idag. Hur mår du idag?',
+                          'Goddag {}, hoppas att allt är bra med dig. Jag heter Emely och kommer hålla intervjun idag. Vill du berätta något om dig själv?'
+                          'Hej {} och välkommen till denna intervju. Hur är det med dig idag?',
+                          'Välkommen {} till denna intervju. Är allt bra med dig idag?']
         self.question_markers = ['?', 'vad', 'varför', 'vem']
         # TODO: Attribute for brain api
         self.model_url = 'https://interview8080-ef5bmjer3q-ew.a.run.app/inference' if True else "http://127.0.0.1:7000/inference"
