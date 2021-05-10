@@ -243,10 +243,7 @@ class FikaWorld:
                                                  error_messages='')
             conversation.add_text(firestore_message)
             brain_response = firestore_message_to_brain_message(firestore_message)
-
-            fire_conversation = conversation.get_fire_object()
-            conversation_ref = self.firestore_conversation_collection.document(conversation.conversation_id)
-            conversation_ref.set(fire_conversation.to_dict())
+            conversation.push_to_firestore()
 
             return brain_response
 
