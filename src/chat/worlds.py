@@ -225,7 +225,7 @@ class FikaWorld:
             response_time = format_response_time(act_timestamp - observe_timestamp)
 
             # Message
-            bye_sv = 'Nu måste jag gå. Det var kul att prata med dig! Hejdå!'
+            bye_sv = 'Det var kul att prata med dig! Du får gärna fylla i detta formulär så jag kan lära mig att bli bättre:\n https://forms.gle/KB8N7AqjokKpELET6'
             bye_en = 'I have to leave now. Bye!'
 
             # Get firestore and push to database
@@ -341,10 +341,16 @@ class InterviewWorld(FikaWorld):
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new interview conversation that is pushed to firestore and replies with a greeting"""
 
+        # TODO: Remove this when there's a better fix
+        if init_body.job is None:
+            init_body.job = 'arbetare här'
+
+
         # Creates greeting message
         job = init_body.job.lower()
         name = init_body.name.capitalize()
         greeting = random.choice(self.greetings).format(name)
+
         greeting_en = 'Hello, {}! Welcome to your interview! How are you?'.format(name)
 
         # Convert initialization data to a dict and update with build data
@@ -443,7 +449,7 @@ class InterviewWorld(FikaWorld):
             is_more_information = False
             removed_from_message = ''
 
-            reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig!'
+            reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig! Du får gärna fylla i detta formulär så jag kan lära mig att bli bättre:\nF https://forms.gle/KB8N7AqjokKpELET6'
             reply_en = 'Thanks for your time, it was nice to interview you!'
         elif interview.nbr_messages == 2 and not interview.last_input_is_question:
             case = '6'

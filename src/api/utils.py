@@ -20,7 +20,7 @@ def create_error_response(error_msg):
     brain_response = BrainMessage(conversation_id='',
                                   msg_id=0,
                                   lang='en',
-                                  message='error',
+                                  message='Oj nu blev jag lite trött och måste vila lite. Kan vi prata igen om några minuter?',
                                   is_init_message=False,
                                   is_hardcoded=True,
                                   error_messages=error_msg)
