@@ -8,6 +8,8 @@ from src.api.bodies import BrainMessage, UserMessage, InitBody
 from pathlib import Path
 import logging
 import timeit
+import uvicorn
+import traceback
 
 """ File contents:
     FastAPI app brain that handles requests to Emely """
@@ -77,7 +79,7 @@ def new_chat(msg: InitBody, response: Response, request: Request):
             brain_response = world.init_conversation(msg, build_data=build_data)
             print('New conversation with id:', brain_response.conversation_id)
         except Exception as e:
-            print(e)
+            print(traceback.format_exc())
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             error_msg = str(e)
             brain_response = create_error_response(error_msg)
@@ -101,6 +103,7 @@ async def fika(msg: UserMessage, response: Response):
             brain_response = fika_world.act(conversation, observe_timestamp)
             return brain_response
         except Exception as e:
+            print(traceback.format_exc())
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             error_msg = str(e)
             error_response = create_error_response(error_msg)
@@ -127,6 +130,7 @@ async def interview(msg: UserMessage, response: Response):
             brain_response = interview_world.act(conversation, observe_timestamp)
             return brain_response
         except Exception as e:
+            print(traceback.format_exc())
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             error_msg = str(e)
             error_response = create_error_response(error_msg)
@@ -135,3 +139,6 @@ async def interview(msg: UserMessage, response: Response):
     elapsed_time = timeit.default_timer() - start_time
     logging.info(f'Intervju message time: {elapsed_time}')
     return brain_response
+
+if __name__ == '__main__':
+    uvicorn.run(brain, log_level='info')
