@@ -449,7 +449,7 @@ class InterviewWorld(FikaWorld):
             is_more_information = False
             removed_from_message = ''
 
-            reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig! Du får gärna fylla i detta formulär så jag kan lära mig att bli bättre:\nF https://forms.gle/KB8N7AqjokKpELET6'
+            reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig! Du får gärna fylla i detta formulär så jag kan lära mig att bli bättre:\n https://forms.gle/KB8N7AqjokKpELET6'
             reply_en = 'Thanks for your time, it was nice to interview you!'
         elif interview.nbr_messages == 2 and not interview.last_input_is_question:
             case = '6'
