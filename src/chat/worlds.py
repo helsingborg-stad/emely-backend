@@ -338,8 +338,8 @@ class InterviewWorld(FikaWorld):
                           'Hej {} och välkommen till denna intervju. Hur är det med dig idag?',
                           'Välkommen {} till denna intervju. Är allt bra med dig idag?']
         self.question_markers = ['?', 'vad', 'varför', 'vem']
-        # TODO: Attribute for brain api
-        self.model_url = 'https://interview8080-ef5bmjer3q-ew.a.run.app/inference' if True else "http://127.0.0.1:7000/inference"
+        # TODO: Only keep the root endpoint here and add /inference in the model call function?
+        self.model_url = 'https://interview-model-ef5bmjer3q-ew.a.run.app/inference' if True else "http://127.0.0.1:7000/inference"
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new interview conversation that is pushed to firestore and replies with a greeting"""
