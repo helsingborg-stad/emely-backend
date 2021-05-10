@@ -24,7 +24,7 @@ if is_gcp_instance():
     with open(file_path, 'r') as f:
         git_version = f.read()
 else:
-    git_version = subprocess.check_output(["git", "describe"]).strip().decode('utf-8')
+    git_version = subprocess.check_output(["git", "describe", "--tags"]).strip().decode('utf-8')
 password = 'KYgZfDG6P34H56WJM996CKKcNG4'
 
 interview_world: InterviewWorld
