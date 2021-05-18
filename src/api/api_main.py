@@ -1,166 +1,144 @@
-from src.chat.worlds import InterviewWorld, ChatWorld
-from fastapi import FastAPI, Response, status
-from pydantic import BaseModel
+from src.chat.worlds import InterviewWorld, FikaWorld
+from fastapi import FastAPI, Response, status, Request
 from argparse import Namespace
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-from typing import Optional
-from collections import defaultdict
-from firebase_admin import credentials
+
+import subprocess
+from src.api.utils import is_gcp_instance, create_error_response
+from src.api.bodies import BrainMessage, UserMessage, InitBody
 from pathlib import Path
-from src.models.models_from_bucket import download_models
-import os
+import logging
+import timeit
+import uvicorn
+import traceback
 
-
-class Message(BaseModel):
-    # Defines regular message during chat
-    persona: str
-    conversation_id: int
-    message: str
-
-
-class InitChat(BaseModel):
-    # Defines body for initial contact where a user starts a chat with Emely
-    persona: str
-    conversation_id: int
-    name: str
-    job: Optional[str] = None
-
-
-class BaseResponse(BaseModel):
-    reply: str
-    episode_done: bool
-
-
-class BrainResponse(BaseModel):
-    # brain_version: float
-    response: BaseResponse
-    # reply_to_local_message_id: str
-
+""" File contents:
+    FastAPI app brain that handles requests to Emely """
 
 brain = FastAPI()
-conversations = defaultdict(dict)
+logging.basicConfig(level=logging.NOTSET)
 
-interview_persona = Namespace(model_name='blenderbot_small-90M@f70_v2_acc20', local_model=True,
-                              chat_mode='interview', no_correction=False)
-fika_persona = Namespace(model_name='blenderbot_small-90M', local_model=True,
-                         chat_mode='chat', no_correction=False)
+# Variables used in the app
+if is_gcp_instance():
+    # TODO: Solve smoother
+    file_path = Path(__file__).resolve().parents[2] / 'git_version.txt'
+    with open(file_path, 'r') as f:
+        git_version = f.read()
+else:
+    git_version = subprocess.check_output(["git", "describe"]).strip().decode('utf-8')
+password = 'KYgZfDG6P34H56WJM996CKKcNG4'
 
-interview_world = InterviewWorld(**vars(interview_persona))
-fika_world = ChatWorld(**vars(fika_persona))
+interview_world: InterviewWorld
+fika_world: FikaWorld
 world = None
 
 
-# Models aren't loaded
 async def init_config():
+    """ Called when app starts """
+    # Print config
+    print('brain_version: ', git_version)
+
+    # TODO: Time to deprecate this functionallity?
+    # Setup
+    interview_persona = Namespace(no_correction=False)
+    fika_persona = Namespace(no_correction=False)
+
     global interview_world, fika_world
-    models = ['blenderbot_small-90M', 'blenderbot_small-90M@f70_v2_acc20']
-    # json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
-    # cred = credentials.Certificate(json_path.as_posix())
-    # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r"C:\Users\AlexanderHagelborn\code\freja\emelybrainapi-7fe03b6e672c.json"
-    download_models(models)  # Uncomment this to download models from gcp bucket on application start
-    interview_world.load_model()
-    fika_world.load_model()
+    interview_world = InterviewWorld(**vars(interview_persona))
+    fika_world = FikaWorld(**vars(fika_persona))
     return
 
 
 brain.add_event_handler("startup", init_config)
 
 
-@brain.post('/message')
-def chat(msg: Message, response: Response):
-    conversation_id, message, persona = msg.conversation_id, msg.message, msg.persona
-    if persona == 'fika':
-        world = fika_world
-    elif persona == 'intervju':
-        world = interview_world
-    else:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return response
-
-    try:
-        episode_done, dialogue = world.observe(message, conversation_id)
-        reply = world.act(dialogue)
-        response.status_code = status.HTTP_200_OK
-    except KeyError:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        episode_done = True
-        reply = 'conversation_id not found'
-    response = BaseResponse(reply=reply, episode_done=episode_done)
-    brain_response = BrainResponse(response=response)
-    return brain_response
-
-
 @brain.post('/init', status_code=201)
-def new_chat(msg: InitChat, response: Response):
-    persona, conversation_id = msg.persona, msg.conversation_id
-    if persona == 'fika':
-        world = fika_world
-    elif persona == 'intervju':
-        if msg.job is None:
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return response
-        else:
+def new_chat(msg: InitBody, response: Response, request: Request):
+    if not msg.password == password:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        error = 'Wrong password'
+        error_response = create_error_response(error)
+        return error_response
+    else:  # All checks pass
+        # Data
+        global git_version
+        client_host = request.client.host
+        build_data = {'brain_version': git_version, 'brain_url': client_host}
+
+        # Choose world depending on persona
+        if msg.persona == 'fika':
+            world = fika_world
+        elif msg.persona == 'intervju':
             world = interview_world
-    else:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return response
-    if conversation_id not in conversations.keys():
-        conversations[conversation_id] = {'fika': False, 'intervju': False}
-    conversations[conversation_id][persona] = True
-    greeting = world.init_conversation(**msg.dict())
-    response = {'reply': greeting,
-                'episode_done': False
-                }
-    response = BaseResponse(**response)
-    brain_response = {'response': response}
-    brain_response = BrainResponse(**brain_response)
+        else:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            error = "Invalid persona: only fika and intervju available"
+            error_response = create_error_response(error)
+            return error_response
+
+        try:
+            brain_response = world.init_conversation(msg, build_data=build_data)
+            print('New conversation with id:', brain_response.conversation_id)
+        except Exception as e:
+            print(traceback.format_exc())
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            error_msg = str(e)
+            brain_response = create_error_response(error_msg)
+
     return brain_response
 
 
-@brain.get('/dialogues')
-def get_dialogues():
-    json_compatible_item_data = jsonable_encoder(conversations)
-    return JSONResponse(content=json_compatible_item_data)
+@brain.post('/fika')
+async def fika(msg: UserMessage, response: Response):
+    # TODO: And add event loop
+    start_time = timeit.default_timer()
 
-#
-# @brain.get('/init', status_code=200)
-# def get_chats():
-#     json_compatible_item_data = jsonable_encoder(list(world.dialogues.keys()))
-#     return JSONResponse(content=json_compatible_item_data)
-#
-#
-# @brain.get('/persona', status_code=200)
-# def get_persona():
-#     persona = type(world).__name__
-#     response = {'reply': 'Current world is {}'.format(persona),
-#                 'episode_done': True}
-#     response = BaseResponse(**response)
-#     return response
-#
-#
-# @brain.put('/persona')
-# def set_persona(msg: SetPersona, response: Response):
-#     global world, fika_world, interview_world
-#     if msg.new_persona == 'intervju' or msg.new_persona == 'interview':
-#         if 'Interview' in type(world).__name__:
-#             # Interview new_persona already running: HTTP already reported
-#             response.status_code = 208
-#         else:
-#             world.unload_model()
-#             world = interview_world
-#             world.load_model()
-#             response.status_code = status.HTTP_201_CREATED
-#
-#     elif msg.new_persona == 'fika':
-#         if 'Chat' in type(world).__name__:
-#             response.status_code = 208
-#         else:
-#             world.unload_model()
-#             world = fika_world
-#             world.load_model()
-#             response.status_code = status.HTTP_201_CREATED
-#     else:
-#         response.status_code = status.HTTP_404_NOT_FOUND
-#
-#     return response
+    if not msg.password == password:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        error = 'Wrong password'
+        error_response = create_error_response(error)
+        return error_response
+    else:
+        try:
+            conversation, observe_timestamp = fika_world.observe(user_request=msg)
+            brain_response = fika_world.act(conversation, observe_timestamp)
+            return brain_response
+        except Exception as e:
+            print(traceback.format_exc())
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            error_msg = str(e)
+            error_response = create_error_response(error_msg)
+            return error_response
+
+    elapsed_time = timeit.default_timer() - start_time
+    logging.info(f'Fika message time: {elapsed_time}')
+    return brain_response
+
+
+@brain.post('/intervju')
+async def interview(msg: UserMessage, response: Response):
+    # TODO: Add event loop
+    start_time = timeit.default_timer()
+
+    if not msg.password == password:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        error = 'Wrong password'
+        error_response = create_error_response(error)
+        return error_response
+    else:
+        try:
+            conversation, observe_timestamp = interview_world.observe(user_request=msg)
+            brain_response = interview_world.act(conversation, observe_timestamp)
+            return brain_response
+        except Exception as e:
+            print(traceback.format_exc())
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            error_msg = str(e)
+            error_response = create_error_response(error_msg)
+            return error_response
+
+    elapsed_time = timeit.default_timer() - start_time
+    logging.info(f'Intervju message time: {elapsed_time}')
+    return brain_response
+
+if __name__ == '__main__':
+    uvicorn.run(brain, log_level='info')

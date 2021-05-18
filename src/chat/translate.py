@@ -2,17 +2,26 @@ from deep_translator import GoogleTranslator
 from googletrans import Translator
 import six
 from google.cloud import translate_v2 as translate
-
-import logging
 import os
 from pathlib import Path
+
+from src.api.utils import is_gcp_instance
+
+""" Translates text. Works with: 
+    - Google's official API(costs money)
+    - DeepTranslator(free)
+    - Googletrans(free)
+"""
+
 
 class ChatTranslator:
 
     def __init__(self, default_translator='googletrans'):
         # Set this to your google api key location
-        json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = json_path.as_posix()
+        if not is_gcp_instance():
+            # Add a authentication to the Google translate if we are not on GCP.
+            json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = json_path.as_posix()
 
         # Translator objects
         self.default = default_translator
@@ -20,7 +29,7 @@ class ChatTranslator:
         self.deeptranslator_sv_to_en = GoogleTranslator(source='sv', target='en')
         self.gtrans_translator = Translator()
         self.gcloud_translator = translate.Client()
-        logging.basicConfig(filename='translate.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
+        # logging.basicConfig(filename='translate.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
         self.nbr_translation = 0
 
     def translate(self, text, src, target, package=None):
@@ -60,7 +69,7 @@ class ChatTranslator:
         translated_text = out.text
         if translated_text == text:
             msg = 'googletrans failed'
-            logging.warning(msg)
+            # logging.warning(msg)
             raise Warning(msg)
         else:
             return translated_text
@@ -76,7 +85,7 @@ class ChatTranslator:
             translation = self.deeptranslator_sv_to_en.translate(text)
             if translation == text:
                 msg = 'deep_translator failed'
-                logging.warning(msg)
+                # logging.warning(msg)
                 raise Warning(msg)
             else:
                 return translation
@@ -84,7 +93,7 @@ class ChatTranslator:
             translation = self.deeptranslator_en_to_sv.translate(text)
             if translation == text:
                 msg = 'deep_translator failed'
-                logging.warning(msg)
+                # logging.warning(msg)
                 raise Warning(msg)
             else:
                 return translation

@@ -1,66 +1,43 @@
 Emely
 ==============================
 
-## Get started
+## Get started - first time
 1. create a new virtual environment
-2. Install pytorch separately via https://pytorch.org/get-started/locally/
-3. run $pip install -r requirements.txt
-4. run $python setup.py develop 
+2. pip install -e .
 
 ## Running the brain app
 To run the fastAPI app on 127.0.0.1:8000
-1. from models/ $python download_model.py --model_name facebook/blenderbot_small-90M
-2. from src/api $uvicorn api_main:brain 
+1. from src/api $uvicorn api_main:brain 
+2. Check the docs and try the http requests at 127.0.0.1:8000/docs
 
-Check the docs and try the http requests at 127.0.0.1:8000/docs
+
 
 Project Organization
 ------------
 
     ├── LICENSE
-    ├── Makefile           <- Makefile with commands like `make data` or `make train`
     ├── README.md          <- The top-level README for developers using this project.
     ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
+    │   ├── json           <- Intermediate data that has been transformed.
     │   ├── processed      <- The final, canonical data sets for modeling.
     │   └── raw            <- The original, immutable data dump.
     │
-    ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
+    ├── docs               <- Eventual documentation files
     │
-    ├── models             <- Trained and serialized models, model predictions, or model summaries
+    ├── models             <- Storage of blenderbot models and tokenizers
     │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
-    │
-    ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
-    │
-    ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-    │   └── figures        <- Generated graphics and figures to be used in reporting
-    │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-    │                         generated with `pip freeze > requirements.txt`
+    ├── requirements.txt   <- The requirements file for reproducing the analysis environment
     │
     ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
     ├── src                <- Source code for use in this project.
     │   ├── __init__.py    <- Makes src a Python module
     │   │
-    │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
+    │   ├── api            <- Code related to the api and hosting the brain backend
     │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
+    │   ├── chat           <- Code used to handle conversations with Emely
     │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
+    │   ├── data           <- Scripts to process data
     │   │
-    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │       └── visualize.py
-    │
-    └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 
 
 --------

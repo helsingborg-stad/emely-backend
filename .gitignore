@@ -58,6 +58,12 @@ docs/_build/
 # PyBuilder
 target/
 
+#JSON
+*.json
+
+# pyc
+*.pyc
+
 # DotEnv configuration
 .env
 
@@ -87,6 +93,10 @@ notebooks/lightning_logs
 todo.txt
 
 models/*/
+src/models/
+# Credentials
+emelybrainapi-7fe03b6e672c.json
+emelybrainapi-33194bec3069.json
 
 # Mac OS-specific storage files
 .DS_Store

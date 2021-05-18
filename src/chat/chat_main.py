@@ -1,16 +1,17 @@
-from worlds import InterviewWorld, ChatWorld
+from worlds import InterviewWorld, FikaWorld
 from argparse import ArgumentParser
+from src.api.bodies import *
+from datetime import datetime
+import subprocess
 
 
 def main(**kwargs):
     if kwargs['chat_mode'].lower() == 'interview':
         world = InterviewWorld(**kwargs)
     elif kwargs['chat_mode'].lower() == 'chat':
-        world = ChatWorld(**kwargs)
+        world = FikaWorld(**kwargs)
     else:
         raise ValueError()
-
-    world.load_model()
 
     # Print config
     print('Starting interaction with world using configuration: \n')
@@ -18,29 +19,45 @@ def main(**kwargs):
         print('{}: {}'.format(key, kwargs[key]))
 
     # Initing the conversation
-    conversation_id = 123456
-    first_message = world.init_conversation(conversation_id, **kwargs)
-    print(first_message)
+    git_build = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip().decode('utf-8')
+    git_version = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"]).strip().decode('utf-8')
+    init_body = InitBody(name=kwargs['name'],
+                         job=kwargs['job'],
+                         created_at=str(datetime.now()),
+                         persona='intervju',
+                         development_testing=True,
+                         webapp_local=True,
+                         webapp_url='None',
+                         webapp_version='None',
+                         webapp_git_build='None',
+                         brain_url='None',
+                         lang='sv',
+                         password='KYgZfDG6P34H56WJM996CKKcNG4',
+                         user_ip_number='None')
+    build_data = {'brain_version': git_build, 'brain_url': 'None'}
     episode_done = False
+    brain_message = world.init_conversation(init_body=init_body, build_data=build_data)
+    conversation_id = brain_message.conversation_id
 
     while not episode_done:
-        user_message = input("\tDitt svar: ")
+        user_input = input("\tDitt svar: ")
+        user_message = UserMessage(conversation_id=conversation_id,
+                                   response_time=-1,
+                                   lang='sv',
+                                   message=user_input,
+                                   created_at=str(datetime.now()),
+                                   recording_used=False,
+                                   password='KYgZfDG6P34H56WJM996CKKcNG4')
+
         if not user_message:
             print('\nDu måste skriva något för att jag ska svara!')
             continue
-        elif user_message == 'reset':
-            print('Conversation reset\n')
-            world.reset_conversation(conversation_id)
-        elif user_message == 'save':
-            world.save(conversation_id)
-        elif user_message == 'go_back':
-            last_reply = world.one_step_back(conversation_id)
-            print(last_reply)
         else:
-            episode_done, dialogue = world.observe(user_message, conversation_id)
-            reply = world.act(dialogue)
-            print(reply)
-    world.save(conversation_id)
+            conversation, timstamp = world.observe(user_message)
+
+            brain_response = world.act(conversation, observe_timestamp=timstamp)
+            print(brain_response.message)
+            episode_done = conversation.episode_done
 
 
 if __name__ == '__main__':
@@ -52,14 +69,8 @@ if __name__ == '__main__':
                         type=str, default='programmerare',
                         help='job user is applying for in interview')
     parser.add_argument('--model_name',
-                        type=str, default='blenderbot-400M-distill',
+                        type=str, default='blenderbot_small-90M',
                         help='name of model')
-    parser.add_argument('--local_model',
-                        action='store_true', dest='local_model',
-                        help='Loads model from local file in freja/models/')
-    parser.add_argument('--huggingface_model',
-                        action='store_false', dest='local_model',
-                        help='Loads model from huggingface remote. Requires internet connection')
     parser.add_argument('--chat_mode',
                         type=str, choices=['interview', 'chat'], default='interview',
                         help='Chat mode to use. interview or open chat available')
