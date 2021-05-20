@@ -288,7 +288,7 @@ class InterviewConversation:
 
     def get_input_with_context(self):
         """ Creates input for model: the conversation history since the last predefined question! """
-        nbr_replies_for_context = 2 + self.model_replies_since_last_question * 2
+        nbr_replies_for_context = 2 + self.model_replies_since_last_question * 2 + 6
         condition = self.nbr_messages - nbr_replies_for_context
         docs = self.firestore_messages_collection.where('msg_nbr', '>=', condition).stream()
         messages = [doc.to_dict() for doc in docs]

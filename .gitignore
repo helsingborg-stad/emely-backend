@@ -97,6 +97,7 @@ src/models/
 # Credentials
 emelybrainapi-7fe03b6e672c.json
 emelybrainapi-33194bec3069.json
+*.json
 
 # Mac OS-specific storage files
 .DS_Store

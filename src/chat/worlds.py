@@ -225,7 +225,7 @@ class FikaWorld:
             response_time = format_response_time(act_timestamp - observe_timestamp)
 
             # Message
-            bye_sv = 'Det var kul att prata med dig! Du får gärna fylla i detta formulär så jag kan lära mig att bli bättre:\n https://forms.gle/KB8N7AqjokKpELET6'
+            bye_sv = 'Det var kul att prata med dig!' # Du får gärna fylla i detta formulär så jag kan lära mig att bli bättre:\n https://forms.gle/KB8N7AqjokKpELET6'
             bye_en = 'I have to leave now. Bye!'
 
             # Get firestore and push to database
@@ -326,12 +326,11 @@ class InterviewWorld(FikaWorld):
                           'Hej {}, Emely heter jag och det är jag som ska intervjua dig. Hur är det med dig idag?',
                           'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?',
                           'Hej och välkommen till denna arbetsintervju {}. Jag heter Emely. Är allt bra med dig idag?',
-                          'Hej {}. Jag heter Emely och kommer att hålla denna intervju med dig. Har du någon fråga innan vi sätter igång?',
                           'Hej {}, vad trevligt att du är intresserad av denna position. Hur står det till med dig idag?',
                           'Välkommen {}. Jag heter Emely och kommer att intervjua dig idag. Hur är det med dig?',
                           'Hej och välkommen till denna arbetsintervju {}. Jag heter Emely. Kan du börja med att berätta lite om dig själv?',
                           'Välkommen {}, jag heter Emely och kommer intervjua dig idag. Hur mår du idag?',
-                          'Goddag {}, hoppas att allt är bra med dig. Jag heter Emely och kommer hålla intervjun idag. Vill du berätta något om dig själv?'
+                          'Goddag {}, hoppas att allt är bra med dig. Jag heter Emely och kommer hålla intervjun idag. Vill du berätta något om dig själv?',
                           'Hej {} och välkommen till denna intervju. Hur är det med dig idag?',
                           'Välkommen {} till denna intervju. Är allt bra med dig idag?']
         self.question_markers = ['?', 'vad', 'varför', 'vem']
@@ -345,9 +344,8 @@ class InterviewWorld(FikaWorld):
         if init_body.job is None:
             init_body.job = 'arbetare här'
 
-
         # Creates greeting message
-        job = init_body.job.lower()
+        init_body.job = init_body.job.lower()
         name = init_body.name.capitalize()
         greeting = random.choice(self.greetings).format(name)
 
@@ -449,7 +447,7 @@ class InterviewWorld(FikaWorld):
             is_more_information = False
             removed_from_message = ''
 
-            reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig! Du får gärna fylla i detta formulär så jag kan lära mig att bli bättre:\nF https://forms.gle/KB8N7AqjokKpELET6'
+            reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig!' # Du får gärna fylla i detta formulär så jag kan lära mig att bli bättre:\nF https://forms.gle/KB8N7AqjokKpELET6'
             reply_en = 'Thanks for your time, it was nice to interview you!'
         elif interview.nbr_messages == 2 and not interview.last_input_is_question:
             case = '6'
