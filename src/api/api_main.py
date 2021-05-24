@@ -3,7 +3,8 @@ from fastapi import FastAPI, Response, status, Request
 from argparse import Namespace
 
 import subprocess
-from src.api.utils import is_gcp_instance, create_error_response
+from src.api.utils import is_gcp_instance, create_error_response, create_badword_message
+from src.chat.utils import BadwordException
 from src.api.bodies import BrainMessage, UserMessage, InitBody
 from pathlib import Path
 import logging
@@ -89,56 +90,50 @@ def new_chat(msg: InitBody, response: Response, request: Request):
 
 @brain.post('/fika')
 async def fika(msg: UserMessage, response: Response):
-    # TODO: And add event loop
-    start_time = timeit.default_timer()
 
-    if not msg.password == password:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        error = 'Wrong password'
-        error_response = create_error_response(error)
+    try:
+        conversation, observe_timestamp = fika_world.observe(user_request=msg)
+        brain_response = fika_world.act(conversation, observe_timestamp)
+        return brain_response
+
+    # Badword in the user message
+    except BadwordException as e:
+        response.status_code = status.HTTP_403_FORBIDDEN
+        badword_response = create_badword_message()
+        logging.warning('Found badword. Check database')
+        return badword_response
+
+    except Exception as e:
+        print(traceback.format_exc())
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        error_msg = str(e)
+        error_response = create_error_response(error_msg)
         return error_response
-    else:
-        try:
-            conversation, observe_timestamp = fika_world.observe(user_request=msg)
-            brain_response = fika_world.act(conversation, observe_timestamp)
-            return brain_response
-        except Exception as e:
-            print(traceback.format_exc())
-            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            error_msg = str(e)
-            error_response = create_error_response(error_msg)
-            return error_response
-
-    elapsed_time = timeit.default_timer() - start_time
-    logging.info(f'Fika message time: {elapsed_time}')
-    return brain_response
 
 
 @brain.post('/intervju')
 async def interview(msg: UserMessage, response: Response):
-    # TODO: Add event loop
-    start_time = timeit.default_timer()
 
-    if not msg.password == password:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        error = 'Wrong password'
-        error_response = create_error_response(error)
+    try:
+        conversation, observe_timestamp = interview_world.observe(user_request=msg)
+        brain_response = interview_world.act(conversation, observe_timestamp)
+        return brain_response
+
+    # TODO: This is the same as for fika. Maybe we should also repeat the previous input?
+    except BadwordException as e: 
+        response.status_code = status.HTTP_403_FORBIDDEN
+        badword_response = create_badword_message()
+        logging.warning('Found badword. Check database')
+        return badword_response
+
+    except Exception as e:
+        print(traceback.format_exc())
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        error_msg = str(e)
+        error_response = create_error_response(error_msg)
         return error_response
-    else:
-        try:
-            conversation, observe_timestamp = interview_world.observe(user_request=msg)
-            brain_response = interview_world.act(conversation, observe_timestamp)
-            return brain_response
-        except Exception as e:
-            print(traceback.format_exc())
-            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            error_msg = str(e)
-            error_response = create_error_response(error_msg)
-            return error_response
 
-    elapsed_time = timeit.default_timer() - start_time
-    logging.info(f'Intervju message time: {elapsed_time}')
-    return brain_response
+
 
 if __name__ == '__main__':
     uvicorn.run(brain, log_level='info')

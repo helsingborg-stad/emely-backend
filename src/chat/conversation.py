@@ -72,6 +72,20 @@ class FirestoreConversation(object):
     def to_dict(self):
         return asdict(self)
 
+@dataclass
+class BadwordMessage(object):
+    message: str
+    conversation_id: str
+    created_at: str
+    development_testing: str
+
+    @staticmethod
+    def from_dict(source):
+        return OffensiveMessage(**source)
+
+    def to_dict(self):
+        return asdict(self)
+
 
 # TODO: Write superclasss
 # class Conversation:
