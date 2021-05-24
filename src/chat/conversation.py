@@ -72,6 +72,20 @@ class FirestoreConversation(object):
     def to_dict(self):
         return asdict(self)
 
+@dataclass
+class BadwordMessage(object):
+    message: str
+    conversation_id: str
+    created_at: str
+    development_testing: str
+
+    @staticmethod
+    def from_dict(source):
+        return OffensiveMessage(**source)
+
+    def to_dict(self):
+        return asdict(self)
+
 
 # TODO: Write superclasss
 # class Conversation:
@@ -288,7 +302,7 @@ class InterviewConversation:
 
     def get_input_with_context(self):
         """ Creates input for model: the conversation history since the last predefined question! """
-        nbr_replies_for_context = 2 + self.model_replies_since_last_question * 2
+        nbr_replies_for_context = 2 + self.model_replies_since_last_question * 2 + 6
         condition = self.nbr_messages - nbr_replies_for_context
         docs = self.firestore_messages_collection.where('msg_nbr', '>=', condition).stream()
         messages = [doc.to_dict() for doc in docs]

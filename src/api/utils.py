@@ -1,6 +1,8 @@
 import socket
 from src.api.bodies import BrainMessage
 import logging
+import requests
+import threading
 
 """ Helper functions """
 
@@ -16,14 +18,41 @@ def is_gcp_instance():
 
 def create_error_response(error_msg):
     """ Creates a dummy BrainMessage with the error message inserted"""
-    logging.warn(error_msg)
+    logging.warning(error_msg)
     brain_response = BrainMessage(conversation_id='',
                                   msg_id=0,
                                   lang='en',
-                                  message='Oj nu blev jag lite trött och måste vila lite. Kan vi prata igen om några minuter?',
+                                  message='Oj nu blev jag lite trött och måste vila. Kan vi prata igen om en stund?',
                                   is_init_message=False,
                                   is_hardcoded=True,
                                   error_messages=error_msg)
+    return brain_response
+
+
+def request_task(url):
+    " Helper function to wake model "
+    requests.get(url)
+
+
+def wake_model(model_url):
+    " Sends a request to the model url without waiting for it"
+    # threading.Thread(target=request_task, args=url).start()
+    url = model_url + '/model-name'
+    try:
+        requests.get(url, timeout=0.001)
+    except:
+        pass
+
+
+def create_badword_message():
+    """ Creates a standard response when worlds has detected a badword in the user message """
+    brain_response = BrainMessage(conversation_id='',
+                                  msg_id=0,
+                                  lang='sv',
+                                  message='Jag förstår inte riktigt vad du menar. Ska vi gå vidare i vårt samtal?',
+                                  is_init_message=False,
+                                  is_hardcoded=True,
+                                  error_messages='')
     return brain_response
 
 
