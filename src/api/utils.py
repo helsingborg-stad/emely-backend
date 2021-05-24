@@ -1,5 +1,5 @@
 import socket
-from src.api.bodies import BrainMessage
+from src.api.bodies import ApiMessage, BrainMessage
 import logging
 import requests
 import threading
@@ -31,17 +31,16 @@ def create_error_response(error_msg):
 
 def request_task(url):
     " Helper function to wake model "
-    requests.get(url)
+    #requests.get(url)
+    dummy = ApiMessage(text='wake\nup')
+    logging.warning('Waking up model by inference')
+    requests.post(url=url, data=dummy.json())
 
 
 def wake_model(model_url):
     " Sends a request to the model url without waiting for it"
-    # threading.Thread(target=request_task, args=url).start()
-    url = model_url + '/model-name'
-    try:
-        requests.get(url, timeout=0.001)
-    except:
-        pass
+    url = model_url + '/inference'
+    threading.Thread(target=request_task, args=(url,)).start()
 
 
 def create_badword_message():

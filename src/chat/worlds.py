@@ -1,3 +1,4 @@
+from typing import Tuple
 import requests
 
 import re
@@ -112,7 +113,7 @@ class FikaWorld:
         """ Creates a new fika conversation that is pushed to firestore and replies with a greeting"""
 
         # Wake model
-        #wake_model(self.model_url)
+        wake_model(self.model_url)
 
         # Creates a greeting message
         name = init_body.name.capitalize()
@@ -156,7 +157,7 @@ class FikaWorld:
 
         return response
 
-    def observe(self, user_request: UserMessage) -> (FikaConversation, datetime):
+    def observe(self, user_request: UserMessage) -> Tuple[FikaConversation, datetime]:
         """ Observes a UserMessage
           1. Pulls conversaton from firestore
           2. Adds message to conversation
@@ -360,7 +361,7 @@ class InterviewWorld(FikaWorld):
                           'Hej {} och välkommen till denna intervju. Hur är det med dig idag?',
                           'Välkommen {} till denna intervju. Är allt bra med dig idag?']
         self.question_markers = ['?', 'vad', 'varför', 'vem']
-        self.model_url = 'https://interview8080-ef5bmjer3q-ew.a.run.app'  # 'https://interview-model-ef5bmjer3q-ew.a.run.app' if True else "http://127.0.0.1:7000"
+        self.model_url = 'https://interview8080-ef5bmjer3q-ew.a.run.app' # 'https://interview-model-ef5bmjer3q-ew.a.run.app' 
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new interview conversation that is pushed to firestore and replies with a greeting"""
@@ -370,7 +371,7 @@ class InterviewWorld(FikaWorld):
         #     init_body.job = 'arbetare här'
 
         # Wake model
-        #wake_model(self.model_url)
+        wake_model(self.model_url)
 
         # Creates greeting message
         init_body.job = init_body.job.lower()

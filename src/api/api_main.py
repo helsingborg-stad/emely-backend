@@ -136,4 +136,4 @@ async def interview(msg: UserMessage, response: Response):
 
 
 if __name__ == '__main__':
-    uvicorn.run(brain, log_level='info')
+    uvicorn.run(brain, log_level='warning')
