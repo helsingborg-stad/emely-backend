@@ -59,7 +59,16 @@ def new_chat(msg: InitBody, response: Response, request: Request):
         error = 'Wrong password'
         error_response = create_error_response(error)
         return error_response
-    else:  # All checks pass
+
+    # Request is missing job
+    elif msg.persona == 'intervju' and msg.job == None:
+        response.status_code == status.HTTP_400_BAD_REQUEST
+        error = 'Av någon anledning har jag glömt vilket jobb du skulle söka... Prova att klicka på knappen \'återställ dialog\' snett upp till vänster'
+        error_response = create_error_response(error)
+        return error_response
+
+    # All checks pass
+    else:  
         # Data
         global git_version
         client_host = request.client.host
