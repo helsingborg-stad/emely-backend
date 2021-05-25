@@ -16,13 +16,13 @@ def is_gcp_instance():
     return True
 
 
-def create_error_response(error_msg):
+def create_error_response(message:str, error_msg:str) -> BrainMessage:
     """ Creates a dummy BrainMessage with the error message inserted"""
     logging.warning(error_msg)
     brain_response = BrainMessage(conversation_id='',
                                   msg_id=0,
                                   lang='en',
-                                  message='Oj nu blev jag lite trött och måste vila. Kan vi prata igen om en stund?',
+                                  message=message, # 'Oj nu blev jag lite trött och måste vila. Kan vi prata igen om en stund?',
                                   is_init_message=False,
                                   is_hardcoded=True,
                                   error_messages=error_msg)
@@ -43,7 +43,7 @@ def wake_model(model_url):
     threading.Thread(target=request_task, args=(url,)).start()
 
 
-def create_badword_message():
+def create_badword_message() -> BrainMessage:
     """ Creates a standard response when worlds has detected a badword in the user message """
     brain_response = BrainMessage(conversation_id='',
                                   msg_id=0,

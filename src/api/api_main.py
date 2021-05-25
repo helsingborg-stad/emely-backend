@@ -32,6 +32,9 @@ interview_world: InterviewWorld
 fika_world: FikaWorld
 world = None
 
+# Response
+migraine_response = 'Ojoj mitt stackars huvud... Jag tror jag har bivit sjuk och måste gå till vårdcentralen. Vi får prata en annan dag. Hejdå!'
+
 
 async def init_config():
     """ Called when app starts """
@@ -56,15 +59,17 @@ brain.add_event_handler("startup", init_config)
 def new_chat(msg: InitBody, response: Response, request: Request):
     if not msg.password == password:
         response.status_code = status.HTTP_401_UNAUTHORIZED
-        error = 'Wrong password'
-        error_response = create_error_response(error)
+        error_msg = 'Wrong password'
+        message = migraine_response
+        error_response = create_error_response(message, error_msg)
         return error_response
 
     # Request is missing job
     elif msg.persona == 'intervju' and msg.job == None:
         response.status_code == status.HTTP_400_BAD_REQUEST
-        error = 'Av någon anledning har jag glömt vilket jobb du skulle söka... Prova att klicka på knappen \'återställ dialog\' snett upp till vänster'
-        error_response = create_error_response(error)
+        message = 'Av någon anledning har jag glömt vilket jobb du skulle söka... Prova att klicka på knappen \'återställ dialog\' snett upp till vänster'
+        error_msg = 'Init to intervju is missing job information'
+        error_response = create_error_response(message, error_msg)
         return error_response
 
     # All checks pass
@@ -81,8 +86,9 @@ def new_chat(msg: InitBody, response: Response, request: Request):
             world = interview_world
         else:
             response.status_code = status.HTTP_400_BAD_REQUEST
-            error = "Invalid persona: only fika and intervju available"
-            error_response = create_error_response(error)
+            error_msg = "Invalid persona: only fika and intervju available"
+            message = 'Just nu har jag bara två olika personas: fika och intervju'
+            error_response = create_error_response(message, error_msg)
             return error_response
 
         try:
@@ -92,7 +98,7 @@ def new_chat(msg: InitBody, response: Response, request: Request):
             print(traceback.format_exc())
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             error_msg = str(e)
-            brain_response = create_error_response(error_msg)
+            brain_response = create_error_response(message=migraine_response, error_msg=error_msg)
 
     return brain_response
 
@@ -116,7 +122,7 @@ async def fika(msg: UserMessage, response: Response):
         print(traceback.format_exc())
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         error_msg = str(e)
-        error_response = create_error_response(error_msg)
+        error_response = create_error_response(message=migraine_response, error_msg=error_msg)
         return error_response
 
 
@@ -139,7 +145,7 @@ async def interview(msg: UserMessage, response: Response):
         print(traceback.format_exc())
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         error_msg = str(e)
-        error_response = create_error_response(error_msg)
+        error_response = create_error_response(message=migraine_response, error_msg=error_msg)
         return error_response
 
 
