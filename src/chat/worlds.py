@@ -79,13 +79,13 @@ class FikaWorld:
         self.greetings = ['Hej {}, jag heter Emely! Hur är det med dig?',
                           'Hej {}! Mitt namn är Emely. Vad vill du prata om idag?',
                           'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!',
-                          'Trevligt att träffas {}, jag heter Emely. Hur läget med dig idag?',
-                          'Hej på dig {}, vad kul att få prata lite med dig. Jag heter Emely. Är allt bra med dig?',
-                          'Hej, jag heter Emely. vad trevligt att du ville prata med mig. Hur mår du idag, {}?',
-                          'Hej {}, hoppas att du har en bra dag. Har det hänt något roligt på sistone du vill prata om?',
-                          'Hej. Hoppas allt är bra med dig, {}. Jag heter Emely. Vad är du sugen på att prata med mig om?',
-                          'Hej {}, vad kul det ska bli att få prata med dig. Jag heter Emely. Du är kanske också nyfiken på att fråga mig om någonting?',
-                          'Hej {}, vad fint att kunna få en liten pratstund med dig. Hur är läget?',
+                          'Trevligt att träffas {}, jag heter Emely. Hur är läget med dig idag?',
+                          'Hej på dig {}, vad kul att få prata med dig. Jag heter Emely. Är allt bra med dig?',
+                          'Hej, jag heter Emely. Vad trevligt att du ville prata med mig. Hur mår du idag, {}?',
+                          'Hejsan {}, hoppas att du har en bra dag. Har det hänt något roligt på sistone du vill prata om?',
+                          'Hej. Hoppas allt är bra med dig, {}. Jag heter Emely. Vad är du sugen på att prata om?',
+                          'Hej {}, vad kul det ska bli att få prata med dig. Jag heter Emely. Du kanske är nyfiken på att fråga mig om någonting?',
+                          'Hej {}, vad fint att kunna få ta en virtuell fika med dig. Hur är läget?',
                           'Goddag {}, mitt namn är Emely. Hur står det till med dig idag?']
 
         # Contains examples of racist/homophobic/sexual words or otherwise offensive language
@@ -365,10 +365,6 @@ class InterviewWorld(FikaWorld):
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new interview conversation that is pushed to firestore and replies with a greeting"""
-
-        # # TODO: Remove this when there's a better fix
-        # if init_body.job is None:
-        #     init_body.job = 'arbetare här'
 
         # Wake model
         wake_model(self.model_url)
