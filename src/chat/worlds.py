@@ -187,7 +187,7 @@ class FikaWorld:
         conversation.add_text(firestore_message)
 
         # Set episode done if exit condition is met.
-        if message.lower().replace(' ', '') in self.stop_tokens:
+        if message.lower().replace(' ', '') in self.stop_tokens or conversation.nbr_messages > 30:
             conversation.episode_done = True
         return conversation, observe_timestamp
 
