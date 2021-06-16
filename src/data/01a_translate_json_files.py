@@ -37,7 +37,7 @@ def translate_json_dialog(conversation: Dict) -> Dict:
         text = turn[1]
         turn[1] = translator.translate(text, src= 'sv', target='en')
 
-    return dialog
+    return conversation
 
 
 def main(input_path, output_path):

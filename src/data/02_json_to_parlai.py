@@ -115,6 +115,8 @@ def main(input_path, output_filename, args):
     data_dir = Path(__file__).resolve().parents[2].joinpath('data')
     out_path = data_dir / 'parlai'
     store_path = out_path.joinpath(output_filename)
+    if store_path.suffix != '.txt':
+        store_path = store_path.parent / (store_path.name + '.txt')
 
     if not out_path.is_dir():
         out_path.mkdir(parents=True, exist_ok=True)
