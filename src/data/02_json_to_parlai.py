@@ -148,8 +148,8 @@ if __name__ == "__main__":
     """
 
     parser = ArgumentParser()
-    parser.add_argument('--input_path', type=str, required=True)
-    parser.add_argument('--output_filename', type=str, required=True)
+    parser.add_argument('--input_path', type=str, required=True, help='Relative to /data/')
+    parser.add_argument('--output_filename', type=str, required=True, help='Relative to /data/parlai/')
     parser.add_argument('--no_hardcoded_question', action='store_true', required=False,
                         help='Skips hardcoded question in parlai data')
     parser.add_argument('--add_position_context', action='store_true', required=False)
