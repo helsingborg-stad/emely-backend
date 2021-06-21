@@ -1,0 +1,17 @@
+sjuksköterska: allergibehandling; diabetesvård; dialys; medicinsk vård; Omvårdnad; Smärtbehandling;
+bilmekaniker:  Balansering av hjul; Bensinmotorer; Bromssystem; Dieselmotorer; Fordonselektronik; växellådereparationer;
+lastbilsförare: att hantera byggtransporter; att hantera djurtransporter; att köra dragbil; att köra grusbil;  specialtransporter;
+lärare: undervisning; undervising i engelska; undervisning i Filosofi; undervisning i Matematik; Moderna språk; Samhällskunskap; pedagogik;
+förskollärare: Barn- och ungdomspedagogik; Fritidspedagogik; Modersmålsundervisning; Avslappningsövningar; Barn- och ungdomsidrott;
+brevbärare: Brevsortering; Paketsortering; brevutdelning; 
+lokalvårdare: Butiksstädning; Byggstädning; Fönsterputsning; tunga lyft; Golvvårdsmaskiner;
+tandsköterska: vårderfarenhet;  Munhälsovård; Specialisttandvård; Tandreglering;
+vårdassistent: omsorgserfarenhet; Daglig verksamhet; Demensvård; Hemsjukvård; Hemtjänst; Äldreomsorg;
+receptionist: Faktureringsvana; Personalansvar; Personalplanering; Receptionsvana;
+ekonomiassistent: redovisningssystem; affärssystem; Bokföring; Ekonomiadministration;
+snickare: montering; Fönstermontage/Fönstermontering; Fönsterrenovering; tunga lyft; ROT-jobb; Takläggning;
+bartender: Bararbete; Kassaredovisning; att hantera kassan; Personalansvar;
+lagerarbetare: tunga lyft;  Lagerhanteringsprogram;  Logistik;  Transportplanering;  Varumottagning;
+parkförvaltare:  Bevattningsteknik; Krukväxtodling; Kulturmiljövård;  skötsel av Kyrkogård; skötsel av Parker; Trädgårdsrådgivning;
+vaktmästare: Fastighetsdrift; Fastighetsskötsel; Fastighetsteknik; Fastighetsunderhåll; Trädgårdsskötsel;
+servitör: Bordsservering; Cateringverksamheter; Fatservering; Kassaredovisning; Kassahantering;  Matsedelsplanering;
