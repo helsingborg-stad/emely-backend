@@ -224,7 +224,7 @@ class InterviewConversation:
         self.model_replies_since_last_question = firestore_conversation.model_replies_since_last_question
 
         # Retrieves hard coded messages
-        self.interview_questions = [c for c in firestore_conversation.interview_questions]  # Split '1234 into ['1','2','3','4']
+        self.interview_questions = [c for c in firestore_conversation.interview_questions]  
         self.pmrr_more_information = [c for c in firestore_conversation.pmrr_more_information]
 
         self.more_information = None
@@ -274,6 +274,7 @@ class InterviewConversation:
            and returns the corresponding question """
         try:
             question = self.interview_questions.pop(0)
+            self.model_replies_since_last_question = 0
         except Exception as e:
             print(e)
             self.episode_done = True
