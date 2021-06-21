@@ -227,7 +227,6 @@ class InterviewConversation:
         self.interview_questions = [c for c in firestore_conversation.interview_questions]  # Split '1234 into ['1','2','3','4']
         self.pmrr_more_information = [c for c in firestore_conversation.pmrr_more_information]
 
-        self.interview_questions = None
         self.more_information = None
         #self._get_interview_questions()
         self._get_more_information()

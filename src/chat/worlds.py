@@ -354,7 +354,7 @@ class InterviewWorld(FikaWorld):
                           'Hej {}, Emely heter jag och det är jag som ska intervjua dig. Hur är det med dig idag?',
                           'Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?',
                           'Hej och välkommen till denna arbetsintervju {}. Jag heter Emely. Är allt bra med dig idag?',
-                          'Hej {}, vad trevligt att du är intresserad av denna position. Hur står det till med dig idag?',
+                          'Hej {}, vad trevligt att du är intresserad av denna anställning. Hur står det till med dig idag?',
                           'Välkommen {}. Jag heter Emely och kommer att intervjua dig idag. Hur är det med dig?',
                           'Hej och välkommen till denna arbetsintervju {}. Jag heter Emely. Kan du börja med att berätta lite om dig själv?',
                           'Välkommen {}, jag heter Emely och kommer intervjua dig idag. Hur mår du idag?',
@@ -460,7 +460,7 @@ class InterviewWorld(FikaWorld):
 
         # Set episode done if exit condition is met.
         if interview.model_replies_since_last_question == self.max_replies and len(
-                interview.pmrr_interview_questions) == 0 \
+                interview.interview_questions) == 0 \
                 or message.lower().replace(' ', '') in self.stop_tokens:
             interview.episode_done = True
 
@@ -487,7 +487,7 @@ class InterviewWorld(FikaWorld):
             removed_from_message = ''
 
 
-            reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig!'  # Du får gärna fylla i detta formulär så jag kan lära mig att bli bättre:\nF https://forms.gle/KB8N7AqjokKpELET6'
+            reply_sv = 'Tack för din tid, det var trevligt att få intervjua dig! Vill du bli intevjuad igen kan du återställa dialogen genom att trycka på knappen uppe till vänster'  # Du får gärna fylla i detta formulär så jag kan lära mig att bli bättre:\nF https://forms.gle/KB8N7AqjokKpELET6'
             reply_en = 'Thanks for your time, it was nice to interview you!'
         elif interview.nbr_messages == 2 and not interview.last_input_is_question:
             case = '6'
@@ -520,7 +520,7 @@ class InterviewWorld(FikaWorld):
             reply_en = self.call_model(context)
 
             # We don't want to correct anything in the beginning
-            if not self.no_correction and len(interview.pmrr_interview_questions) != 5:
+            if not self.no_correction and len(interview.interview_questions) != 5:
                 reply_en, removed_from_message = self._correct_reply(reply_en, interview)
             else:
                 removed_from_message = ''
