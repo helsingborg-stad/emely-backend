@@ -104,8 +104,8 @@ class FikaWorld:
     def call_model(self, context):
         """ Sends context to model and gets a reply back """
         url = self.model_url + '/inference'
-        context_json = ApiMessage(text=context).json()
-        response = requests.post(url=url, data=context_json)
+        message = {'text': context}
+        response = requests.post(url=url, json=message)
         json_response = response.json()
         reply = json_response['text']
         return reply
@@ -474,8 +474,10 @@ class InterviewWorld(FikaWorld):
          3. Model generates a reply that is totally revoked by correct reply and it forces new question instead
          4. Model should force new question, but user has just written a question --> return reply + new question
          5. Model is allowed to chat more
-         6. Starup case: User has replied to initial hardcoded question but has not replied with question --> force interview question"""
-
+         6. Starup case: User has replied to initial hardcoded question but has not replied with question --> force interview question
+         7. On last question, model answer gets revoked -> bye bye
+         
+         """ 
         if interview.episode_done:
             # Case 1 - No more interview questions --> End conversation
             case = '1'
@@ -520,7 +522,7 @@ class InterviewWorld(FikaWorld):
             reply_en = self.call_model(context)
 
             # We don't want to correct anything in the beginning
-            if not self.no_correction and len(interview.interview_questions) != 5:
+            if not self.no_correction and len(interview.interview_questions) != 5 and len(interview.interview_questions) != 0:
                 reply_en, removed_from_message = self._correct_reply(reply_en, interview)
             else:
                 removed_from_message = ''
