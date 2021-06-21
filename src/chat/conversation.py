@@ -1,6 +1,8 @@
 from dataclasses import dataclass, asdict
 from pathlib import Path
 import random
+from src.chat.questions import QuestionGenerator
+from typing import List
 
 """ File contents:
 - Firestore objects used for storing data in the database
@@ -55,15 +57,17 @@ class FirestoreConversation(object):
     user_ip_number: str  #
     brain_url: str  # Client host of brain
     brain_version: str  #
-    job: str = None  # Only used for interview, not fika
 
     # Updated attributes - Used in Fika/InterviewConversation
+    interview_questions: List[str]
     episode_done: bool = False  # Is the conversation over?
     nbr_messages: int = 0  #
     last_input_is_question: bool = False  # Was the last user input a question?
     model_replies_since_last_question: int = 0  # Used to steer Emely
-    pmrr_interview_questions: str = '01234'  # TODO: FIX this predefined list
     pmrr_more_information: str = '012'  # TODO: Fix predefined list
+
+    job: str = None  # Only used for interview, not fika
+
 
     @staticmethod
     def from_dict(source):
@@ -220,13 +224,12 @@ class InterviewConversation:
         self.model_replies_since_last_question = firestore_conversation.model_replies_since_last_question
 
         # Retrieves hard coded messages
-        self.pmrr_interview_questions = [c for c in
-                                         firestore_conversation.pmrr_interview_questions]  # Split '1234 into ['1','2','3','4']
+        self.interview_questions = [c for c in firestore_conversation.interview_questions]  # Split '1234 into ['1','2','3','4']
         self.pmrr_more_information = [c for c in firestore_conversation.pmrr_more_information]
 
         self.interview_questions = None
         self.more_information = None
-        self._get_interview_questions()
+        #self._get_interview_questions()
         self._get_more_information()
 
         # Firestore
@@ -249,21 +252,13 @@ class InterviewConversation:
         doc_ref.set(firestore_message.to_dict())
         return
 
-    # TODO: Draw from database instead
-    # TODO: Implement skill formatting when data is available
     def _get_interview_questions(self):
-        """ Helper function: Reads and formats interview questions according to the job
+        """ Gets interview quesitons from QuestionGenerator. Formatted with competences for 17 different jobs
         """
-        interview_questions_path = Path(__file__).resolve().parent.joinpath('interview_questions.txt')
-        with open(interview_questions_path, 'r') as f:
-            text = f.read()
-        lines = text.split('\n')
-        formatted_questions = []
-        for line in lines:  # TODO: Also format skill eventually
-            line = line.replace('_job_', self.job)
-            formatted_questions.append(line)
-        self.interview_questions = formatted_questions
-        return
+        q = QuestionGenerator()
+        job = self.job.strip(' ')
+
+        return q.get_interview_questions(job)
 
     # TODO: Retrieve more information from database instead of from file
     def _get_more_information(self):
@@ -276,17 +271,14 @@ class InterviewConversation:
         return
 
     def get_next_interview_question(self):
-        """Pops the next question index from the pmrr_interview_questions list
+        """Pops the next question from the interview_questions list
            and returns the corresponding question """
         try:
-            index = int(self.pmrr_interview_questions.pop(0))
-            question = self.interview_questions[index]
-            self.model_replies_since_last_question = 0
+            question = self.interview_questions.pop(0)
         except Exception as e:
-            # TODO: This should not happen preferably. Try to solve it in another way
             print(e)
             self.episode_done = True
-            return 'Oj jag måste tyvärr absluta intervjun lite tidigt men tack för din tid!'
+            return 'Oj jag måste tyvärr avsluta intervjun lite tidigt men tack för din tid!'
         return question
 
     def get_next_more_information(self):
@@ -332,11 +324,7 @@ class InterviewConversation:
         self.firestore_conversation.nbr_messages = self.nbr_messages
         self.firestore_conversation.last_input_is_question = self.last_input_is_question
         self.firestore_conversation.model_replies_since_last_question = self.model_replies_since_last_question
-
-        pmrr_questions = ''
-        for c in self.pmrr_interview_questions:
-            pmrr_questions = pmrr_questions + c
-        self.firestore_conversation.pmrr_interview_questions = pmrr_questions
+        self.firestore_conversation.interview_questions = self.interview_questions
 
         pmrr_information = ''
         for c in self.pmrr_more_information:
@@ -351,9 +339,3 @@ class InterviewConversation:
         self._update_fire_object()
         self.firestore_conversation_ref.set(self.firestore_conversation.to_dict())
         return
-
-    def _print_attr(self):
-        s = "pmrr_interview_questions: {} \n model_replies_since_last_question: {} \n nbr_messages : {} \n pmrr_more_info: {}".format(
-            self.pmrr_interview_questions, self.model_replies_since_last_question, self.nbr_messages,
-            self.pmrr_more_information)
-        print(s)

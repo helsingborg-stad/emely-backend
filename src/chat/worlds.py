@@ -17,6 +17,7 @@ from src.chat.translate import ChatTranslator
 from src.api.utils import is_gcp_instance, wake_model
 from src.api.bodies import BrainMessage, UserMessage, InitBody, ApiMessage
 from src.chat.utils import *
+from src.chat.questions import QuestionGenerator
 from datetime import datetime
 
 import logging
@@ -362,6 +363,7 @@ class InterviewWorld(FikaWorld):
                           'Välkommen {} till denna intervju. Är allt bra med dig idag?']
         self.question_markers = ['?', 'vad', 'varför', 'vem']
         self.model_url = 'https://interview8080-ef5bmjer3q-ew.a.run.app' # 'https://interview-model-ef5bmjer3q-ew.a.run.app' 
+        self.question_generator = QuestionGenerator()
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new interview conversation that is pushed to firestore and replies with a greeting"""
@@ -370,7 +372,8 @@ class InterviewWorld(FikaWorld):
         wake_model(self.model_url)
 
         # Creates greeting message
-        init_body.job = init_body.job.lower()
+        job = init_body.job.lower().strip(' ')
+        init_body.job = job
         name = init_body.name.capitalize()
         greeting = random.choice(self.greetings).format(name)
 
@@ -380,6 +383,10 @@ class InterviewWorld(FikaWorld):
         initial_information = init_body.dict()
         initial_information.update(build_data)
         initial_information.pop('password')  # Not needed
+
+        # Generate questions 
+        interview_questions = self.question_generator.get_interview_questions(job)
+        initial_information['interview_questions'] = interview_questions
 
         # Create FirestoreConversation, push to db and get conversation_id
         fire_convo = FirestoreConversation.from_dict(initial_information)

@@ -16,7 +16,8 @@ class QuestionGenerator:
                                   'Vad är din bästa erfarenhet från dina tidigare arbeten?',  
                                   'Är det någonting som du vill fråga om det här arbetet?']
 
-        self.job_to_competences = parse_data(Path('core_competences.txt'))
+        p = Path(__file__).resolve().parent / 'core_competences.txt'
+        self.job_to_competences = parse_data(p)
         self.job_list = self.job_to_competences.keys()
 
 
