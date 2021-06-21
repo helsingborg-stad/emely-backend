@@ -362,7 +362,7 @@ class InterviewWorld(FikaWorld):
                           'Hej {} och välkommen till denna intervju. Hur är det med dig idag?',
                           'Välkommen {} till denna intervju. Är allt bra med dig idag?']
         self.question_markers = ['?', 'vad', 'varför', 'vem']
-        self.model_url = 'https://interview8080-ef5bmjer3q-ew.a.run.app' # 'https://interview-model-ef5bmjer3q-ew.a.run.app' 
+        self.model_url = 'https://interview-model-ef5bmjer3q-ew.a.run.app'
         self.question_generator = QuestionGenerator()
 
     def init_conversation(self, init_body: InitBody, build_data):
