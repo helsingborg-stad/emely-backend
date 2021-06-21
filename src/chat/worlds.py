@@ -631,7 +631,8 @@ class InterviewWorld(FikaWorld):
         lies = ['I am a {}'.format(conversation.job),
                 'do you have any hobbies?',
                 "i'm a stay at home mom",
-                "i'm unemployed"]
+                "i'm unemployed",
+                "I'm just about to start my interview"]
         temp_idx = []
         for i in keep_idx:
             combos = list(product([sentences[i]], lies))
