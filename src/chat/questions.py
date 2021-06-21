@@ -24,13 +24,13 @@ class QuestionGenerator:
         """ Called by InterviewConversation to generate questions""" 
 
         if job in self.job_list:
-            return self.get_competence_questions(job)
+            return self._get_competence_questions(job)
 
         else:
-            return self.get_general_questions(job)
+            return self._get_general_questions(job)
 
 
-    def get_general_questions(self, job:str) -> List:
+    def _get_general_questions(self, job:str) -> List:
         """ Used for jobs we haven't seen in the data collection """
         questions = ['Du har sökt job som {}. Vad är det som du tycker verkar vara roligt med detta arbete?',
                     'Om du ska arbeta som {} så är det bra om du har erfarenhet från att jobba tillsammans med andra. Kan du berätta lite om du har sådan erfarenhet?',
@@ -41,7 +41,7 @@ class QuestionGenerator:
         return formatted_questions
 
 
-    def get_competence_questions(self, job:str) -> List:
+    def _get_competence_questions(self, job:str) -> List:
         """ Used if the job is NOT in the list of supported jobs that data was collected for"""
         nbr_questions = self.nbr_questions
         job_competences = self.job_to_competences[job]
