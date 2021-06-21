@@ -60,6 +60,7 @@ def validate(file):
                 print('Unexpected token was {}'.format(unexpected_token))
                 print('Message was: {}'.format(message))
 
+    print("If there were no other messages you're all good :) ")
 
 
 if __name__ == '__main__':
