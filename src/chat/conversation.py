@@ -2,7 +2,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 import random
 from src.chat.questions import QuestionGenerator
-from typing import List
+from typing import List, Optional
 
 """ File contents:
 - Firestore objects used for storing data in the database
@@ -59,7 +59,7 @@ class FirestoreConversation(object):
     brain_version: str  #
 
     # Updated attributes - Used in Fika/InterviewConversation
-    interview_questions: List[str]
+    interview_questions: Optional[List] = None
     episode_done: bool = False  # Is the conversation over?
     nbr_messages: int = 0  #
     last_input_is_question: bool = False  # Was the last user input a question?
