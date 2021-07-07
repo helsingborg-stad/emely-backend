@@ -57,6 +57,21 @@ def firestore_message_to_brain_message(fire_msg: FirestoreMessage) -> BrainMessa
     return brain_msg
 
 
+def swenglish_corrections(message: str) -> str:
+    """"
+    @ Isabella
+    Method to fix google translate obvious faults
+
+    Takes the english message and translates it to a more correct version of the phrase
+    """
+    with open("swenglish.txt", "r") as f:
+        swenglish_phrases = f.readlines()
+    for phrase in swenglish_phrases:
+        eng, swe = phrase.split(":")[0].strip(), phrase.split(":")[1].strip()
+        if eng.lower() in message.lower():
+            message = message.replace(eng, swe)
+    return message
+
 def create_goodbye_message():
     """ Creates a dummy BrainMessage with the error message inserted"""
     brain_response = BrainMessage(conversation_id='',
@@ -67,3 +82,4 @@ def create_goodbye_message():
                                   is_hardcoded=True,
                                   error_messages='')
     return brain_response
+

@@ -14,6 +14,7 @@ from firebase_admin import firestore
 
 from src.chat.conversation import FikaConversation, InterviewConversation, FirestoreConversation, FirestoreMessage
 from src.chat.translate import ChatTranslator
+
 from src.api.utils import is_gcp_instance, wake_model
 from src.api.bodies import BrainMessage, UserMessage, InitBody, ApiMessage
 from src.chat.utils import *
@@ -206,7 +207,10 @@ class FikaWorld:
                 removed_from_message = ''
                 case = 'no_correction'
                 is_hardcoded = False
-            else:  # Removes repetitive statements
+            else:  
+                # Checks for swenglish and changes it
+                reply_en = swenglish_corrections(reply_en)
+                # Removes repetitive statements
                 reply_en, removed_from_message = self._correct_reply(reply_en, conversation)
                 if len(reply_en) < 3:  # TODO: Move the popping and length check into correct reply
                     removed_from_message = ''  # We're forcing a new hardcode anyway
@@ -524,7 +528,15 @@ class InterviewWorld(FikaWorld):
             reply_en = self.call_model(context)
 
             # We don't want to correct anything in the beginning
+
+            if not self.no_correction and len(interview.pmrr_interview_questions) != 5:
+                # Checks for swenglish and changes it
+                reply_en = swenglish_corrections(reply_en)
+
             if not self.no_correction and len(interview.interview_questions) != 5 and len(interview.interview_questions) != 0:
+
+                # Checks for swenglish and changes it
+                reply_en = swenglish_corrections(reply_en)
                 reply_en, removed_from_message = self._correct_reply(reply_en, interview)
             else:
                 removed_from_message = ''
