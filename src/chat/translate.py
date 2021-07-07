@@ -19,7 +19,7 @@ class ChatTranslator:
     def __init__(self, default_translator='googletrans'):
         # Set this to your google api key location
         if not is_gcp_instance():
-            # Add a authentication to the Google translate if we are not on GCP.
+            # Add an authentication to the Google translate if we are not on GCP.
             json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
             os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = json_path.as_posix()
 
@@ -35,7 +35,7 @@ class ChatTranslator:
     def translate(self, text, src, target, package=None):
         if package is None:
             package = self.default
-
+        text = text.lower()
         if package == 'gcloud':
             return self.gcloud_translate(text, src, target)
         elif package == 'googletrans':
