@@ -115,6 +115,8 @@ def main(input_path, output_filename, args):
     data_dir = Path(__file__).resolve().parents[2].joinpath('data')
     out_path = data_dir / 'parlai'
     store_path = out_path.joinpath(output_filename)
+    if store_path.suffix != '.txt':
+        store_path = store_path.parent / (store_path.name + '.txt')
 
     if not out_path.is_dir():
         out_path.mkdir(parents=True, exist_ok=True)
@@ -148,8 +150,8 @@ if __name__ == "__main__":
     """
 
     parser = ArgumentParser()
-    parser.add_argument('--input_path', type=str, required=True)
-    parser.add_argument('--output_filename', type=str, required=True)
+    parser.add_argument('--input_path', type=str, required=True, help='Relative to /data/')
+    parser.add_argument('--output_filename', type=str, required=True, help='Relative to /data/parlai/')
     parser.add_argument('--no_hardcoded_question', action='store_true', required=False,
                         help='Skips hardcoded question in parlai data')
     parser.add_argument('--add_position_context', action='store_true', required=False)
