@@ -1,7 +1,7 @@
 from src.api.bodies import BrainMessage, UserMessage
 from src.chat.conversation import FirestoreMessage, BadwordMessage
 from datetime import timedelta, datetime
-
+from pathlib import Path
 """ 
     File contents:
     - Helper functions 
@@ -64,7 +64,8 @@ def swenglish_corrections(message: str) -> str:
 
     Takes the english message and translates it to a more correct version of the phrase
     """
-    with open("swenglish.txt", "r") as f:
+    file_path = Path(__file__).parent.joinpath('swenglish.txt')
+    with open(file_path, "r") as f:
         swenglish_phrases = f.readlines()
     for phrase in swenglish_phrases:
         eng, swe = phrase.split(":")[0].strip(), phrase.split(":")[1].strip()
