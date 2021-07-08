@@ -53,7 +53,7 @@ class FikaWorld:
         # Attributes common for both FikaWorld and InterviewWorld
         self.no_correction = kwargs['no_correction']
         self.on_gcp = is_gcp_instance()
-        self.model_url = 'https://fika-model-ef5bmjer3q-ew.a.run.app' if True else "http://127.0.0.1:7000"
+        self.model_url = 'https://blender-90m-ef5bmjer3q-ey.a.run.app'
 
         if self.on_gcp:
             if not firebase_admin._apps:
@@ -365,7 +365,7 @@ class InterviewWorld(FikaWorld):
                           'Hej {} och välkommen till denna intervju. Hur är det med dig idag?',
                           'Välkommen {} till denna intervju. Är allt bra med dig idag?']
         self.question_markers = ['?', 'vad', 'varför', 'vem']
-        self.model_url = 'https://interview-model-ef5bmjer3q-ew.a.run.app'
+        self.model_url = 'https://interview-model-ef5bmjer3q-ey.a.run.app'
         self.question_generator = QuestionGenerator()
 
     def init_conversation(self, init_body: InitBody, build_data):
