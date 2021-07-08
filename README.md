@@ -10,7 +10,6 @@ To run the fastAPI app on 127.0.0.1:8000
 1. from src/api $uvicorn api_main:brain 
 2. Check the docs and try the http requests at 127.0.0.1:8000/docs
 
-
 Project Organization
 ------------
 
