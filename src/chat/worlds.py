@@ -525,7 +525,7 @@ class InterviewWorld(FikaWorld):
 
             # We don't want to correct anything in the beginning
 
-            if not self.no_correction and len(interview.pmrr_interview_questions) != 5:
+            if not self.no_correction and len(interview.interview_questions) != 5:
                 # Checks for swenglish and changes it
                 reply_en = swenglish_corrections(reply_en)
 
