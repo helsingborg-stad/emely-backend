@@ -205,8 +205,6 @@ class FikaWorld:
                 case = 'no_correction'
                 is_hardcoded = False
             else:  
-                # Checks for swenglish + extra spaces and changes it
-                reply_en = model_output_corrections(reply_en)
                 # Removes repetitive statements
                 reply_en, removed_from_message = self._correct_reply(reply_en, conversation)
                 if len(reply_en) < 3:  # TODO: Move the popping and length check into correct reply
@@ -524,15 +522,8 @@ class InterviewWorld(FikaWorld):
             reply_en = self.call_model(context)
 
             # We don't want to correct anything in the beginning
-
-            if not self.no_correction and len(interview.interview_questions) != 5:
-                # Checks for swenglish + extra spaces and changes it
-                reply_en = model_output_corrections(reply_en)
-
             if not self.no_correction and len(interview.interview_questions) != 5 and len(interview.interview_questions) != 0:
 
-                # Checks for swenglish + extra spaces and changes it
-                reply_en = model_output_corrections(reply_en)
                 reply_en, removed_from_message = self._correct_reply(reply_en, interview)
             else:
                 removed_from_message = ''

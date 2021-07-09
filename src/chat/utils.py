@@ -57,40 +57,6 @@ def firestore_message_to_brain_message(fire_msg: FirestoreMessage) -> BrainMessa
                              error_messages=fire_msg.error_messages)
     return brain_msg
 
-
-def model_output_corrections(message: str) -> str:
-    """"
-    @ Isabella
-    Method to fix google translate obvious faults and spaces everywhere
-
-    Takes the english message and translates it to a more correct version of the phrase
-    """
-    file_path = Path(__file__).parent.joinpath('swenglish.txt')
-    with open(file_path, "r") as f:
-        swenglish_phrases = f.readlines()
-    for phrase in swenglish_phrases:
-        eng, swe = phrase.split(":")[0].strip(), phrase.split(":")[1].strip()
-        if eng.lower() in message.lower():
-            message = message.replace(eng, swe)
-        message = clean_sentences(message)
-    return message
-
-def clean_sentences(phrase : str) -> str:
-    """"
-    @ Isabella
-    
-    Method that removes unneccesary whitespace in sentences 
-    and makes sure that the first letter of each sentence is uppercase
-    """
-    # Matching spaces between word and delimiters: ,.?!"
-    # Removing the spaces
-    phrase = re.sub(r'\s(?=[^,\s\w+]*[,.?!\"])', "", phrase)
-
-    # Matching first letter in sentence to be uppercase
-    phrase = re.sub(r'(^[a-zåäöA-Zåäö]|(?<=[?.!]\s)\w)', lambda match: r'{}'.format(match.group(1).upper()), phrase)
-    return phrase
-
-
 def create_goodbye_message():
     """ Creates a dummy BrainMessage with the error message inserted"""
     brain_response = BrainMessage(conversation_id='',

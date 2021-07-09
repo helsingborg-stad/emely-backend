@@ -1,9 +1,7 @@
-googletrans==3.1.0a0
 regex
 google-cloud-translate
 google-cloud-storage
 firebase_admin
-deep-translator
 six~=1.15.0
 fastapi
 pydantic

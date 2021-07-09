@@ -1,101 +1,73 @@
-from deep_translator import GoogleTranslator
-from googletrans import Translator
 import six
 from google.cloud import translate_v2 as translate
 import os
 from pathlib import Path
-
+import re
 from src.api.utils import is_gcp_instance
 
-""" Translates text. Works with: 
-    - Google's official API(costs money)
-    - DeepTranslator(free)
-    - Googletrans(free)
+""" Translates text using Google's official API
 """
-
 
 class ChatTranslator:
 
-    def __init__(self, default_translator='googletrans'):
+    def __init__(self):
+
         # Set this to your google api key location
         if not is_gcp_instance():
             # Add an authentication to the Google translate if we are not on GCP.
             json_path = Path(__file__).resolve().parents[2].joinpath('emelybrainapi-33194bec3069.json')
             os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = json_path.as_posix()
 
-        # Translator objects
-        self.default = default_translator
-        self.deeptranslator_en_to_sv = GoogleTranslator(source='en', target='sv')
-        self.deeptranslator_sv_to_en = GoogleTranslator(source='sv', target='en')
-        self.gtrans_translator = Translator()
+        # Translator object
         self.gcloud_translator = translate.Client()
         # logging.basicConfig(filename='translate.log', level=logging.WARNING, format='%(levelname)s - %(message)s')
         self.nbr_translation = 0
 
-    def translate(self, text, src, target, package=None):
-        if package is None:
-            package = self.default
-        text = text.lower()
-        if package == 'gcloud':
-            return self.gcloud_translate(text, src, target)
-        elif package == 'googletrans':
-            try:
-                return self.gtrans_translate(text, src, target)
-            except:
-                return self.gcloud_translate(text, src, target)
-        elif package == 'deep_translator':
-            try:
-                return self.deep_translate(text, src, target)
-            except:
-                return self.gcloud_translate(text, src, target)
-        else:
-            raise ValueError('No package named{}'.format(package))
+    def translate(self, text : str, src: str, target: str) -> str:
+        """
+        @ Isabella - Method that translates between two languages
+        and makes sure each start of sentence is uppercase
 
-    def gcloud_translate(self, text, src, target):
-        """Uses official google translate API.
-        Configure your credentials in conda environment using
-        $conda env config vars set GOOGLE_APPLICATION_CREDENTIALS=path/to/json """
+        Args:
+            text (str): text that is to be translated
+            src (str): source language of text string
+            target (str): target language of text string
+
+        Returns:
+            str: the translated string
+        """
+        # To minimize errors in google translate - lowercase everything
+        text = text.lower()
+
+        text = self._model_output_corrections(text)
+
         if isinstance(text, six.binary_type):
             text = text.decode("utf-8")
-
         result = self.gcloud_translator.translate(text, source_language=src, target_language=target)
-        return result['translatedText']
+        trans = result['translatedText']
+        
+        # Matching spaces between word and delimiters ,.?!
+        # and then removing the spaces
+        trans = re.sub(r'\s(?=[^,\s\w+]*[,.?!])', "", trans)
+        
+        # Fixes upper and lowercase letters at the beginning of each sentence
+        trans = re.sub(r'(^[a-zåäöA-Zåäö]|(?<=[?.!]\s)\w)', lambda match: r'{}'.format(match.group(1).upper()), trans)
+        return trans
+        
+    def _model_output_corrections(self, message: str) -> str:
+        """[summary]
 
-    def gtrans_translate(self, text, src, target):
-        """Uses googletrans package for translation. Raises warning if translation i unsuccesful"""
-        assert src == 'sv' or src == 'en'
-        assert target == 'sv' or target == 'en'
-        out = self.gtrans_translator.translate(text, src=src, dest=target)
-        translated_text = out.text
-        if translated_text == text:
-            msg = 'googletrans failed'
-            # logging.warning(msg)
-            raise Warning(msg)
-        else:
-            return translated_text
+        Args:
+            message (str): [description]
 
-    def deep_translate(self, text, src, target):
-        """Uses deep translator to translate text. If the service is down we raise a warning
-        to allow the program to use the official google cloud api instead"""
-        # Needed to compare translation result to original string
-        if text[0] == ' ':
-            text = text[1:]
-
-        if src == 'sv' and target == 'en':
-            translation = self.deeptranslator_sv_to_en.translate(text)
-            if translation == text:
-                msg = 'deep_translator failed'
-                # logging.warning(msg)
-                raise Warning(msg)
-            else:
-                return translation
-        elif src == 'en' and target == 'sv':
-            translation = self.deeptranslator_en_to_sv.translate(text)
-            if translation == text:
-                msg = 'deep_translator failed'
-                # logging.warning(msg)
-                raise Warning(msg)
-            else:
-                return translation
-        else:
-            raise ValueError('One or more invalid language code\n src:{}\n target:{}'.format(src, target))
+        Returns:
+            str: [description]
+        """
+        file_path = Path(__file__).parent.joinpath('swenglish.txt')
+        with open(file_path, "r") as f:
+            swenglish_phrases = f.readlines()
+        for phrase in swenglish_phrases:
+            eng, swe = phrase.split(":")[0].strip(), phrase.split(":")[1].strip()
+            if eng.lower() in message.lower():
+                message = message.replace(eng, swe)
+        return message
