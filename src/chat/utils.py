@@ -1,7 +1,7 @@
 from src.api.bodies import BrainMessage, UserMessage
 from src.chat.conversation import FirestoreMessage, BadwordMessage
 from datetime import timedelta, datetime
-from pathlib import Path
+
 """ 
     File contents:
     - Helper functions 
@@ -55,23 +55,6 @@ def firestore_message_to_brain_message(fire_msg: FirestoreMessage) -> BrainMessa
                              is_hardcoded=fire_msg.is_hardcoded,
                              error_messages=fire_msg.error_messages)
     return brain_msg
-
-
-def swenglish_corrections(message: str) -> str:
-    """"
-    @ Isabella
-    Method to fix google translate obvious faults
-
-    Takes the english message and translates it to a more correct version of the phrase
-    """
-    file_path = Path(__file__).parent.joinpath('swenglish.txt')
-    with open(file_path, "r") as f:
-        swenglish_phrases = f.readlines()
-    for phrase in swenglish_phrases:
-        eng, swe = phrase.split(":")[0].strip(), phrase.split(":")[1].strip()
-        if eng.lower() in message.lower():
-            message = message.replace(eng, swe)
-    return message
 
 def create_goodbye_message():
     """ Creates a dummy BrainMessage with the error message inserted"""
