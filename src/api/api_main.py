@@ -41,14 +41,9 @@ async def init_config():
     # Print config
     print('brain_version: ', git_version)
 
-    # TODO: Time to deprecate this functionallity?
-    # Setup
-    interview_persona = Namespace(no_correction=False)
-    fika_persona = Namespace(no_correction=False)
-
     global interview_world, fika_world
-    interview_world = InterviewWorld(**vars(interview_persona))
-    fika_world = FikaWorld(**vars(fika_persona))
+    interview_world = InterviewWorld()
+    fika_world = FikaWorld()
     return
 
 
@@ -130,8 +125,8 @@ async def fika(msg: UserMessage, response: Response):
 async def interview(msg: UserMessage, response: Response):
 
     try:
-        conversation, observe_timestamp = interview_world.observe(user_request=msg)
-        brain_response = interview_world.act(conversation, observe_timestamp)
+        conversation, observe_timestamp, intent = interview_world.observe(user_request=msg)
+        brain_response = interview_world.act(conversation, observe_timestamp, intent)
         return brain_response
 
     # TODO: This is the same as for fika. Maybe we should also repeat the previous input?
