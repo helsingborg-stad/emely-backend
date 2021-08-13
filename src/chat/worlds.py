@@ -389,13 +389,14 @@ class InterviewWorld(ChatWorld):
                           'Välkommen {} till denna intervju. Är allt bra med dig idag?']
         self.question_markers = ['?', 'vad', 'varför', 'vem']
         self.model_url = 'https://interview-model-ef5bmjer3q-ey.a.run.app'
-        # self.nlu_url = 'https://rasa-nlu-ef5bmjer3q-ey.a.run.app'
+        self.nlu_url = 'https://rasa-nlu-ef5bmjer3q-ey.a.run.app'
         self.question_generator = QuestionGenerator()
 
         self.lies = ['do you have any hobbies?',
                     "i'm a stay at home mom",
                     "i'm unemployed",
                     "I'm just about to start my interview"]
+
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new interview conversation that is pushed to firestore and replies with a greeting"""
@@ -452,6 +453,7 @@ class InterviewWorld(ChatWorld):
 
         return response
 
+
     def observe(self, user_request: UserMessage):
         """ Observes a UserMessage
           1. Pulls conversaton from firestore
@@ -460,9 +462,18 @@ class InterviewWorld(ChatWorld):
         """
         observe_timestamp = datetime.now()
 
-        # Extract information and translate message
         conversation_id = user_request.conversation_id
         message = user_request.message
+
+        # Send to RASA NLU
+        # TODO: If no hardcoded reply will come next and it's not the beginning of the conversation
+        if True:
+            intent = self.call_nlu(message) # TODO: Call this asynchronously?
+
+        else:
+            intent = {'id': '', 'name': '', 'confidence': 0}
+
+        # Translate message
         message_en = self.translator.translate(message, src='sv', target='en')
         fire_convo = self._get_fire_conversation(conversation_id)
 
@@ -496,9 +507,10 @@ class InterviewWorld(ChatWorld):
                 or message.lower().replace(' ', '') in self.stop_tokens:
             interview.episode_done = True
 
-        return interview, observe_timestamp
+        return interview, observe_timestamp, intent
 
-    def act(self, interview: InterviewConversation, observe_timestamp):
+
+    def act(self, interview: InterviewConversation, observe_timestamp, intent):
         """There are four cases we can encounter that we treat differently.
             Code is slightly messy so the four cases are marked with 'Case X' in the code:
          1. No more interview questions         --> End conversation
@@ -508,6 +520,10 @@ class InterviewWorld(ChatWorld):
          5. Model is allowed to chat more
          6. Starup case: User has replied to initial hardcoded question but has not replied with question --> force interview question
          7. On last question, model answer gets revoked -> bye bye
+
+         Rasa intents:
+         8. no_experience: user has no work experience
+         9. ask_salary: emely replies with hardcoded message
          
          """ 
         if interview.episode_done:
@@ -544,6 +560,31 @@ class InterviewWorld(ChatWorld):
             removed_from_message = ''
 
             reply_sv = interview.get_next_interview_question()
+            reply_en = self.translator.translate(reply_sv, src='sv', target='en')
+
+        elif intent['name'] == 'no_experience' and intent['confidence'] > 0.9:
+
+            case = '8'
+
+            # Data for FireMessage
+            is_hardcoded = True
+            is_predefined_question = False
+            is_more_information = False
+            removed_from_message = ''
+
+            reply_sv = 'Om du inte har någon erfarenhet från ett arbete så kanske du har någon privat erfarenhet som kan vara relevant?'
+            reply_en = self.translator.translate(reply_sv, src='sv', target='en')
+
+        elif intent['name'] == 'ask_salary' and intent['confidence'] > 0.9:
+            case = '9'
+
+            # Data for FireMessage
+            is_hardcoded = True
+            is_predefined_question = False
+            is_more_information = False
+            removed_from_message = ''
+
+            reply_sv = 'Lönen kommer vi att diskutera vi vid ett senare tillfälle' #TODO: fix better option here 
             reply_en = self.translator.translate(reply_sv, src='sv', target='en')
 
         else:  # Case 3, 4 or 5 - Model acts
@@ -629,3 +670,28 @@ class InterviewWorld(ChatWorld):
         interview.push_to_firestore()
 
         return brain_response
+
+
+    def call_nlu(self, text):
+        """ Calls RASA NLU model deployed on GCP to get a classification of the user message. 
+        This can be used to avoid situations where we know the blenderbot answer's are unsatisfactory
+
+        Args:
+            text ([type]): text to be classified
+
+        Returns:
+            [type]: intent classification
+        """
+
+
+        request_url = self.nlu_url + '/model/parse'
+
+        r = requests.post(url=request_url, json={'text': text})
+        r_json = r.json()
+        if r.status_code == 200:
+            intent = r_json['intent']
+        
+        else:
+            intent = {'id': '', 'name': '', 'confidence': 0}
+
+        return intent

@@ -125,8 +125,8 @@ async def fika(msg: UserMessage, response: Response):
 async def interview(msg: UserMessage, response: Response):
 
     try:
-        conversation, observe_timestamp = interview_world.observe(user_request=msg)
-        brain_response = interview_world.act(conversation, observe_timestamp)
+        conversation, observe_timestamp, intent = interview_world.observe(user_request=msg)
+        brain_response = interview_world.act(conversation, observe_timestamp, intent)
         return brain_response
 
     # TODO: This is the same as for fika. Maybe we should also repeat the previous input?
