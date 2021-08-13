@@ -41,14 +41,9 @@ async def init_config():
     # Print config
     print('brain_version: ', git_version)
 
-    # TODO: Time to deprecate this functionallity?
-    # Setup
-    interview_persona = Namespace(no_correction=False)
-    fika_persona = Namespace(no_correction=False)
-
     global interview_world, fika_world
-    interview_world = InterviewWorld(**vars(interview_persona))
-    fika_world = FikaWorld(**vars(fika_persona))
+    interview_world = InterviewWorld()
+    fika_world = FikaWorld()
     return
 
 

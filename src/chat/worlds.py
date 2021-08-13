@@ -42,18 +42,12 @@ import logging
   - _get_fire_conversation: Retreives conversation from firestore
 """
 
+class ChatWorld:
+    """Parent class for FikaWorld and InterviewWorld
+    """
+    def __init__(self):
 
-# TODO: Implement superclass ChatWorld?
-
-
-class FikaWorld:
-    """ Handles Fika conversation"""
-
-    def __init__(self, **kwargs):
-        # Attributes common for both FikaWorld and InterviewWorld
-        self.no_correction = kwargs['no_correction']
         self.on_gcp = is_gcp_instance()
-        self.model_url = 'https://blender-90m-ef5bmjer3q-ey.a.run.app'
 
         if self.on_gcp:
             if not firebase_admin._apps:
@@ -77,7 +71,127 @@ class FikaWorld:
 
         self.translator = ChatTranslator()
 
+        # Contains examples of racist/homophobic/sexual words or otherwise offensive language
+        badwords_path = Path(__file__).parent.joinpath('badwords.txt')
+        with open(badwords_path, 'r') as f:
+            self.badwords = f.read().splitlines()
+
+        self.lies = []
         self.stop_tokens = ['hejdå', 'bye', 'hej då']
+        self.no_correction = False #TODO: Maybe deprecate this eventually
+
+
+    def init_conversation(self, init_body: InitBody, build_data):
+        raise NotImplementedError('ChatWorld is not intended for actual use. Use a subclass instead')
+
+
+    def observe(self, user_request: UserMessage):
+        raise NotImplementedError('ChatWorld is not intended for actual use. Use a subclass instead')
+
+
+    def act(self, conversation: FikaConversation, observe_timestamp: datetime):
+        raise NotImplementedError('ChatWorld is not intended for actual use. Use a subclass instead')
+
+
+    def call_model(self, context):
+        """ Sends context to model and gets a reply back """
+        url = self.model_url + '/inference'
+        message = {'text': context}
+        response = requests.post(url=url, json=message)
+        json_response = response.json()
+        reply = json_response['text']
+        return reply
+
+
+    def contains_badwords(self, message: str) -> bool:
+        """ Does a simple tokenization and checks if message contains any badwords """
+        badwords = self.badwords
+        sentence = message.lower()
+        offensive = any([bad_word.lower() in sentence for bad_word in badwords])
+        return offensive
+
+
+    def _get_fire_conversation(self, conversation_id):
+        """ Helper function used to retrieve the firestore conversation corresponding to the conversation_id """
+        conversation_ref = self.firestore_conversation_collection.document(conversation_id)
+        doc = conversation_ref.get()
+        fire_conversation = FirestoreConversation.from_dict(doc.to_dict())
+        return fire_conversation
+
+    def _correct_reply(self, reply, conversation):
+        """ Corrects a reply from the blenderbot model.
+            - Removes any sentence that is similar to a sentence Emely has said previously.
+            - Removes any sentences she's not allowed to say: e.g. I work as a __job__
+        """
+        previous_replies = conversation.get_bot_replies()
+
+        if len(previous_replies) == 0:
+            return reply
+        previous_sentences = []
+
+        # Split sentences and keep separators
+        sentence_splits = re.split('([.?!])', reply)
+        if sentence_splits[-1] == '':
+            del sentence_splits[-1]
+        sentences = [sep for i, sep in enumerate(sentence_splits) if i % 2 == 0]
+        separators = [sep for i, sep in enumerate(sentence_splits) if i % 2 != 0]
+
+        for old_reply in previous_replies:
+            raw_splits = re.split('[.?!]', old_reply)
+            splits = [s for s in raw_splits if len(s) > 2]
+            previous_sentences.extend(splits)
+
+        keep_idx = []
+        # For each part/sentence of the new reply, save it if it's not close to something said before
+        for i in range(len(sentences)):
+            combos = list(product([sentences[i]], previous_sentences))
+            ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
+            if max(ratios) < 0.9:
+                keep_idx.append(i)
+
+        # Emely cannot say anything contained in 'lies'
+        lies = self.lies
+        if len(lies) != 0:
+            temp_idx = []
+            for i in keep_idx:
+                combos = list(product([sentences[i]], lies))
+                lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
+                if max(lie_probabilities) < 0.9:
+                    temp_idx.append(i)
+
+            keep_idx = temp_idx
+
+        if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
+            return reply, ''
+
+        else:
+            new_reply = ''  # Reply without repetitions
+            removed_from_message = ''  # What we remove
+            for i in range(len(sentences)):
+
+                if i in keep_idx:
+                    try:
+                        new_reply = new_reply + sentences[i] + separators[i] + ' '
+
+                    except IndexError:
+                        new_reply = new_reply + sentences[i]
+
+                else:
+                    removed_from_message = removed_from_message + sentences[i] + ' '
+
+            logging.warning(
+                'Pruned message. Removed sentence(s):\n{}\nCorrected reply:\n{}'.format(removed_from_message,
+                                                                                        new_reply))
+            return new_reply, removed_from_message
+
+
+class FikaWorld(ChatWorld):
+    """ Handles Fika conversation"""
+
+    def __init__(self):
+        super().__init__()
+        self.model_url = 'https://blender-90m-ef5bmjer3q-ey.a.run.app'
+
         self.greetings = ['Hej {}, jag heter Emely! Hur är det med dig?',
                           'Hej {}! Mitt namn är Emely. Vad vill du prata om idag?',
                           'Hejsan! Jag förstår att du heter {}. Berätta något om dig själv!',
@@ -89,27 +203,7 @@ class FikaWorld:
                           'Hej {}, vad kul det ska bli att få prata med dig. Jag heter Emely. Du kanske är nyfiken på att fråga mig om någonting?',
                           'Hej {}, vad fint att kunna få ta en virtuell fika med dig. Hur är läget?',
                           'Goddag {}, mitt namn är Emely. Hur står det till med dig idag?']
-
-        # Contains examples of racist/homophobic/sexual words or otherwise offensive language
-        badwords_path = Path(__file__).parent.joinpath('badwords.txt')
-        with open(badwords_path, 'r') as f:
-            self.badwords = f.read().splitlines()
-
-    def contains_badwords(self, message: str) -> bool:
-        """ Does a simple tokenization and checks if message contains any badwords """
-        badwords = self.badwords
-        sentence = message.lower()
-        offensive = any([bad_word.lower() in sentence for bad_word in badwords])
-        return offensive
-
-    def call_model(self, context):
-        """ Sends context to model and gets a reply back """
-        url = self.model_url + '/inference'
-        message = {'text': context}
-        response = requests.post(url=url, json=message)
-        json_response = response.json()
-        reply = json_response['text']
-        return reply
+        self.lies = ['I hate you']
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new fika conversation that is pushed to firestore and replies with a greeting"""
@@ -275,81 +369,12 @@ class FikaWorld:
 
             return brain_response
 
-    # TODO: Create superclass function which can be called with some parameters specific for fika/interview?
-    def _correct_reply(self, reply, conversation):
-        """ Corrects a reply from the blenderbot model.
-            Removes any sentence that is similar to a sentence Emely has said previously """
-        previous_replies = conversation.get_bot_replies()
 
-        if len(previous_replies) == 0:
-            return reply
-        previous_sentences = []
-
-        # Split sentences and keep separators
-        sentence_splits = re.split('([.?!])', reply)
-        if sentence_splits[-1] == '':
-            del sentence_splits[-1]
-        sentences = [sep for i, sep in enumerate(sentence_splits) if i % 2 == 0]
-        separators = [sep for i, sep in enumerate(sentence_splits) if i % 2 != 0]
-
-        for old_reply in previous_replies:
-            raw_splits = re.split('[.?!]', old_reply)
-            splits = [s for s in raw_splits if len(s) > 2]
-            previous_sentences.extend(splits)
-
-        keep_idx = []
-        # For each part/sentence of the new reply, save it if it's similar to something said before
-        for i in range(len(sentences)):
-            combos = list(product([sentences[i]], previous_sentences))
-            ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(ratios) < 0.85:
-                keep_idx.append(i)
-
-        # Emely cannot say that she's also a {job}, add
-        lies = ['I hate you']
-
-        temp_idx = []
-        for i in keep_idx:
-            combos = list(product([sentences[i]], lies))
-            lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(lie_probabilities) < 0.9:
-                temp_idx.append(i)
-
-        keep_idx = temp_idx
-
-        if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
-            return reply, ''
-        else:
-            new_reply = ''  # Reply without repetitions
-            removed_from_message = ''  # What we remove
-            for i in range(len(sentences)):
-                if i in keep_idx:
-                    try:
-                        new_reply = new_reply + sentences[i] + separators[i] + ' '
-                    except IndexError:
-                        new_reply = new_reply + sentences[i]
-                else:
-                    removed_from_message = removed_from_message + sentences[i] + ' '
-            logging.warning(
-                'Pruned message. Removed sentence(s):\n{}\nCorrected reply:\n{}'.format(removed_from_message,
-                                                                                        new_reply))
-            return new_reply, removed_from_message
-
-    # TODO: Move to super
-    def _get_fire_conversation(self, conversation_id):
-        """ Helper function used to retrieve the firestore conversation corresponding to the conversation_id """
-        conversation_ref = self.firestore_conversation_collection.document(conversation_id)
-        doc = conversation_ref.get()
-        fire_conversation = FirestoreConversation.from_dict(doc.to_dict())
-        return fire_conversation
-
-
-class InterviewWorld(FikaWorld):
+class InterviewWorld(ChatWorld):
     """ Handles interview conversations """
 
-    def __init__(self, **kwargs):
-        # TODO: More sophisticated questions/greeting drawn from txt file(?) and formated with name and job
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self.max_replies = 2  # Maximum number of replies back and forth for each question
         self.greetings = ['Hej, {}! Välkommen till din intervju! Hur är det med dig?',
                           'Hej {}, Emely heter jag och det är jag som ska intervjua dig. Hur är det med dig idag?',
@@ -364,7 +389,13 @@ class InterviewWorld(FikaWorld):
                           'Välkommen {} till denna intervju. Är allt bra med dig idag?']
         self.question_markers = ['?', 'vad', 'varför', 'vem']
         self.model_url = 'https://interview-model-ef5bmjer3q-ey.a.run.app'
+        # self.nlu_url = 'https://rasa-nlu-ef5bmjer3q-ey.a.run.app'
         self.question_generator = QuestionGenerator()
+
+        self.lies = ['do you have any hobbies?',
+                    "i'm a stay at home mom",
+                    "i'm unemployed",
+                    "I'm just about to start my interview"]
 
     def init_conversation(self, init_body: InitBody, build_data):
         """ Creates a new interview conversation that is pushed to firestore and replies with a greeting"""
@@ -598,76 +629,3 @@ class InterviewWorld(FikaWorld):
         interview.push_to_firestore()
 
         return brain_response
-
-    def _correct_reply(self, reply, conversation):
-        """ Corrects a reply from the blenderbot model.
-            - Removes any sentence that is similar to a sentence Emely has said previously.
-            - Removes any sentences she's not allowed to say: e.g. I work as a __job__
-        """
-        previous_replies = conversation.get_bot_replies()
-
-        if len(previous_replies) == 0:
-            return reply
-        previous_sentences = []
-
-        # Split sentences and keep separators
-        sentence_splits = re.split('([.?!])', reply)
-        if sentence_splits[-1] == '':
-            del sentence_splits[-1]
-        sentences = [sep for i, sep in enumerate(sentence_splits) if i % 2 == 0]
-        separators = [sep for i, sep in enumerate(sentence_splits) if i % 2 != 0]
-
-        for old_reply in previous_replies:
-            raw_splits = re.split('[.?!]', old_reply)
-            splits = [s for s in raw_splits if len(s) > 2]
-            previous_sentences.extend(splits)
-
-        keep_idx = []
-        # For each part/sentence of the new reply, save it if it's not close to something said before
-        for i in range(len(sentences)):
-            combos = list(product([sentences[i]], previous_sentences))
-            ratios = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(ratios) < 0.9:
-                keep_idx.append(i)
-
-        # Emely cannot say that she's also a {job}, add
-        lies = ['I am a {}'.format(conversation.job),
-                'do you have any hobbies?',
-                "i'm a stay at home mom",
-                "i'm unemployed",
-                "I'm just about to start my interview"]
-        temp_idx = []
-        for i in keep_idx:
-            combos = list(product([sentences[i]], lies))
-            lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-            if max(lie_probabilities) < 0.9:
-                temp_idx.append(i)
-
-        keep_idx = temp_idx
-
-        if len(keep_idx) == len(sentences):  # Everything is fresh and we return it unmodified
-            return reply, ''
-        else:
-            new_reply = ''  # Reply without repetitions
-            removed_from_message = ''  # What we remove
-            for i in range(len(sentences)):
-                if i in keep_idx:
-                    try:
-                        new_reply = new_reply + sentences[i] + separators[i] + ' '
-                    except IndexError:
-                        new_reply = new_reply + sentences[i]
-                else:
-                    removed_from_message = removed_from_message + sentences[i] + ' '
-
-            logging.warning(
-                'Pruned message. Removed sentence(s):\n{}\nCorrected reply:\n{}'.format(removed_from_message,
-                                                                                        new_reply))
-            return new_reply, removed_from_message
-
-    # TODO: Move to super
-    def _get_fire_conversation(self, conversation_id):
-        """ Helper function used to retrieve the firestore conversation corresponding to the conversation_id """
-        conversation_ref = self.firestore_conversation_collection.document(conversation_id)
-        doc = conversation_ref.get()
-        fire_conversation = FirestoreConversation.from_dict(doc.to_dict())
-        return fire_conversation
