@@ -43,7 +43,7 @@ class ChatTranslator:
 
         if isinstance(text, six.binary_type):
             text = text.decode("utf-8")
-        result = self.gcloud_translator.translate(text, source_language=src, target_language=target)
+        result = self.gcloud_translator.translate(text, source_language=src, target_language=target, format_='text')
         trans = result['translatedText']
         
         # Matching spaces between word and delimiters ,.?!
