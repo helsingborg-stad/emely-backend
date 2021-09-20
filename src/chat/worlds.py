@@ -467,7 +467,7 @@ class InterviewWorld(ChatWorld):
 
         # Send to RASA NLU
         # TODO: If no hardcoded reply will come next and it's not the beginning of the conversation
-        if True:
+        if False:
             intent = self.call_nlu(message) # TODO: Call this asynchronously?
 
         else:
