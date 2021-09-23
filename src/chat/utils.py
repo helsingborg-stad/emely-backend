@@ -1,9 +1,28 @@
 from src.api.bodies import BrainMessage, UserMessage
-from src.chat.conversation import FirestoreMessage
-from datetime import timedelta
+from src.chat.conversation import FirestoreMessage, BadwordMessage
+from datetime import timedelta, datetime
 
-"""File contents:
-- Helper functions """
+""" 
+    File contents:
+    - Helper functions 
+"""
+
+
+class BadwordException(Exception):
+    """ Raised when user input contains a badword"""
+    pass
+
+
+def push_filtered_message_to_firestore(firestore_client, message: str, conversation_id: str, time: datetime,
+                                       development_testing: bool):
+    """ Stores message in firestore collection 'filtered_messages' """
+
+    collection = firestore_client.collection('filtered_messages')
+    badwordmessage = BadwordMessage(message=message, conversation_id=conversation_id, created_at=str(time),
+                                    development_testing=development_testing)
+    doc_ref = collection.document()
+    doc_ref.set(badwordmessage.to_dict())
+    return
 
 
 def format_response_time(time: timedelta):
@@ -36,3 +55,15 @@ def firestore_message_to_brain_message(fire_msg: FirestoreMessage) -> BrainMessa
                              is_hardcoded=fire_msg.is_hardcoded,
                              error_messages=fire_msg.error_messages)
     return brain_msg
+
+def create_goodbye_message():
+    """ Creates a dummy BrainMessage with the error message inserted"""
+    brain_response = BrainMessage(conversation_id='',
+                                  msg_id=0,
+                                  lang='sv',
+                                  message='Oj jag måste faktiskt gå nu. Hejdå!',
+                                  is_init_message=False,
+                                  is_hardcoded=True,
+                                  error_messages='')
+    return brain_response
+

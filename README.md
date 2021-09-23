@@ -1,16 +1,24 @@
 Emely
 ==============================
 
+## Pushing and continuous deployment
+
+This repo has CD set up with GCP. GCP will automatically deploy from the develop branch.
+To prevent unintended things from happening we add a git hook that's checked before pushing to GitHub.
+
+You'll have to place it in .git/hooks/ manually and you'll find it in the OneDrive under AI ML PROJECTS\Emely\Design - Development - Test\pre-push
+
+Note: If the confirmation doesn't appear for you, please check that you have a git version higher than 1.8.2 (run git --version on the command line) and also check that the pre-push file is executable (run chmod +x pre-push on the command line) and try again :)
+
+
 ## Get started - first time
 1. create a new virtual environment
 2. pip install -e .
 
-## Running the brain app
+## Running the brain app locally
 To run the fastAPI app on 127.0.0.1:8000
 1. from src/api $uvicorn api_main:brain 
-2. Check the docs and try the http requests at 127.0.0.1:8000/docs
-
-
+2. Check the swagger docs and try the http requests at 127.0.0.1:8000/docs
 
 Project Organization
 ------------
@@ -37,7 +45,6 @@ Project Organization
     │   ├── chat           <- Code used to handle conversations with Emely
     │   │
     │   ├── data           <- Scripts to process data
-    │   │
 
 
 --------

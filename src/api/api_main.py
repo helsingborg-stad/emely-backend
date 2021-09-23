@@ -3,7 +3,8 @@ from fastapi import FastAPI, Response, status, Request
 from argparse import Namespace
 
 import subprocess
-from src.api.utils import is_gcp_instance, create_error_response
+from src.api.utils import is_gcp_instance, create_error_response, create_badword_message
+from src.chat.utils import BadwordException
 from src.api.bodies import BrainMessage, UserMessage, InitBody
 from pathlib import Path
 import logging
@@ -24,12 +25,15 @@ if is_gcp_instance():
     with open(file_path, 'r') as f:
         git_version = f.read()
 else:
-    git_version = subprocess.check_output(["git", "describe"]).strip().decode('utf-8')
+    git_version = subprocess.check_output(["git", "describe", "--tags"]).strip().decode('utf-8')
 password = 'KYgZfDG6P34H56WJM996CKKcNG4'
 
 interview_world: InterviewWorld
 fika_world: FikaWorld
 world = None
+
+# Response
+migraine_response = 'Ojoj mitt stackars huvud... Jag tror jag har bivit sjuk och måste gå till vårdcentralen. Vi får prata en annan dag. Hejdå!'
 
 
 async def init_config():
@@ -37,14 +41,9 @@ async def init_config():
     # Print config
     print('brain_version: ', git_version)
 
-    # TODO: Time to deprecate this functionallity?
-    # Setup
-    interview_persona = Namespace(no_correction=False)
-    fika_persona = Namespace(no_correction=False)
-
     global interview_world, fika_world
-    interview_world = InterviewWorld(**vars(interview_persona))
-    fika_world = FikaWorld(**vars(fika_persona))
+    interview_world = InterviewWorld()
+    fika_world = FikaWorld()
     return
 
 
@@ -55,10 +54,21 @@ brain.add_event_handler("startup", init_config)
 def new_chat(msg: InitBody, response: Response, request: Request):
     if not msg.password == password:
         response.status_code = status.HTTP_401_UNAUTHORIZED
-        error = 'Wrong password'
-        error_response = create_error_response(error)
+        error_msg = 'Wrong password'
+        message = migraine_response
+        error_response = create_error_response(message, error_msg)
         return error_response
-    else:  # All checks pass
+
+    # Request is missing job
+    elif msg.persona == 'intervju' and msg.job == None:
+        response.status_code == status.HTTP_400_BAD_REQUEST
+        message = 'Av någon anledning har jag glömt vilket jobb du skulle söka... Prova att klicka på knappen \'återställ dialog\' snett upp till vänster'
+        error_msg = 'Init to intervju is missing job information'
+        error_response = create_error_response(message, error_msg)
+        return error_response
+
+    # All checks pass
+    else:  
         # Data
         global git_version
         client_host = request.client.host
@@ -71,8 +81,9 @@ def new_chat(msg: InitBody, response: Response, request: Request):
             world = interview_world
         else:
             response.status_code = status.HTTP_400_BAD_REQUEST
-            error = "Invalid persona: only fika and intervju available"
-            error_response = create_error_response(error)
+            error_msg = "Invalid persona: only fika and intervju available"
+            message = 'Just nu har jag bara två olika personas: fika och intervju'
+            error_response = create_error_response(message, error_msg)
             return error_response
 
         try:
@@ -82,63 +93,57 @@ def new_chat(msg: InitBody, response: Response, request: Request):
             print(traceback.format_exc())
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             error_msg = str(e)
-            brain_response = create_error_response(error_msg)
+            brain_response = create_error_response(message=migraine_response, error_msg=error_msg)
 
     return brain_response
 
 
 @brain.post('/fika')
 async def fika(msg: UserMessage, response: Response):
-    # TODO: And add event loop
-    start_time = timeit.default_timer()
 
-    if not msg.password == password:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        error = 'Wrong password'
-        error_response = create_error_response(error)
+    try:
+        conversation, observe_timestamp = fika_world.observe(user_request=msg)
+        brain_response = fika_world.act(conversation, observe_timestamp)
+        return brain_response
+
+    # Badword in the user message
+    except BadwordException as e:
+        response.status_code = status.HTTP_403_FORBIDDEN
+        badword_response = create_badword_message()
+        logging.warning('Found badword. Check database')
+        return badword_response
+
+    except Exception as e:
+        print(traceback.format_exc())
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        error_msg = str(e)
+        error_response = create_error_response(message=migraine_response, error_msg=error_msg)
         return error_response
-    else:
-        try:
-            conversation, observe_timestamp = fika_world.observe(user_request=msg)
-            brain_response = fika_world.act(conversation, observe_timestamp)
-            return brain_response
-        except Exception as e:
-            print(traceback.format_exc())
-            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            error_msg = str(e)
-            error_response = create_error_response(error_msg)
-            return error_response
-
-    elapsed_time = timeit.default_timer() - start_time
-    logging.info(f'Fika message time: {elapsed_time}')
-    return brain_response
 
 
 @brain.post('/intervju')
 async def interview(msg: UserMessage, response: Response):
-    # TODO: Add event loop
-    start_time = timeit.default_timer()
 
-    if not msg.password == password:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        error = 'Wrong password'
-        error_response = create_error_response(error)
+    try:
+        conversation, observe_timestamp, intent = interview_world.observe(user_request=msg)
+        brain_response = interview_world.act(conversation, observe_timestamp, intent)
+        return brain_response
+
+    # TODO: This is the same as for fika. Maybe we should also repeat the previous input?
+    except BadwordException as e: 
+        response.status_code = status.HTTP_403_FORBIDDEN
+        badword_response = create_badword_message()
+        logging.warning('Found badword. Check database')
+        return badword_response
+
+    except Exception as e:
+        print(traceback.format_exc())
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        error_msg = str(e)
+        error_response = create_error_response(message=migraine_response, error_msg=error_msg)
         return error_response
-    else:
-        try:
-            conversation, observe_timestamp = interview_world.observe(user_request=msg)
-            brain_response = interview_world.act(conversation, observe_timestamp)
-            return brain_response
-        except Exception as e:
-            print(traceback.format_exc())
-            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            error_msg = str(e)
-            error_response = create_error_response(error_msg)
-            return error_response
 
-    elapsed_time = timeit.default_timer() - start_time
-    logging.info(f'Intervju message time: {elapsed_time}')
-    return brain_response
+
 
 if __name__ == '__main__':
-    uvicorn.run(brain, log_level='info')
+    uvicorn.run(brain, log_level='warning')
