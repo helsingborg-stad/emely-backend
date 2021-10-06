@@ -143,7 +143,18 @@ async def interview(msg: UserMessage, response: Response):
         error_response = create_error_response(message=migraine_response, error_msg=error_msg)
         return error_response
 
+@brain.get('/joblist')
+def get_joblist():
+    return {"occupations": get_occupations()}
 
+def get_occupations():
+    competences_list_path = Path(__file__).resolve().parent.parent / 'chat' / 'core_competences.txt'
+    with open(competences_list_path, "r") as f:
+        competences = f.readlines()
+    jobs = []
+    for line in competences:
+        jobs.append(line.split(":")[0])
+    return jobs
 
 if __name__ == '__main__':
     uvicorn.run(brain, log_level='warning')
