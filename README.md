@@ -12,41 +12,15 @@ Note: If the confirmation doesn't appear for you, please check that you have a g
 
 
 ## Get started - first time
-1. create a new virtual environment
-2. pip install -e .
+1. Create and activate the environment in Anaconda prompt
+2. Go to root folder and '$ pip install -r requirements' & '$ pip install -e'.
 
 ## Running the brain app locally
 To run the fastAPI app on 127.0.0.1:8000
-1. from src/api $uvicorn api_main:brain 
-2. Check the swagger docs and try the http requests at 127.0.0.1:8000/docs
-
-Project Organization
-------------
-
-    ├── LICENSE
-    ├── README.md          <- The top-level README for developers using this project.
-    ├── data
-    │   ├── json           <- Intermediate data that has been transformed.
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump.
-    │
-    ├── docs               <- Eventual documentation files
-    │
-    ├── models             <- Storage of blenderbot models and tokenizers
-    │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment
-    │
-    ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
-    ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
-    │   │
-    │   ├── api            <- Code related to the api and hosting the brain backend
-    │   │
-    │   ├── chat           <- Code used to handle conversations with Emely
-    │   │
-    │   ├── data           <- Scripts to process data
+1. Make sure the environment is activated.
+2. Go to src/api and run the command '$ uvicorn api_main:brain' 
+3. Check the swagger docs and try the http requests at 127.0.0.1:8000/docs
 
 
---------
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
