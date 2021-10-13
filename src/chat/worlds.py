@@ -219,7 +219,6 @@ class FikaWorld(ChatWorld):
         # Convert initialization data to a dict and update with build data
         initial_information = init_body.dict()
         initial_information.update(build_data)
-        initial_information.pop('password')  # Not needed
         # Create FirestoreConversation, push to db and get conversation_id
         fire_convo = FirestoreConversation.from_dict(initial_information)
         conversation_ref = self.firestore_conversation_collection.document()
@@ -415,7 +414,6 @@ class InterviewWorld(ChatWorld):
         # Convert initialization data to a dict and update with build data
         initial_information = init_body.dict()
         initial_information.update(build_data)
-        initial_information.pop('password')  # Not needed
 
         # Generate questions 
         interview_questions = self.question_generator.get_interview_questions(job)

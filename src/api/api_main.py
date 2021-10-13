@@ -26,7 +26,6 @@ if is_gcp_instance():
         git_version = f.read()
 else:
     git_version = subprocess.check_output(["git", "describe", "--tags"]).strip().decode('utf-8')
-password = 'KYgZfDG6P34H56WJM996CKKcNG4'
 
 interview_world: InterviewWorld
 fika_world: FikaWorld
@@ -52,15 +51,8 @@ brain.add_event_handler("startup", init_config)
 
 @brain.post('/init', status_code=201)
 def new_chat(msg: InitBody, response: Response, request: Request):
-    if not msg.password == password:
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        error_msg = 'Wrong password'
-        message = migraine_response
-        error_response = create_error_response(message, error_msg)
-        return error_response
-
     # Request is missing job
-    elif msg.persona == 'intervju' and msg.job == None:
+    if msg.persona == 'intervju' and msg.job == None:
         response.status_code == status.HTTP_400_BAD_REQUEST
         message = 'Av någon anledning har jag glömt vilket jobb du skulle söka... Prova att klicka på knappen \'återställ dialog\' snett upp till vänster'
         error_msg = 'Init to intervju is missing job information'

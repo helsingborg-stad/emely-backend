@@ -57,6 +57,7 @@ class FirestoreConversation(object):
     user_ip_number: str  #
     brain_url: str  # Client host of brain
     brain_version: str  #
+    user_id: str
 
     # Updated attributes - Used in Fika/InterviewConversation
     interview_questions: Optional[List] = None
