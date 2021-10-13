@@ -20,7 +20,7 @@ class LanguageEnum(str, Enum):
 class InitBody(BaseModel):
     """ Defines body for initial contact where a user starts a chat with Emely """
     name: str
-    job: str
+    job: str = None
     created_at: str
     persona: PersonaEnum
     development_testing: bool
@@ -29,8 +29,8 @@ class InitBody(BaseModel):
     webapp_version: str
     brain_url: str
     lang: LanguageEnum
-    password: str
     user_ip_number: str
+    user_id:str = None
 
     class Config:
         """ Default values sent when testing through swagger docs """
@@ -46,7 +46,6 @@ class InitBody(BaseModel):
                 "webapp_version": "NA",
                 "brain_url": "NA",
                 "lang": "sv",
-                "password": "KYgZfDG6P34H56WJM996CKKcNG4",
                 "user_ip_number": "127.0.0.1",
             }
         }
@@ -60,7 +59,6 @@ class UserMessage(BaseModel):
     message: str
     created_at: str
     recording_used: bool
-    password: str
 
     class Config:
         """ Used for the swagger docs when testing the api """
@@ -72,7 +70,6 @@ class UserMessage(BaseModel):
                 "created_at": '1999-04-07 18:59:24.584658',
                 "recording_used": False,
                 "lang": "sv",
-                "password": "KYgZfDG6P34H56WJM996CKKcNG4",
             }
         }
 
@@ -86,6 +83,7 @@ class BrainMessage(BaseModel):
     is_init_message: bool
     is_hardcoded: bool
     error_messages: str
+
 
 class ApiMessage(BaseModel):
     """ Used to send requests to models """

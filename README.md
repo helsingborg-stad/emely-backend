@@ -22,6 +22,8 @@ To run the fastAPI app on 127.0.0.1:8000
 2. Go to src/api and run the command '$ uvicorn api_main:brain' 
 3. Check the swagger docs and try the http requests at 127.0.0.1:8000/docs
 
+## Tests
+Pytest tests are located under src/test. Run with $pytest src/test
 
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
