@@ -1,64 +1,56 @@
-
-
 class DialogFlowHandler:
     def __init__(self, question_generator):
         self.question_generator
         self.interview_model = None
         self.fika_model = None
 
-    def _determine_dialog_block(self, conversation) -> str:
-        "Determines which question block"
-
-        if "All questions are left":
-            return "starting phase"
-        elif "No questions are left":
-            return "end phase"
-
-        # -> we are in a question block!
-        # use question attributes to determine dialog (question) block
-        question_attributes = self.question_generator.get_question_attributes()
-
-        if cond == x:
-            return "X"
-
-        elif cond == y:
-            return "Y"
-
-        elif cond == z:
-            return "Z"
-
-        else:
-            raise ValueError("Could not determine question block")
-
     def act(self, conversation):
+        " Determines which method to call"
 
-        dialog_block = self._determine_dialog_block(conversation)
+        current_dialog_block = conversation.current_dialog_block
 
-        if dialog_block == x:
-            return self.X_act(conversation)
+        if current_dialog_block == "tough":
+            return self.tough_question_block(conversation)
 
-        elif dialog_block == y:
+        elif current_dialog_block == y:
             return self.Y_act(conversation)
 
-        elif dialog_block == z:
+        elif current_dialog_block == z:
             return self.Z_act(conversation)
 
         else:
+            raise ValueError("Unknown dialog block")
 
+    def transition_to_next_block(self, conversation) -> Message:
+        "Pops a new question or hardcoded message"
+        if len(conversation.question_list) > 0:
+            new_question = conversation.question_list.pop(0)
+            conversation.current_dialog_block = new_question["label"]
+            conversation.nbr_replies_since_last_question = 0
 
-    def X_act(self, conversation) -> Message:
+        else:
+            # Transition into the goodbye block.
+            return self.goodbye_block(conversation)
+
+    def tough_question_block(self, conversation) -> Message:
         """Should handle:
         - transition to next block
         - update conversations attributes
         """
 
-        if transition:
+        if transition_condition:
             return self.transition_to_next_block(conversation)
 
-        elif cond == X:
+        else:
             # Action
             # self.interview_model.get_response()
             return
 
-    def transition_to_next_block(self, conversation) -> Message:
-        "Pops a new question or hardcoded message"
+    def introduction_block(self, conversation) -> Message:
+        "First block of kallprat"
+        pass
+
+    def goodbye_block(self, conversation) -> Message:
+        "Last block of the interview"
+        pass
+
