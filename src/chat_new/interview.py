@@ -1,11 +1,12 @@
 class DialogFlowHandler:
-    def __init__(self, question_generator):
-        self.question_generator
+    def __init__(self):
         self.interview_model = None
         self.fika_model = None
 
-    def act(self, conversation):
-        " Determines which method to call"
+    def _act(self, conversation):
+        """ All of the methods in this class should both add the message 
+        to the conversation and return it as a variable!!!!"""
+        # TODO: Implement this and a check
 
         current_dialog_block = conversation.current_dialog_block
 
@@ -21,7 +22,7 @@ class DialogFlowHandler:
         else:
             raise ValueError("Unknown dialog block")
 
-    def transition_to_next_block(self, conversation) -> Message:
+    def _transition_to_next_block(self, conversation) -> Message:
         "Pops a new question or hardcoded message"
         if len(conversation.question_list) > 0:
             new_question = conversation.question_list.pop(0)
@@ -32,7 +33,7 @@ class DialogFlowHandler:
             # Transition into the goodbye block.
             return self.goodbye_block(conversation)
 
-    def tough_question_block(self, conversation) -> Message:
+    def _tough_question_block(self, conversation) -> Message:
         """Should handle:
         - transition to next block
         - update conversations attributes
@@ -46,11 +47,14 @@ class DialogFlowHandler:
             # self.interview_model.get_response()
             return
 
-    def introduction_block(self, conversation) -> Message:
+    def _introduction_block(self, conversation) -> Message:
         "First block of kallprat"
         pass
 
-    def goodbye_block(self, conversation) -> Message:
+    def _goodbye_block(self, conversation) -> Message:
         "Last block of the interview"
         pass
 
+    def greet(self, conversation) -> Message:
+        " Gretting message. Update conversation"
+        pass
