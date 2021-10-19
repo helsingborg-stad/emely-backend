@@ -3,9 +3,10 @@ class DialogFlowHandler:
         self.interview_model = None
         self.fika_model = None
 
-    def _act(self, conversation):
-        """ All of the methods in this class should both add the message 
-        to the conversation and return it as a variable!!!!"""
+    def act(self, conversation):
+        """ All of the methods in this class should filter the the message 
+            and possible return something appropirate (transition to next question?) 
+            if it's too short or otherwise doesn't pass the filter"""
         # TODO: Implement this and a check
 
         current_dialog_block = conversation.current_dialog_block
