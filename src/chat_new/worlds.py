@@ -1,5 +1,12 @@
 import os
 from src.chat.translate import ChatTranslator
+from conversation import Conversation, Message, Message
+from interview import DialogFlowHandler
+from questions import QuestionGenerator
+from database import FirestoreHandler
+
+
+from filters import toxicity_filter, remove_repetition
 
 
 class InterviewWorld:
@@ -9,7 +16,8 @@ class InterviewWorld:
 
         self.translator = ChatTranslator()
         self.question_generator = QuestionGenerator()
-        self.dialog_flow_handler = DialogFlowHandler(self.question_generator)
+        self.dialog_flow_handler = DialogFlowHandler()
+        self.database_handler = FirestoreHandler()
 
     def _set_environment(self):
         "Sets class attributes based on environment variables"
@@ -28,11 +36,28 @@ class InterviewWorld:
 
     def create_new_conversation(self, info: InitBody):
         """Creates a new conversation
-        
+        - Sets current_dialog_block to either intro or first question depending on parameter in info! Default to False
         - Generates questions
-        - Determines if user wants kallprat with fika emely in the beginning of the conversation
+        - Gets first message
         - Pushes data to firestore"""
-        pass
+        job = info.job
+        current_dialog_block = None  # TODO: Set based on field in InitBody?
+
+        question_list = self.question_generator.get_interview_questions(job)
+
+        conversation_id = self.database_handler.get_new_conversation_id()
+        new_conversation = Conversation(
+            **info,
+            current_dialog_block=current_dialog_block,
+            conversation_id=conversation_id,
+            question_list=question_list,
+        )
+
+        # Get the first message
+        reply = self.dialog_flow_handler.greet(new_conversation)
+        self.database_handler.update(new_conversation)
+
+        return reply
 
     def respond(self, message: UserMessage):
         """ 
@@ -43,14 +68,29 @@ class InterviewWorld:
         """
 
         # 1. Fetch conversation data from firestore
+        conversation = self.database_handler.get_conversation()
 
         # 2.
-        # a) Check for badwords
-        # b) Translate
-        # c) Add messages to conversation
+        # a) Translate
+        # b) Check for badwords
+        # c) Convert message to FirestoreMessage and add to conversation
+
+        message_en = self.translator.translate()
+
+        if toxicity_filter(message):
+            # TODO: Handle this
+            pass
+
+        # TODO: Construct suplementary informaton for add_message()
+        who = "user"
+        conversation.add_message(message, message_en, who)
 
         # 3. Determine question block
         # self.dialog_flow_handler.act
+        reply = self.dialog_flow_handler.act(conversation)
+        # TODO:
 
         # 4. Update firestore with conversation and send back message to front end
-        pass
+        self.database_handler.update()
+        return reply
+
