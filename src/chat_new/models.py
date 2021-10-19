@@ -13,7 +13,7 @@ class MLModel:
         r = requests.post(url=self.url, json=inputs)
         outputs = self._format_outputs(r)
 
-        return r
+        return outputs
 
     def _format_input(self, x):
         raise NotImplementedError(
@@ -34,6 +34,10 @@ class HuggingfaceFika(MLModel):
 
 
 class InterviewModel(MLModel):
+    pass
+
+
+class FikaModel(MLModel):
     pass
 
 
