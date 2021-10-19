@@ -5,8 +5,7 @@ from interview import DialogFlowHandler
 from questions import QuestionGenerator
 from database import FirestoreHandler
 
-
-from filters import toxicity_filter, remove_repetition
+from filters import contains_toxicity
 
 
 class InterviewWorld:
@@ -18,6 +17,7 @@ class InterviewWorld:
         self.question_generator = QuestionGenerator()
         self.dialog_flow_handler = DialogFlowHandler()
         self.database_handler = FirestoreHandler()
+        self.rasa_model = "https://rasa-nlu-ef5bmjer3q-ey.a.run.app"
 
     def _set_environment(self):
         "Sets class attributes based on environment variables"
@@ -60,37 +60,49 @@ class InterviewWorld:
         return reply
 
     def respond(self, message: UserMessage):
-        """ 
-        1. Fetch conversation from firestore
-        2. Checks message, translates and adds to conversation
-        3. Determines which dialog block we're in and gets a reply
-        4. Updates firestore and sends back reply
-        """
+        " Responds to user"
 
-        # 1. Fetch conversation data from firestore
+        # Fetch conversation data from firestore
         conversation = self.database_handler.get_conversation()
 
-        # 2.
-        # a) Translate
-        # b) Check for badwords
-        # c) Convert message to FirestoreMessage and add to conversation
+        # Call rasa
+        rasa_response = self.call_rasa(message)  # TODO: Make async to save time!
 
+        # Translate
         message_en = self.translator.translate()
 
-        if toxicity_filter(message):
-            # TODO: Handle this
-            pass
-
+        # Add usermessage to conversation
         # TODO: Construct suplementary informaton for add_message()
         who = "user"
         conversation.add_message(message, message_en, who)
 
-        # 3. Determine question block
-        # self.dialog_flow_handler.act
-        reply = self.dialog_flow_handler.act(conversation)
-        # TODO:
+        # Toxic messages are replied to without doing anything specific.
+        # Emely will pretend like she didn't understand and repeat her previous statement
+        if contains_toxicity(message):
+            # TODO: Handle this
+            reply = Message()
 
-        # 4. Update firestore with conversation and send back message to front end
+        # If rasa detects something
+        elif rasa_response["confidence"] > threshold:
+            # TODO: Set threshold using env variable?
+            # TODO: Make rasa_response['message'] a user message
+            rasa_reply = Message()
+            reply = rasa_reply
+
+        # Let dialog flow handler act
+        else:
+            reply = self.dialog_flow_handler.act(conversation)
+
+        # Add reply to conversation
+        conversation.add_message(reply)
+        # Update firestore with conversation and send back message to front end
+
         self.database_handler.update()
         return reply
 
+    async def call_rasa(self, message):
+        if rasa_enabled:
+            # TODO: Implement with a timeout feature so it doesn't take too long
+            pass
+        else:
+            return {"confidence": 0.0, "reply": "Hejsan tjosan"}
