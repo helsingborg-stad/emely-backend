@@ -1,10 +1,10 @@
-from typing import List, Dict, Optional
+from typing import List, Optional
 import datetime
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict
+from pydantic import BaseModel
 
 
-@dataclass
-class UserMessage:
+class UserMessage(BaseModel):
     "JSON schema for API request from frontend"
     created_at: str
     conversation_id: str
@@ -19,8 +19,7 @@ class UserMessage:
         return d
 
 
-@dataclass
-class Message:
+class Message(BaseModel):
     "Extends Usermessage to include more data saved in database"
     conversation_id: str
     lang: str
@@ -37,14 +36,8 @@ class Message:
     is_hardcoded: bool = False
     recording_used: bool = False
 
-    def __post_init__(self):
-        who_condition = ["bot", "user"]
-        if self.who not in who_condition:
-            raise ValueError(f"Persona has to be in {who_condition}")
 
-
-@dataclass
-class ConversationInit:
+class ConversationInit(BaseModel):
     "Defines JSON schema for init requests"
     brain_url: str
     created_at: str
@@ -63,8 +56,7 @@ class ConversationInit:
     user_id: Optional[str] = None
 
 
-@dataclass
-class Conversation:
+class Conversation(BaseModel):
     brain_url: str
     created_at: str
     current_dialog_block: str
@@ -83,9 +75,9 @@ class Conversation:
     # Default values
     conversation_id: str = None  # Is set first when we've pushed to firestore so it has to be None at initialisation
     current_dialog_block_length: str = 0
-    messages: list = field(default_factory=list)
-    nbr_messages: int = 0
-    question_list: list = field(default_factory=list)
+    messages: List = []
+    nbr_messages: List = 0
+    question_list: List = []
 
     def add_message(self, message: UserMessage, who, message_en, etc):
         # TODO: What info is needed to convert UserMessage to FirestoreMessage?
@@ -101,4 +93,3 @@ class Conversation:
         d.pop("conversation_id", None)
         d.pop("messages", None)
         return d
-
