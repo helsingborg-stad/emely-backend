@@ -1,14 +1,13 @@
-from dataclasses import Conversation, FirestoreMessage
+from data import Conversation, Message
 import firebase_admin
 from firebase_admin import credentials, firestore
+from pathlib import Path
 
 from src.api.utils import is_gcp_instance
 
 
 class FirestoreHandler:
-    # TODO: Implement this class
-
-    def __init__(self, collection):
+    def __init__(self):
         self._authenticate_firebase()
 
         # Authenticate firebase to connect to firestore
@@ -43,26 +42,52 @@ class FirestoreHandler:
         doc_ref = self.firestore_collection.document()
         return doc_ref.id
 
-    def create_new_conversation(self, current_dialog_block, question_list, **kwargs)
-        doc_ref = self.firestore_collection.document()
-        
-        new_conversation = Conversation(
-            **kwargs,
-            current_dialog_block=current_dialog_block,
-            conversation_id=doc_ref.id,
-            question_list=question_list,
-        )
-
-
     def get_conversation(self, conversation_id) -> Conversation:
         "Retreives a conversation from firestore"
-        # TODO: Needs to return subcollection with messages too
-        doc_ref = self.firestore_colleciotn.document(conversation_id)
+        # TODO: Async calls?
+        conversation_ref = self.firestore_collection.document(conversation_id)
+        firestore_conversation = conversation_ref.get().to_dict()
 
-        conversation = None
+        # Messages
+        # TODO: All messages are fetched. Is there a better way to do this?
+        message_collection = conversation_ref.collection("messages")
+        message_refs = message_collection.where("message_nbr", ">=", 0).stream()
+        firestore_messages = [doc.to_dict() for doc in message_refs]
+
+        conversation = Conversation(
+            **firestore_conversation, messages=firestore_messages,
+        )
+
         return conversation
 
-    def update_conversation(self, conversation):
-        " Updates conversation on firestore"
+    def create(self, conversation):
+        # TODO: Use this during creat_new_conversation?
+        # conversation_ref = self.firestore_collection.document()
+        # conversation_ref.set(conversation.to_dict())
+
+        # messages = conversation.get_last_two_messages()
+        # message_collection = conversation_ref.collection("messages")
+        # # TODO: Don't loop
+        # for message_nbr, message in messages.items():
+        #     message_ref = message_collection.document(str(message_nbr))
+        #     message_ref.set(message.to_dict())
+        # return
         pass
 
+    def update(self, conversation):
+        " Updates conversation on firestore"
+
+        conversation_ref = self.firestore_collection.document(
+            conversation.conversation_id
+        )
+
+        # TODO: Use update instead of set?
+        conversation_ref.set(conversation.to_dict())
+
+        messages = conversation.get_last_two_messages()
+        message_collection = conversation_ref.collection("messages")
+        # TODO: Don't loop
+        for message_nbr, message in messages.items():
+            message_ref = message_collection.document(str(message_nbr))
+            message_ref.set(message.to_dict())
+        return

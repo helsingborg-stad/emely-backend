@@ -5,8 +5,8 @@ import random
 
 
 class QuestionGenerator:
-    def __init__(self, some_file):
-        self.question_df = pd.read_excel(some_file)
+    def __init__(self, some_file="questions.xlsx"):
+        self.question_df = pd.read_excel(Path(__file__).resolve().parent / some_file)
 
         # Set the number of different questions
         # TODO: Automatically from some config?
@@ -17,8 +17,8 @@ class QuestionGenerator:
         # TODO: Assert that the df is properly formatted?
         # All values should be proper and duplicated questions should have the same attributes
 
-    def get_questions(self, job) -> List[str]:
-
+    def get_interview_questions(self, job) -> List[str]:
+        # TODO: Implement when excel doc is ready
         # Draw appropriate questions from self.question_df in semi-random order
 
         # We only need to return a list of question strings
