@@ -5,6 +5,7 @@ import random
 
 
 class QuestionGenerator:
+    # TODO: Replace questions.xlsx with real excel file
     def __init__(self, some_file="questions.xlsx"):
         self.question_df = pd.read_excel(Path(__file__).resolve().parent / some_file)
 

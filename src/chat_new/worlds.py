@@ -45,14 +45,14 @@ class InterviewWorld:
         - Gets first message
         - Pushes data to firestore"""
         job = info.job
-        current_dialog_block = "tough"  # TODO: Set based on field in InitBody?
+        enable_small_talk = info.enable_small_talk
 
         question_list = self.question_generator.get_interview_questions(job)
 
         conversation_id = self.database_handler.get_new_conversation_id()
         new_conversation = Conversation(
             **dict(info),
-            current_dialog_block=current_dialog_block,
+            current_dialog_block="greet",
             current_dialog_block_length=0,
             conversation_id=conversation_id,
             episode_done=False,
@@ -62,7 +62,7 @@ class InterviewWorld:
         )
 
         # Get the first message
-        reply = self.dialog_flow_handler.greet(new_conversation)
+        reply = self.dialog_flow_handler.greet(new_conversation, enable_small_talk)
         reply = self.handle_bot_reply(reply, new_conversation)
 
         new_conversation.add_message(reply)
@@ -85,12 +85,12 @@ class InterviewWorld:
         rasa_response = self.call_rasa(user_message)
 
         # Translate
-        message_en = self.translator.translate(
-            text=user_message.message, src=user_message.lang, target="en"
+        text_en = self.translator.translate(
+            text=user_message.text, src=user_message.lang, target="en"
         )
 
         # Add usermessage to conversation
-        conversation.add_user_message(user_message, message_en)
+        conversation.add_user_message(user_message, text_en)
 
         # Toxic messages are replied to without doing anything specific.
         # Emely will pretend like she didn't understand and repeat her previous statement
@@ -109,7 +109,7 @@ class InterviewWorld:
             reply = self.dialog_flow_handler.act(conversation)
 
         # Translate reply depending on if it was hardcoded or not
-        reply = self.handle_bot_reply(reply)
+        reply = self.handle_bot_reply(reply, conversation)
 
         # Add reply to conversation
         conversation.add_message(reply)
@@ -121,26 +121,26 @@ class InterviewWorld:
     def handle_bot_reply(
         self, bot_message: BotMessage, conversation: Conversation
     ) -> Message:
-        # TODO: Hardcoded phrases will be translated often. Add dictionary for them?
 
         # First translate depending on which way we're going
         if bot_message.lang == "en":
-            message_en = bot_message.text
-            message = self.translator.translate(
-                text=message_en, src="en", target=bot_message.lang
+            text_en = bot_message.text
+            text = self.translator.translate(
+                text=text_en, src="en", target=conversation.lang
             )
         else:
-            message = bot_message.text
-            message_en = self.translator.translate(
-                text=message, src=bot_message.lang, target="en"
+            # TODO: Hardcoded phrases will be translated often. Add dictionary for them?
+            text = bot_message.text
+            text_en = self.translator.translate(
+                text=text, src=bot_message.lang, target="en"
             )
 
         message = Message(
             **bot_message.dict(exclude={"text"}),
             conversation_id=conversation.conversation_id,
-            message_nbr=conversation.nbr_messages + 1,
-            message=message,
-            message_en=message_en,
+            message_nbr=conversation.get_nbr_messages(),
+            text=text,
+            text_en=text_en,
             progress=0,
         )
 

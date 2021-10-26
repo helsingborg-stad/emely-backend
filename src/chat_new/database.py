@@ -53,10 +53,11 @@ class FirestoreHandler:
         message_collection = conversation_ref.collection("messages")
         message_refs = message_collection.where("message_nbr", ">=", 0).stream()
         firestore_messages = [doc.to_dict() for doc in message_refs]
+        messages = [
+            Message(**m, conversation_id=conversation_id) for m in firestore_messages
+        ]
 
-        conversation = Conversation(
-            **firestore_conversation, messages=firestore_messages,
-        )
+        conversation = Conversation(**firestore_conversation, messages=messages,)
 
         return conversation
 

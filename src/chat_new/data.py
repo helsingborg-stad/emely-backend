@@ -11,7 +11,7 @@ class UserMessage(BaseModel):
     created_at: str
     conversation_id: str
     lang: str
-    message: str
+    text: str
     recording_used: bool
     response_time: float
 
@@ -47,8 +47,8 @@ class Message(BaseModel):
     conversation_id: str
     lang: str
     message_nbr: int
-    message: str
-    message_en: str
+    text: str
+    text_en: str
     progress: float
     response_time: float
     who: str
@@ -108,7 +108,7 @@ class Conversation(BaseModel):
     brain_url: str
     created_at: str
     current_dialog_block: str
-    current_dialog_block_length: str
+    current_dialog_block_length: int
     development_testing: bool
     episode_done: bool
     job: str
@@ -135,10 +135,10 @@ class Conversation(BaseModel):
         self.messages.append(message)
         return
 
-    def add_user_message(self, user_message: UserMessage, message_en: str):
+    def add_user_message(self, user_message: UserMessage, text_en: str):
         message = Message(
             **user_message.dict(),
-            message_en=message_en,
+            text_en=text_en,
             message_nbr=self.nbr_messages,
             who="user",
             is_hardcoded=False,
@@ -157,13 +157,32 @@ class Conversation(BaseModel):
         pass
 
     def get_last_two_messages(self) -> Dict[int, Message]:
-        sorted_messages = sorted(
-            self.messages, key=lambda x: x.message_nbr, reverse=True
-        )
 
         if self.nbr_messages == 1:
             return {0: self.messages[0]}
         else:
+            sorted_messages = sorted(
+                self.messages, key=lambda x: x.message_nbr, reverse=True
+            )
             last_two_message = sorted_messages[:2]
             return {m.message_nbr: m for m in last_two_message}
+
+    def get_last_x_message_strings(self, x):
+        " Returns blenderbot formatted string of last x messages"
+        sorted_messages = sorted(
+            self.messages, key=lambda x: x.message_nbr, reverse=False
+        )
+
+        # We will take all
+        if x <= len(sorted_messages):
+            messages = sorted_messages
+
+        else:
+            messages = sorted_messages[-x:]
+
+        strings = [m.text_en for m in messages]
+        return "\n".join(strings)
+
+    def get_nbr_messages(self) -> int:
+        return len(self.messages)
 

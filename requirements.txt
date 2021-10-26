@@ -8,6 +8,7 @@ pydantic
 uvicorn
 numpy
 pytest
+openpyxl
 
 # external requirements
 click~=7.1.2

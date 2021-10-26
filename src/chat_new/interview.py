@@ -1,10 +1,19 @@
 from data import Message, Conversation, UserMessage, BotMessage
+from models import InterviewModel, FikaModel
+
+tough_question_max_length = 5
+job_question_max_length = 3
+personal_question_max_length = 3
+general_question_max_length = 3
+
+interview_model_context_length = 8
+fika_model_context_length = 8
 
 
 class DialogFlowHandler:
     def __init__(self):
-        self.interview_model = None
-        self.fika_model = None
+        self.interview_model = InterviewModel()
+        self.fika_model = FikaModel()
 
     def act(self, conversation: Conversation):
         """ All of the methods in this class should filter the the message 
@@ -14,30 +23,52 @@ class DialogFlowHandler:
 
         current_dialog_block = conversation.current_dialog_block
 
-        if current_dialog_block == "tough":
-            return self.tough_question_block(conversation)
+        if current_dialog_block == "greet":
+            return self.transition_to_next_block(conversation)
 
-        elif current_dialog_block == y:
-            return self.Y_act(conversation)
+        elif current_dialog_block == "tough":
+            return self.question_block(
+                conversation, max_length=tough_question_max_length
+            )
 
-        elif current_dialog_block == z:
-            return self.Z_act(conversation)
+        elif current_dialog_block == "always":
+            return self.question_block(
+                conversation, max_length=general_question_max_length
+            )
+
+        elif current_dialog_block == "job":
+            return self.question_block(conversation, max_length=job_question_max_length)
+
+        elif current_dialog_block == "smalltalk":
+            return self.smalltalk_block(conversation)
 
         else:
             raise ValueError("Unknown dialog block")
 
-    def _transition_to_next_block(self, conversation: Conversation) -> BotMessage:
+    def transition_to_next_block(self, conversation: Conversation) -> BotMessage:
         "Pops a new question or hardcoded message"
         if len(conversation.question_list) > 0:
+
             new_question = conversation.question_list.pop(0)
+
+            # Update attributes
             conversation.current_dialog_block = new_question["label"]
-            conversation.nbr_replies_since_last_question = 0
+            conversation.current_dialog_block_length = 0
+
+            bot_message = BotMessage(
+                is_hardcoded=True,
+                lang=conversation.lang,
+                text=new_question["question"],
+                response_time=0,
+            )
+
+            return bot_message
 
         else:
             # Transition into the goodbye block.
             return self.goodbye_block(conversation)
 
-    def _tough_question_block(self, conversation: Conversation) -> BotMessage:
+    def question_block(self, conversation: Conversation, max_length) -> BotMessage:
         """Should handle:
         - transition to next block
         - update conversations attributes
@@ -46,34 +77,54 @@ class DialogFlowHandler:
             - current_dialog_block_length
         """
 
-        if transition_condition:
+        if conversation.current_dialog_block_length > max_length:
             return self.transition_to_next_block(conversation)
 
         else:
             # Action
-            # self.interview_model.get_response()
-            return
+            context = conversation.get_last_x_message_strings(
+                interview_model_context_length
+            )
+            model_reply, response_time = self.interview_model.get_response(context)
+            reply = BotMessage(
+                lang="en",
+                text=model_reply,
+                response_time=response_time,
+                is_hardcoded=True,
+            )
 
-    def _introduction_block(self, conversation: Conversation) -> BotMessage:
-        "First block of kallprat"
+            # TODO: Implement and put some sort of filter here that can lead to transition_to_next_block
+
+            return reply
+
+    def smalltalk_block(self, conversation: Conversation) -> BotMessage:
+        "First block of small talk"
+        # TODO: Implement
         pass
 
-    def _goodbye_block(self, conversation: Conversation) -> BotMessage:
+    def goodbye_block(self, conversation: Conversation) -> BotMessage:
         "Last block of the interview"
-        pass
-
-    def greet(self, conversation: Conversation) -> BotMessage:
-        " Gretting message. Update conversation"
-        # TODO: Implement. Add greetings as list in class attribute after reading from file?
+        # TODO: Variation
         reply = BotMessage(
-            conversation_id=conversation.conversation_id,
             lang=conversation.lang,
-            message_nbr=conversation.nbr_messages,
-            text="Hej och välkommen!",
-            message_en="Hello and welcome!",
-            progress=0.0,
-            response_time=0.1,
-            who="bot",
+            text="Tack för att jag fick intervju dig! Hejdå!",
+            response_time=0.0,
             is_hardcoded=True,
         )
         return reply
+
+    def greet(self, conversation: Conversation, enable_small_talk: bool) -> BotMessage:
+        " Gretting message. Update conversation"
+        # TODO: Implement. Add greetings as list in class attribute after reading from file?
+        # TODO: Enable small talk -> two different paths
+        if enable_small_talk:
+            text = "Hej och välkommen!"
+            return BotMessage(
+                lang=conversation.lang, text=text, response_time=0.1, is_hardcoded=True,
+            )
+        else:
+            # TODO: Transition into next block, i.e. first interview question, immediately
+            text = "Hej och välkommen! Vi börjar direkt med din intervju"
+            return BotMessage(
+                lang=conversation.lang, text=text, response_time=0.1, is_hardcoded=True,
+            )
