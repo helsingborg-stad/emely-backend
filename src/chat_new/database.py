@@ -7,6 +7,8 @@ from src.api.utils import is_gcp_instance
 
 
 class FirestoreHandler:
+    "Contains firestore connection and methods for creating, updating and retrieving data"
+
     def __init__(self):
         self._authenticate_firebase()
 
@@ -14,7 +16,7 @@ class FirestoreHandler:
         self.firestore_collection = self.firestore_client.collection("conversations")
 
     def _authenticate_firebase(self):
-        "Authenticates on firebase"
+        "Authenticates firebase"
         # TODO: Change projectId and api-key when moving this to new gcp project
         if is_gcp_instance():
             if not firebase_admin._apps:

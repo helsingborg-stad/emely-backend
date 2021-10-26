@@ -12,6 +12,7 @@ class MLModel:
         self.url = url
 
     def get_response(self, x):
+        ""
         assert self._check_input(x)
         inputs = self._format_input(x)
         r = requests.post(url=self.url, json=inputs)
@@ -20,6 +21,7 @@ class MLModel:
         return outputs
 
     def _check_input(self, x):
+        "Assures input is formatted correctly"
         # TODO: Implement. x should follow blenderbot format or just be a plain string if it's rasa
         return True
 
@@ -44,6 +46,8 @@ class HuggingfaceFika(MLModel):
 
 
 class InterviewModel(MLModel):
+    "Interfaces communication with the interview model"
+
     def __init__(self, url=interview_model_url):
         inference_url = url + "/inference"
         super().__init__(url=inference_url)
@@ -60,9 +64,16 @@ class InterviewModel(MLModel):
 
 
 class FikaModel(InterviewModel):
+    "Interfaces communication with the Fika model"
+
     def __init__(self, url=fika_model_url):
         super().__init__(url=url)
 
 
 class RasaModel(MLModel):
+    "Interfaces communication with the Rasa NLU model"
     pass
+
+    def get_response(self):
+        # TODO Implement some sort of timeout feature
+        pass
