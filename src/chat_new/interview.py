@@ -2,9 +2,9 @@ from data import Message, Conversation, UserMessage, BotMessage
 from models import InterviewModel, FikaModel
 
 tough_question_max_length = 5
-job_question_max_length = 3
 personal_question_max_length = 3
 general_question_max_length = 3
+small_talk_max_length = 3
 
 interview_model_context_length = 8
 fika_model_context_length = 8
@@ -31,13 +31,15 @@ class DialogFlowHandler:
                 conversation, max_length=tough_question_max_length
             )
 
-        elif current_dialog_block == "always":
+        elif current_dialog_block == "personal":
+            return self.question_block(
+                conversation, max_length=personal_question_max_length
+            )
+
+        elif current_dialog_block == "general":
             return self.question_block(
                 conversation, max_length=general_question_max_length
             )
-
-        elif current_dialog_block == "job":
-            return self.question_block(conversation, max_length=job_question_max_length)
 
         elif current_dialog_block == "smalltalk":
             return self.smalltalk_block(conversation)
@@ -50,16 +52,14 @@ class DialogFlowHandler:
         if len(conversation.question_list) > 0:
 
             new_question = conversation.question_list.pop(0)
+            text = new_question["transition"] + new_question["question"]
 
             # Update attributes
             conversation.current_dialog_block = new_question["label"]
             conversation.current_dialog_block_length = 0
 
             bot_message = BotMessage(
-                is_hardcoded=True,
-                lang=conversation.lang,
-                text=new_question["question"],
-                response_time=0,
+                is_hardcoded=True, lang=conversation.lang, text=text, response_time=0,
             )
 
             return bot_message
@@ -99,7 +99,7 @@ class DialogFlowHandler:
 
     def smalltalk_block(self, conversation: Conversation) -> BotMessage:
         "First block of small talk"
-        # TODO: Implement
+        # TODO: Implement. Use small_talk_max_length
         pass
 
     def goodbye_block(self, conversation: Conversation) -> BotMessage:

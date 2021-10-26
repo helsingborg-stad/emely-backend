@@ -25,8 +25,11 @@ class QuestionGenerator:
         # We only need to return a list of question strings
         # All of the remaining attributes are stored in the dataframe and can be
         question_list = [
-            {"question": "Varför har du sökt det här jobbet?", "label": "tough"},
-            {"question": "Hur är du som person?", "label": "personal"},
+            {
+                "question": "Varför har du sökt det här jobbet?",
+                "label": "tough",
+                "transition": "Om vi nu funderar på vad som motiverar dig.",
+            },
         ]
 
         return question_list
