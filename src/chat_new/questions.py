@@ -18,7 +18,8 @@ class QuestionGenerator:
         # TODO: Assert that the df is properly formatted?
         # All values should be proper and duplicated questions should have the same attributes
 
-    def get_interview_questions(self, job) -> List[str]:
+    def get_interview_questions(self, job) -> List[Dict[str, str]]:
+        "Returns list of dicts with keys question, label, transition"
         # TODO: Implement when excel doc is ready
         # Draw appropriate questions from self.question_df in semi-random order
 
@@ -33,21 +34,4 @@ class QuestionGenerator:
         ]
 
         return question_list
-
-    # def get_question_attributes(self, question: str) -> Dict:
-    #     """Used to retrieve the attributes to a question. Needed to identify the appropriate question block later
-
-    #     """
-
-    #     # Find row in self.question_df
-    #     question_attributes = self.question_df[self.question_df.question == question]
-
-    #     if len(question_attributes) == 0:
-    #         raise ValueError("Found no matching questions in question_df")
-
-    #     # Some questions are duplicated for several jobs. We'll pick the first
-    #     elif len(question_attributes) > 1:
-    #         question_attributes = question_attributes.loc[0]
-
-    #     return dict(question_attributes)
 

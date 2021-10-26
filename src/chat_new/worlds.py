@@ -121,6 +121,7 @@ class InterviewWorld:
     def handle_bot_reply(
         self, bot_message: BotMessage, conversation: Conversation
     ) -> Message:
+        "Translates BotMessage and converts it to a proper Message object"
 
         # First translate depending on which way we're going
         if bot_message.lang == "en":
@@ -147,6 +148,7 @@ class InterviewWorld:
         return message
 
     def call_rasa(self, message):
+        "Calls a rasa NLU model to identify certain questions"
         # TODO: Make async
         if rasa_enabled:
             # TODO: Implement with a timeout feature so it doesn't take too long

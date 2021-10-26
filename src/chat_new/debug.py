@@ -14,7 +14,7 @@ init = {
     "webapp_version": "null",
     "job": "debugger",
     "has_experience": True,
-    "enable_small_talk": True,
+    "enable_small_talk": False,
     "user_id": "123456",
 }
 

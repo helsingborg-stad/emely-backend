@@ -11,6 +11,8 @@ fika_model_context_length = 8
 
 
 class DialogFlowHandler:
+    "Object that encapsulates all methods relating to dialog flow"
+
     def __init__(self):
         self.interview_model = InterviewModel()
         self.fika_model = FikaModel()
@@ -48,7 +50,7 @@ class DialogFlowHandler:
             raise ValueError("Unknown dialog block")
 
     def transition_to_next_block(self, conversation: Conversation) -> BotMessage:
-        "Pops a new question or hardcoded message"
+        "Pops a new question or hardcoded message and moves into the next block"
         if len(conversation.question_list) > 0:
 
             new_question = conversation.question_list.pop(0)
