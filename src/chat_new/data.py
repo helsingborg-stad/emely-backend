@@ -165,6 +165,7 @@ class Conversation(BaseModel):
         emely_messages = [m.text_en for m in self.messages if m.who == "bot"]
         return emely_messages
 
+
     def get_last_two_messages(self) -> Dict[int, Message]:
         "Used before updating database since only two messages are new and need to be synced"
 

@@ -9,6 +9,7 @@ similarity_threshold = 0.9
 min_text_length = 10
 
 
+
 def contains_toxicity(message) -> bool:
     # TODO: Implement
     return False
@@ -101,3 +102,4 @@ def stitch_together_sentences(sentences: List[str], separators: List[str]) -> st
             stitched_text = stitched_text + sentences[i]
 
     return stitched_text
+
