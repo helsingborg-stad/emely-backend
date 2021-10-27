@@ -2,6 +2,7 @@ from data import Conversation, BotMessage
 import re
 from itertools import product
 from difflib import SequenceMatcher
+from typing import Tuple, List
 
 lies = ["i'm a stay at home mom"]
 similarity_threshold = 0.9
@@ -36,19 +37,12 @@ def is_to_repetitive(bot_message: BotMessage, conversation: Conversation) -> boo
         if len(previous_replies) == 0:
             return False
 
-        sentence_parts = re.split("([.?!])", bot_message.text)
-        if sentence_parts[-1] == "":
-            del sentence_parts[-1]
-
-        # We split the sentence parts into the words and the .?! signs
-        sentences = [sep for i, sep in enumerate(sentence_parts) if i % 2 == 0]
-        separators = [sep for i, sep in enumerate(sentence_parts) if i % 2 != 0]
+        sentences, separators = split_text_into_sentences(bot_message.text)
 
         # Split the previous sentences into
         previous_sentences = []
         for text in previous_replies:
-            raw_text_parts = re.split("[.?!]", text)
-            text_parts = [part for part in raw_text_parts if len(part) > 2]
+            text_parts, _ = split_text_into_sentences(text)
             previous_sentences.extend(text_parts)
 
         keep_idx = []
@@ -60,18 +54,17 @@ def is_to_repetitive(bot_message: BotMessage, conversation: Conversation) -> boo
             if max(ratios) < similarity_threshold:
                 keep_idx.append(i)
 
+        # Everything is kept
         if len(keep_idx) == len(sentences):
             return False
+        # Everything is removed
         elif len(keep_idx) == 0:
             return True
 
         # Stitch together sentence
-        new_reply = ""
-        for i in keep_idx:
-            try:
-                new_reply = new_reply + sentences[i] + separators[i] + " "
-            except IndexError:
-                new_reply = new_reply + sentences[i]
+        keep_sentences = [sentences[i] for i in keep_idx]
+        keep_separators = [separators[i] for i in keep_idx]
+        new_reply = stitch_together_sentences(keep_sentences, keep_separators)
 
         # Last check if it's too short
         if len(new_reply) > min_text_length:
@@ -80,3 +73,31 @@ def is_to_repetitive(bot_message: BotMessage, conversation: Conversation) -> boo
         else:
             return True
 
+
+def split_text_into_sentences(text: str) -> Tuple[List[str], List[str]]:
+    "Helper func. Splits a text on . ? and ! and returns a list with the sentences and the separators"
+
+    sentence_parts = re.split("([.?!])", text)
+    if sentence_parts[-1] == "":
+        del sentence_parts[-1]
+
+    # We split the sentence parts into the words and the .?! signs
+    sentences = [sep for i, sep in enumerate(sentence_parts) if i % 2 == 0]
+    separators = [sep for i, sep in enumerate(sentence_parts) if i % 2 != 0]
+
+    return (sentences, separators)
+
+
+def stitch_together_sentences(sentences: List[str], separators: List[str]) -> str:
+    "Helper func. Stitches together a list of sentence and separators into a string of sentences"
+    stitched_text = ""
+
+    for i in range(len(sentences)):
+        try:
+            stitched_text = stitched_text + sentences[i] + separators[i] + " "
+
+        # If the original text didn't end with a separator we can get an IndexError
+        except IndexError:
+            stitched_text = stitched_text + sentences[i]
+
+    return stitched_text
