@@ -45,7 +45,6 @@ class InterviewWorld:
         - Gets first message
         - Pushes data to firestore"""
         job = info.job
-        enable_small_talk = info.enable_small_talk
 
         question_list = self.question_generator.get_interview_questions(job)
 
@@ -62,7 +61,7 @@ class InterviewWorld:
         )
 
         # Get the first message
-        reply = self.dialog_flow_handler.greet(new_conversation, enable_small_talk)
+        reply = self.dialog_flow_handler.greet(new_conversation)
         reply = self.handle_bot_reply(reply, new_conversation)
 
         new_conversation.add_message(reply)
