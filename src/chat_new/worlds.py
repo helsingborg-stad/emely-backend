@@ -25,7 +25,7 @@ class InterviewWorld:
 
     def _set_environment(self):
         "Sets class attributes based on environment variables"
-        # TODO
+        # TODO:
         pass
 
     def wake_models(self):
@@ -149,9 +149,8 @@ class InterviewWorld:
 
     def call_rasa(self, message):
         "Calls a rasa NLU model to identify certain questions"
-        # TODO: Make async
+        # TODO: Make async and Implement with a timeout feature so it doesn't take too long
         if rasa_enabled:
-            # TODO: Implement with a timeout feature so it doesn't take too long
             pass
         else:
             return {"confidence": 0.0, "reply": "Hejsan tjosan"}
