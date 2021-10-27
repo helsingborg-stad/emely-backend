@@ -111,6 +111,9 @@ class QuestionGenerator:
     '''
     def get_last_question(self, alt_id) -> Dict[str,str]:
         temp_df = self.question_df[self.question_df.loc[:,'fit_as_last']==1]
+        # Make sure two random questions are not taken if only one is allowed
+        if self.nbr_random_questions==0 and self.nbr_personal_questions>0:
+            temp_df = temp_df[temp_df.personal==1]
         return self.get_random_question_from_df(temp_df, alt_id)
     
     '''
@@ -131,15 +134,18 @@ class QuestionGenerator:
     Retreive the appropriate label for a specific question
     '''
     def get_label(self, question_row) -> str:
-        if question_row.loc["tough"]==1:
+        if question_row.loc["always"]==1:
             self.nbr_always_questions -= 1
-            return "tough"
+            return "general"
         elif question_row.loc["personal"]==1:
             self.nbr_personal_questions -= 1
             return "personal"
         elif question_row.loc["job"]!="Allmän":
             self.nbr_job_questions -= 1
             return "job"
+        elif question_row.loc["tough"]==1:
+            self.nbr_random_questions -= 1
+            return "tough"
         else:
             self.nbr_random_questions -= 1
             return "general"
@@ -150,14 +156,16 @@ class QuestionGenerator:
     def discard_question(self, question_id):
         self.question_df = self.question_df[self.question_df.question_id != question_id]
 
-qg = QuestionGenerator()
-qlist = qg.get_interview_questions("Bartender")
-ii = 1
-for question in qlist:
-    if ii==1:
-        print(question["question"])
-    else:
-        print(question["transition"], question["question"])
-    print(question["label"])
-    print("")
-    ii += 1
+# Example generation
+if __name__ == "__main__":
+    qg = QuestionGenerator()
+    qlist = qg.get_interview_questions("Snickare")
+    ii = 1
+    for question in qlist:
+        if ii==1:
+            print(question["question"])
+        else:
+            print(question["transition"], question["question"])
+        print(question["label"])
+        print("")
+        ii += 1
