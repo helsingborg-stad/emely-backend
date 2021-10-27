@@ -5,7 +5,7 @@ from questions import QuestionGenerator
 from database import FirestoreHandler
 from data import ConversationInit, Conversation, Message, UserMessage, BotMessage
 
-from filters import contains_toxicity, is_to_repetitive
+from filters import contains_toxicity, is_too_repetitive
 
 # TODO: Override these with env variables in InterviewWorld._set_environment()
 rasa_threshold = 0.7
@@ -124,7 +124,7 @@ class InterviewWorld:
         "Translates BotMessage and converts it to a proper Message object"
 
         # Filters come here
-        if is_to_repetitive(bot_message, conversation):
+        if is_too_repetitive(bot_message, conversation):
             return self.dialog_flow_handler.transition_to_next_block(conversation)
 
         # First translate depending on which way we're going

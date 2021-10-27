@@ -14,7 +14,7 @@ def contains_toxicity(message) -> bool:
     return False
 
 
-def is_to_repetitive(bot_message: BotMessage, conversation: Conversation) -> bool:
+def is_too_repetitive(bot_message: BotMessage, conversation: Conversation) -> bool:
     """Modifies bot_message.text if it contains parts that are repetitive. 
     Will return True if it is too heavily modified and too little text is left.
 
