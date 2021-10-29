@@ -25,7 +25,22 @@ class InterviewWorld:
 
     def _set_environment(self):
         "Sets class attributes based on environment variables"
-        # TODO:
+        # TODO: Check if set, otherwise default to these values?
+        # Suggestions:
+        # LIE_FILTER, REPETITION_FILTER : turn on and off filters
+        # parameters for question_generator and dialog_flow (how many turns or questions etc)
+        # rasa_enabled and rasa_threshold
+        env = os.environ
+
+        ########## Filter parameters
+        if "LIE_FILTER" not in env:
+            env["LIE_FILTER"] = "1"
+            env["LIE_THRESHOLD"] = "0.9"
+
+        if "REPETITION_FILTER" not in env:
+            env["REPETITION_FILTER"] = "1"
+            os.environ["SIMILARITY_THRESHOLD"] = "0.9"
+
         pass
 
     def wake_models(self):
