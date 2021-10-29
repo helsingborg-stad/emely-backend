@@ -114,6 +114,8 @@ class DialogFlowHandler:
                 is_hardcoded=True,
             )
 
+            # TODO: Add filter for model_reply here. If it doesn't pass, return transition_to_next_block
+
             return reply
 
     def smalltalk_block(self, conversation: Conversation) -> BotMessage:
