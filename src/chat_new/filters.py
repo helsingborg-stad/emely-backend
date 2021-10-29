@@ -38,7 +38,9 @@ def is_too_repetitive(bot_message: BotMessage, conversation: Conversation) -> bo
 
     else:
         # What if we have a really long conversation? Is it okay to only check the latest X messages? Computation time can be a "problem" if we have a 40 message conversation
-        previous_replies = conversation.get_all_emely_messages()
+        previous_replies = conversation.get_emely_messages(
+            int(os.environ["N_MESSAGES_FOR_REPETITION_FILTER"])
+        )
         if len(previous_replies) == 0:
             return False
 
@@ -101,6 +103,13 @@ def remove_lies(bot_message: BotMessage) -> bool:
 
     keep_sentences = [sentences[i] for i in keep_idx]
     keep_separators = [separators[i] for i in keep_idx]
+
+    # Everything is kept
+    if len(keep_idx) == len(sentences):
+        return False
+    # Everything is removed
+    elif len(keep_idx) == 0:
+        return True
 
     new_reply = stitch_together_sentences(keep_sentences, keep_separators)
 

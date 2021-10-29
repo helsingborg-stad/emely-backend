@@ -160,11 +160,14 @@ class Conversation(BaseModel):
             exclude={"messages"}
         )  # Messags will be saved in sub collection
 
-    def get_all_emely_messages(self) -> List[str]:
+    def get_emely_messages(self, N=-1) -> List[str]:
         "Returns a list of all Messages uttered by Emely in english"
         emely_messages = [m.text_en for m in self.messages if m.who == "bot"]
-        return emely_messages
+        if N == -1 or N >= len(emely_messages):
+            return emely_messages
 
+        else:
+            return emely_messages[-N:]
 
     def get_last_two_messages(self) -> Dict[int, Message]:
         "Used before updating database since only two messages are new and need to be synced"

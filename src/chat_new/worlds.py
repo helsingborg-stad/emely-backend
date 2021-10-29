@@ -1,7 +1,7 @@
 import os
 from src.chat.translate import ChatTranslator
 from interview import DialogFlowHandler
-from questions import QuestionGenerator
+from hardcoded_messages.questions import QuestionGenerator
 from database import FirestoreHandler
 from data import ConversationInit, Conversation, Message, UserMessage, BotMessage
 
@@ -39,7 +39,8 @@ class InterviewWorld:
 
         if "REPETITION_FILTER" not in env:
             env["REPETITION_FILTER"] = "1"
-            os.environ["SIMILARITY_THRESHOLD"] = "0.9"
+            env["SIMILARITY_THRESHOLD"] = "0.9"
+            env["N_MESSAGES_FOR_REPETITION_FILTER"] = "8"
 
         pass
 
