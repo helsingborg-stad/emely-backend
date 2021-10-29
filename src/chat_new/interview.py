@@ -8,6 +8,7 @@ import random
 tough_question_max_length = 5
 personal_question_max_length = 3
 general_question_max_length = 3
+job_question_max_length = 3
 small_talk_max_length = 3
 
 interview_model_context_length = 8
@@ -29,32 +30,45 @@ class DialogFlowHandler:
 
         current_dialog_block = conversation.current_dialog_block
 
+        if conversation.episode_done:
+            return self.goodbye_block(conversation)
+
         if current_dialog_block == "greet":
             if conversation.enable_small_talk:
-                return self.smalltalk_block(conversation)
+                bot_message = self.smalltalk_block(conversation)
             else:
-                return self.transition_to_next_block(conversation)
+                bot_message = self.transition_to_next_block(conversation)
 
         elif current_dialog_block == "tough":
-            return self.question_block(
+            bot_message = self.question_block(
                 conversation, max_length=tough_question_max_length
             )
 
         elif current_dialog_block == "personal":
-            return self.question_block(
+            bot_message = self.question_block(
                 conversation, max_length=personal_question_max_length
             )
 
+        elif current_dialog_block == "job":
+            bot_message = self.question_block(
+                conversation, max_length=job_question_max_length
+            )
+
         elif current_dialog_block == "general":
-            return self.question_block(
+            bot_message = self.question_block(
                 conversation, max_length=general_question_max_length
             )
 
         elif current_dialog_block == "smalltalk":
-            return self.smalltalk_block(conversation)
+            bot_message = self.smalltalk_block(conversation)
 
         else:
             raise ValueError("Unknown dialog block")
+
+        # Increment dialog block length
+        conversation.current_dialog_block_length += 1
+
+        return bot_message
 
     def transition_to_next_block(self, conversation: Conversation) -> BotMessage:
         "Pops a new question or hardcoded message and moves into the next block"
@@ -82,8 +96,6 @@ class DialogFlowHandler:
         - transition to next block
         - update conversations attributes
             - progress
-            - current_dialog_block
-            - current_dialog_block_length
         """
 
         if conversation.current_dialog_block_length > max_length:
@@ -141,6 +153,7 @@ class DialogFlowHandler:
 
     def goodbye_block(self, conversation: Conversation) -> BotMessage:
         "Last block of the interview"
+        conversation.episode_done = True
         goodbye = random.choice(goodbyes.interview)
         reply = BotMessage(
             lang=conversation.lang, text=goodbye, response_time=0.0, is_hardcoded=True,
