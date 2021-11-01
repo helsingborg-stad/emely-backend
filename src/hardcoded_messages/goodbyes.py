@@ -1,6 +1,6 @@
 interview = [
-    "Tack för din tid, det var trevligt att få intervjua dig!",
-    "Nu är intervjun över. Tack för att du ville öva med mig!",
+    "Det var trevligt att intervjua dig och vi får prata mer vid ett senare tillfälle, men nu är intervjun slut. Tack för att du kunde vara med på den här intervjun!",
+    "Det var trevligt att intervjua dig och jag hoppas att vi kan prata mer senare. Nu är intervjun slut för idag, tack för att du kunde vara med!",
 ]
 
 fika = [
