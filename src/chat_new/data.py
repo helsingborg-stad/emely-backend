@@ -165,9 +165,9 @@ class Conversation(BaseModel):
         emely_messages = [m.text_en for m in self.messages if m.who == "bot"]
         if N == -1 or N >= len(emely_messages):
             return emely_messages
-
         else:
             return emely_messages[-N:]
+
 
     def get_last_two_messages(self) -> Dict[int, Message]:
         "Used before updating database since only two messages are new and need to be synced"
@@ -199,4 +199,10 @@ class Conversation(BaseModel):
 
     def get_nbr_messages(self) -> int:
         return len(self.messages)
+
+    def repeat_last_message(self) -> str:
+        "Repeats last message. Used when user says badword"
+        latest_emely_message = self.messages[-2]
+        assert latest_emely_message.who == "bot"
+        return latest_emely_message.text
 

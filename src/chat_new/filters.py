@@ -1,8 +1,9 @@
-from data import Conversation, BotMessage
+from data import Conversation, BotMessage, UserMessage
 import re
 from itertools import product
 from difflib import SequenceMatcher
 from typing import Tuple, List
+from hardcoded_messages.badwords import badwords
 import os
 
 lies = [
@@ -15,9 +16,16 @@ lies = [
 min_text_length = 10
 
 
-def contains_toxicity(message) -> bool:
-    # TODO: Implement
-    return False
+def contains_toxicity(user_message: UserMessage) -> bool:
+    """ Checks if any swedish badword is in the message """
+    # TODO: Call a deployed detoxify model on the translated user_message for better detection
+    if user_message.lang == "sv":
+        sentence = user_message.text.lower()
+        offensive = any([bad_word in sentence for bad_word in badwords])
+        return offensive
+
+    else:
+        return False
 
 
 def is_too_repetitive(bot_message: BotMessage, conversation: Conversation) -> bool:

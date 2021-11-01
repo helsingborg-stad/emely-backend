@@ -4,6 +4,7 @@ from interview import DialogFlowHandler
 from hardcoded_messages.questions import QuestionGenerator
 from database import FirestoreHandler
 from data import ConversationInit, Conversation, Message, UserMessage, BotMessage
+from hardcoded_messages.toxic_response import badword_response
 
 from filters import contains_toxicity
 
@@ -61,7 +62,6 @@ class InterviewWorld:
         - Gets first message
         - Pushes data to firestore"""
         job = info.job
-        enable_small_talk = info.enable_small_talk
 
         question_list = self.question_generator.get_interview_questions(job)
 
@@ -78,7 +78,7 @@ class InterviewWorld:
         )
 
         # Get the first message
-        reply = self.dialog_flow_handler.greet(new_conversation, enable_small_talk)
+        reply = self.dialog_flow_handler.greet(new_conversation)
         reply = self.handle_bot_reply(reply, new_conversation)
 
         new_conversation.add_message(reply)
@@ -111,8 +111,16 @@ class InterviewWorld:
         # Toxic messages are replied to without doing anything specific.
         # Emely will pretend like she didn't understand and repeat her previous statement
         if contains_toxicity(user_message):
-            # TODO: Handle this
-            reply = Message()
+            return Message(
+                is_hardcoded=True,
+                lang="sv",
+                response_time=0,
+                conversation_id=conversation.conversation_id,
+                message_nbr=-1,
+                text=conversation.repeat_last_message(),
+                text_en="You said a bad word to me",
+                progress=0,
+            )
 
         # If rasa detects something
         elif rasa_response["confidence"] >= rasa_threshold:
