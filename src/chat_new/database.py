@@ -64,7 +64,7 @@ class FirestoreHandler:
         return conversation
 
     def create(self, conversation):
-        # TODO: Use this during creat_new_conversation?
+        # TODO: Use this during create_new_conversation?
         # conversation_ref = self.firestore_collection.document()
         # conversation_ref.set(conversation.to_dict())
 

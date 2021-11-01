@@ -1,4 +1,4 @@
-interview_smalltalk = [
+interview_small_talk = [
     "Hej, {}! Välkommen till din intervju! Hur är det med dig?",
     "Hej {}, Emely heter jag och det är jag som ska intervjua dig. Hur är det med dig idag?",
     "Välkommen till din intervju {}! Jag heter Emely. Hur mår du idag?",
@@ -12,7 +12,7 @@ interview_smalltalk = [
     "Välkommen {} till denna intervju. Är allt bra med dig idag?",
 ]
 
-interview_no_smalltalk = [
+interview_no_small_talk = [
     "Hej! Välkommen till din intervju! Jag kommer att ställa några frågor till dig för att se om du passar för detta jobb. Känner du dig redo?",
     "Hej, jag heter Emely och det är jag som ska intervjua dig. Jag hoppas allt är bra med dig idag.",
     "Hej och välkommen till denna arbetsintervju. Jag heter Emely. Är du redo att börja intervjun?",

@@ -28,7 +28,6 @@ class DialogFlowHandler:
         """ All of the methods in this class should filter the the message 
             and possible return something appropirate (transition to next question?) 
             if it's too short or otherwise doesn't pass the filter"""
-        # TODO: Add filters at the end of this method? Env variables for activating them?
 
         current_dialog_block = conversation.current_dialog_block
 
@@ -37,7 +36,7 @@ class DialogFlowHandler:
 
         if current_dialog_block == "greet":
             if conversation.enable_small_talk:
-                bot_message = self.smalltalk_block(conversation)
+                bot_message = self.small_talk_block(conversation)
             else:
                 bot_message = self.transition_to_next_block(conversation)
 
@@ -61,8 +60,8 @@ class DialogFlowHandler:
                 conversation, max_length=general_question_max_length
             )
 
-        elif current_dialog_block == "smalltalk":
-            bot_message = self.smalltalk_block(conversation)
+        elif current_dialog_block == "small_talk":
+            bot_message = self.small_talk_block(conversation)
 
         else:
             raise ValueError("Unknown dialog block")
@@ -125,7 +124,7 @@ class DialogFlowHandler:
 
             return reply
 
-    def smalltalk_block(self, conversation: Conversation) -> BotMessage:
+    def small_talk_block(self, conversation: Conversation) -> BotMessage:
         "First block of small talk. Uses the fika model instead of the Interview Model"
         if conversation.current_dialog_block_length > small_talk_max_length:
             return self.transition_to_first_question(conversation)
@@ -145,7 +144,7 @@ class DialogFlowHandler:
             return reply
 
     def transition_to_first_question(self, conversation: Conversation) -> BotMessage:
-        "Should be used when transitioning from smalltalk to first question"
+        "Should be used when transitioning from small_talk to first question"
         new_question = conversation.question_list.pop(0)
         transition = random.choice(greetings.first_transition)
         text = transition + new_question["question"]
@@ -172,13 +171,13 @@ class DialogFlowHandler:
     def greet(self, conversation: Conversation) -> BotMessage:
         "Greeting message"
 
-        if conversation.enable_smalltalk:
-            greeting = random.choice(greetings.interview_smalltalk).format(
+        if conversation.enable_small_talk:
+            greeting = random.choice(greetings.interview_small_talk).format(
                 conversation.name
             )
 
         else:
-            greeting = random.choice(greetings.interview_no_smalltalk).format(
+            greeting = random.choice(greetings.interview_no_small_talk).format(
                 conversation.name
             )
 

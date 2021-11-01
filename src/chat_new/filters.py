@@ -18,7 +18,6 @@ min_text_length = 10
 
 def contains_toxicity(user_message: UserMessage) -> bool:
     """ Checks if any swedish badword is in the message """
-    # TODO: Call a deployed detoxify model on the translated user_message for better detection
     if user_message.lang == "sv":
         sentence = user_message.text.lower()
         offensive = any([bad_word in sentence for bad_word in badwords])
