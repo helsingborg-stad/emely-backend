@@ -1,6 +1,8 @@
 from data import Message, Conversation, UserMessage, BotMessage
 from models import InterviewModel, FikaModel
+from filters import is_too_repetitive, remove_lies
 from hardcoded_messages import greetings, goodbyes
+import logging
 
 import random
 
@@ -92,10 +94,10 @@ class DialogFlowHandler:
             return self.goodbye_block(conversation)
 
     def question_block(self, conversation: Conversation, max_length) -> BotMessage:
-        """Should handle:
-        - transition to next block
-        - update conversations attributes
-            - progress
+        """Handles a question_block by:
+        1. Checking if it's time to transition: true -> transition_to_next_block
+        2. Requests inference from interview model
+        3. Post filtering of model reply which can lead to transition_to_next_block if the filter makes it too short
         """
 
         if conversation.current_dialog_block_length > max_length:
@@ -113,8 +115,13 @@ class DialogFlowHandler:
                 response_time=response_time,
                 is_hardcoded=True,
             )
-
-            # TODO: Add filter for model_reply here. If it doesn't pass, return transition_to_next_block
+            # Post filtering of model replies
+            if is_too_repetitive(reply, conversation):
+                logging.warning("Early transition to next block due to repetitiveness")
+                return self.transition_to_next_block(conversation)
+            elif remove_lies(reply):
+                logging.warning("Early transition to next block due lying")
+                return self.transition_to_next_block(conversation)
 
             return reply
 

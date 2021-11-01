@@ -4,9 +4,15 @@ from itertools import product
 from difflib import SequenceMatcher
 from typing import Tuple, List
 from hardcoded_messages.badwords import badwords
+import os
 
-lies = ["i'm a stay at home mom"]
-similarity_threshold = 0.9
+lies = [
+    "do you have any hobbies?",
+    "i'm a stay at home mom",
+    "i'm unemployed",
+    "i'm just about to start my interview",
+    "thank you for your time",
+]
 min_text_length = 10
 
 
@@ -35,13 +41,14 @@ def is_too_repetitive(bot_message: BotMessage, conversation: Conversation) -> bo
     """
 
     # We only filter if it's an english utterance from the blenderbot
-    # TODO: is this a good enough condition?
     if bot_message.lang != "en":
         return False
 
     else:
         # What if we have a really long conversation? Is it okay to only check the latest X messages? Computation time can be a "problem" if we have a 40 message conversation
-        previous_replies = conversation.get_all_emely_messages()
+        previous_replies = conversation.get_emely_messages(
+            int(os.environ["N_MESSAGES_FOR_REPETITION_FILTER"])
+        )
         if len(previous_replies) == 0:
             return False
 
@@ -53,6 +60,7 @@ def is_too_repetitive(bot_message: BotMessage, conversation: Conversation) -> bo
             text_parts, _ = split_text_into_sentences(text)
             previous_sentences.extend(text_parts)
 
+        similarity_threshold = float(os.environ["SIMILARITY_THRESHOLD"])
         keep_idx = []
         # We loop over the sentences in bot_message and check how similar they are to previous sentences
         # idx is appended to keep_idx if the sentence is deemed okay to keep
@@ -80,6 +88,48 @@ def is_too_repetitive(bot_message: BotMessage, conversation: Conversation) -> bo
             return False
         else:
             return True
+
+
+def remove_lies(bot_message: BotMessage) -> bool:
+    "Removes lies (in english) "
+
+    # We don't do anything if message is in english, there are no lies or the filter is deactivated
+    if bot_message.lang != "en" and len(lies) != 0 and not os.environ["LIE_FILTER"]:
+        return False
+
+    sentences, separators = split_text_into_sentences(bot_message.text)
+
+    lie_threshold = float(os.environ["LIE_THRESHOLD"])
+
+    keep_idx = []
+    # Create combinations of sentences and lies and check if they are similar
+    for i in range(len(sentences)):
+        combos = list(product([sentences[i]], lies))
+        lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
+        if max(lie_probabilities) < lie_threshold:
+            keep_idx.append(i)
+
+    keep_sentences = [sentences[i] for i in keep_idx]
+    keep_separators = [separators[i] for i in keep_idx]
+
+    # Everything is kept
+    if len(keep_idx) == len(sentences):
+        return False
+    # Everything is removed
+    elif len(keep_idx) == 0:
+        return True
+
+    new_reply = stitch_together_sentences(keep_sentences, keep_separators)
+
+    # Last check if it's too short
+    if len(new_reply) > min_text_length:
+        bot_message.text = new_reply
+        return False
+    else:
+        return True
+
+
+# Method 2: Just remove if
 
 
 def split_text_into_sentences(text: str) -> Tuple[List[str], List[str]]:
