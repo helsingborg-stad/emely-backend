@@ -1,7 +1,12 @@
+import logging
 import requests
+from data import UserMessage
+from typing import Dict
+import os
 
 interview_model_url = "https://interview-model-ef5bmjer3q-ey.a.run.app"
 fika_model_url = "https://blender-90m-ef5bmjer3q-ey.a.run.app"
+rasa_nlu_url = "https://rasa-nlu-ef5bmjer3q-ey.a.run.app"
 
 
 class MLModel:
@@ -36,9 +41,11 @@ class MLModel:
         )
 
     def wake_up(self):
-        "Sends a dummy request to wake up GCP instance"
-        # TODO: ASync wake up call
-        pass
+        "Sends a request with a short timeout to wake up gcp instance"
+        try:
+            requests.get(url=self.model_url, timeout=0.01)
+        except:
+            logging.info(f"Sent wake up call to {type(self)} model")
 
 
 class HuggingfaceFika(MLModel):
@@ -72,8 +79,28 @@ class FikaModel(InterviewModel):
 
 class RasaModel(MLModel):
     "Interfaces communication with the Rasa NLU model"
-    pass
 
-    def get_response(self):
-        # TODO Implement some sort of timeout feature
-        pass
+    def __init__(self):
+        self.model_url = rasa_nlu_url
+        self.inference_url = self.model_url + "/model/parse"
+        self.dummy_reponse = {"id": "", "name": "", "confidence": 0}
+        self.enabled = os.environ.get("RASA_ENABLED", "0")
+
+    def get_response(self, user_message: UserMessage) -> Dict:
+        "Calls rasa model for NLU classification"
+        if not self.enabled:
+            return self.dummy_reponse
+
+        if user_message.lang == "sv":
+            text = user_message.text
+            try:
+                r = requests.post(
+                    url=self.inference_url, json={"text": text}, timeout=0.5
+                )
+                return r.json()["intent"]
+            except Exception as e:
+                print(e)
+                return self.dummy_reponse
+        else:
+            return self.dummy_reponse
+
