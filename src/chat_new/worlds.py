@@ -2,6 +2,7 @@ import os
 from src.chat.translate import ChatTranslator
 from interview import DialogFlowHandler
 from hardcoded_messages.questions import QuestionGenerator
+from hardcoded_messages import rasa
 from database import FirestoreHandler
 from data import ConversationInit, Conversation, Message, UserMessage, BotMessage
 from models import RasaModel
@@ -101,9 +102,9 @@ class InterviewWorld:
 
         # If rasa detects something
         elif rasa_response["confidence"] >= rasa_threshold:
-            # TODO: Set threshold using env variable?
-            # TODO: Make rasa_response['message'] a BotMessage
-            reply = BotMessage()
+            key = rasa_response["name"]
+            text = rasa.replies[key]
+            reply = BotMessage(is_hardcoded=True, lang="sv", text=text, response_time=0)
 
         # Let dialog flow handler act
         else:
