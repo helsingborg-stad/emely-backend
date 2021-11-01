@@ -1,5 +1,7 @@
 from data import ConversationInit, Conversation, UserMessage, Message
 from worlds import InterviewWorld
+import asyncio
+import time
 
 init = {
     "brain_url": "null",
@@ -12,7 +14,7 @@ init = {
     "webapp_local": True,
     "webapp_url": "null",
     "webapp_version": "null",
-    "job": "debugger",
+    "job": "Snickare",
     "has_experience": True,
     "enable_small_talk": False,
     "user_id": "123456",
@@ -21,52 +23,17 @@ init = {
 msg = {
     "created_at": "1999-01-01 00:00:00.000000",
     "lang": "sv",
-    "text": "Hej Emely",
+    "text": "Hej Emely jag har jobbat i många många år men jag är fortfarande inte redo för att ta en chefsposition",
     "recording_used": False,
     "response_time": 0.0,
 }
 
-question_list = [
-    {"question": "Varför har du sökt det här jobbet?", "label": "tough"},
-    {"question": "Hur är du som person?", "label": "personal"},
+msgs = [
+    "Hej Emely jag har jobbat i många många år men jag är fortfarande inte redo för att ta en chefsposition",
+    "jag älskar att hjälpa människor",
+    "nej jag har inte jobbat med det innan",
+    "är det viktigt att jag kommer i tid?",
 ]
-
-current_dialog_block = "tough"
-
-conversation_id = "0UNFqtlc73ya8oLCb9LJ"
-
-
-def test():
-    conversation_init = ConversationInit(**init)
-
-    c1 = Conversation(
-        current_dialog_block=current_dialog_block,
-        conversation_id=conversation_id,
-        episode_done=False,
-        question_list=question_list,
-        brain_url="a",
-        job="test",
-        name="test",
-        user_id="test",
-        user_ip_number="test",
-        webapp_url="test",
-        webapp_version="test",
-        lang="test",
-        created_at="test",
-        development_testing=True,
-        persona="test",
-        webapp_local=True,
-    )
-
-    c2 = Conversation(
-        **dict(conversation_init),
-        current_dialog_block=current_dialog_block,
-        conversation_id=conversation_id,
-        episode_done=False,
-        question_list=question_list,
-    )
-    return c2
-
 
 if __name__ == "__main__":
 
@@ -74,9 +41,13 @@ if __name__ == "__main__":
 
     conversation_init = ConversationInit(**init)
 
-    first_reply = world.create_new_conversation(conversation_init)
+    first_reply = asyncio.run(world.create_new_conversation(conversation_init))
     user_msg = UserMessage(**msg, conversation_id=first_reply.conversation_id)
 
-    for i in range(5):
-        reply = world.respond(user_msg)
-
+    t1 = time.time()
+    for i in range(2):
+        msg["text"] = msgs[i]
+        user_msg = UserMessage(**msg, conversation_id=first_reply.conversation_id)
+        reply = asyncio.run(world.respond(user_msg))
+    t2 = time.time()
+    print(t2 - t1)

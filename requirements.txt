@@ -9,6 +9,7 @@ uvicorn
 numpy
 pytest
 openpyxl
+aioify
 
 # external requirements
 click~=7.1.2

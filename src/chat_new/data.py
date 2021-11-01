@@ -113,6 +113,7 @@ class Conversation(BaseModel):
     current_dialog_block: str
     current_dialog_block_length: int
     development_testing: bool
+    enable_small_talk: bool
     episode_done: bool
     job: str
     lang: str
@@ -133,7 +134,6 @@ class Conversation(BaseModel):
 
     def add_message(self, message: Message):
         "Adds a message to the conversation"
-        # TODO: Enum for typing message
 
         self.nbr_messages += 1
         self.messages.append(message)
@@ -167,7 +167,6 @@ class Conversation(BaseModel):
             return emely_messages
         else:
             return emely_messages[-N:]
-
 
     def get_last_two_messages(self) -> Dict[int, Message]:
         "Used before updating database since only two messages are new and need to be synced"
