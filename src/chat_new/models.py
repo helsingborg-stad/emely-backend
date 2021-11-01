@@ -3,6 +3,8 @@ import requests
 from data import UserMessage
 from typing import Dict
 import os
+import aiohttp
+from utils import timer
 
 interview_model_url = "https://interview-model-ef5bmjer3q-ey.a.run.app"
 fika_model_url = "https://blender-90m-ef5bmjer3q-ey.a.run.app"
@@ -18,17 +20,11 @@ class MLModel:
 
     def get_response(self, x):
         ""
-        assert self._check_input(x)
         inputs = self._format_input(x)
         r = requests.post(url=self.url, json=inputs)
         outputs = self._format_outputs(r)
 
         return outputs
-
-    def _check_input(self, x):
-        "Assures input is formatted correctly"
-        # TODO: Implement. x should follow blenderbot format or just be a plain string if it's rasa
-        return True
 
     def _format_input(self, x):
         raise NotImplementedError(
@@ -86,7 +82,7 @@ class RasaModel(MLModel):
         self.dummy_reponse = {"id": "", "name": "", "confidence": 0}
         self.enabled = os.environ.get("RASA_ENABLED", "0")
 
-    def get_response(self, user_message: UserMessage) -> Dict:
+    async def get_response(self, user_message: UserMessage) -> Dict:
         "Calls rasa model for NLU classification"
         if not self.enabled:
             return self.dummy_reponse
@@ -94,10 +90,12 @@ class RasaModel(MLModel):
         if user_message.lang == "sv":
             text = user_message.text
             try:
-                r = requests.post(
-                    url=self.inference_url, json={"text": text}, timeout=0.5
-                )
-                return r.json()["intent"]
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        url=self.inference_url, json={"text": text}, timeout=0.5
+                    ) as resp:
+                        r = await resp.json()
+                return r["intent"]
             except Exception as e:
                 print(e)
                 return self.dummy_reponse

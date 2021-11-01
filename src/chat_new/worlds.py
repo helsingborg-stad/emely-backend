@@ -1,5 +1,5 @@
 import os
-from src.chat.translate import ChatTranslator
+from translator import ChatTranslator
 from interview import DialogFlowHandler
 from hardcoded_messages.questions import QuestionGenerator
 from hardcoded_messages import rasa
@@ -8,7 +8,6 @@ from data import ConversationInit, Conversation, Message, UserMessage, BotMessag
 from models import RasaModel
 from database import FirestoreHandler
 from data import ConversationInit, Conversation, Message, UserMessage, BotMessage
-from hardcoded_messages.toxic_response import badword_response
 
 from filters import contains_toxicity
 
@@ -59,7 +58,7 @@ class InterviewWorld:
         self.dialog_flow_handler.fika_model.wake_up()
         return
 
-    def create_new_conversation(self, info: ConversationInit):
+    async def create_new_conversation(self, info: ConversationInit):
         """Creates a new conversation
         - Sets current_dialog_block to either intro or first question depending on parameter in info! Default to False
         - Generates questions
@@ -83,7 +82,7 @@ class InterviewWorld:
 
         # Get the first message
         reply = self.dialog_flow_handler.greet(new_conversation)
-        reply = self.handle_bot_reply(reply, new_conversation)
+        reply = await self.handle_bot_reply(reply, new_conversation)
 
         new_conversation.add_message(reply)
         self.database_handler.update(
@@ -92,21 +91,22 @@ class InterviewWorld:
 
         return reply
 
-    def respond(self, user_message: UserMessage):
+    async def respond(self, user_message: UserMessage):
         " Responds to user"
-        # TODO: Make calls async to save time!
-
-        # Fetch conversation data from firestore
-        conversation = self.database_handler.get_conversation(
-            user_message.conversation_id
-        )
-
         # Call rasa
-        rasa_response = self.rasa_model.get_response(user_message)
+        # TODO: ASync
+        rasa_response = await self.rasa_model.get_response(user_message)
 
         # Translate
-        text_en = self.translator.translate(
+        # TODO: ASync?
+        text_en = await self.translator.translate(
             text=user_message.text, src=user_message.lang, target="en"
+        )
+
+        # Fetch conversation data from firestore
+        # TODO: ASync
+        conversation = self.database_handler.get_conversation(
+            user_message.conversation_id
         )
 
         # Add usermessage to conversation
@@ -127,17 +127,21 @@ class InterviewWorld:
             )
 
         # If rasa detects something
-        elif rasa_response["confidence"] >= rasa_threshold:
+        elif (
+            rasa_response["confidence"] >= rasa_threshold
+            and rasa_response["name"] in rasa.replies.keys()
+        ):
             key = rasa_response["name"]
             text = rasa.replies[key]
             reply = BotMessage(is_hardcoded=True, lang="sv", text=text, response_time=0)
 
         # Let dialog flow handler act
         else:
+            # TODO: ASync
             reply = self.dialog_flow_handler.act(conversation)
 
         # Translate reply depending on if it was hardcoded or not
-        reply = self.handle_bot_reply(reply, conversation)
+        reply = await self.handle_bot_reply(reply, conversation)
 
         # Add reply to conversation
         conversation.add_message(reply)
@@ -146,7 +150,7 @@ class InterviewWorld:
         self.database_handler.update(conversation)
         return reply
 
-    def handle_bot_reply(
+    async def handle_bot_reply(
         self, bot_message: BotMessage, conversation: Conversation
     ) -> Message:
         "Translates BotMessage and converts it to a proper Message object"
@@ -154,13 +158,13 @@ class InterviewWorld:
         # First translate depending on which way we're going
         if bot_message.lang == "en":
             text_en = bot_message.text
-            text = self.translator.translate(
+            text = await self.translator.translate(
                 text=text_en, src="en", target=conversation.lang
             )
         else:
             # TODO: Hardcoded phrases will be translated often. Add dictionary for them?
             text = bot_message.text
-            text_en = self.translator.translate(
+            text_en = await self.translator.translate(
                 text=text, src=bot_message.lang, target="en"
             )
 
