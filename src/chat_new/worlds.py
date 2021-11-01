@@ -6,6 +6,9 @@ from hardcoded_messages import rasa
 from database import FirestoreHandler
 from data import ConversationInit, Conversation, Message, UserMessage, BotMessage
 from models import RasaModel
+from database import FirestoreHandler
+from data import ConversationInit, Conversation, Message, UserMessage, BotMessage
+from hardcoded_messages.toxic_response import badword_response
 
 from filters import contains_toxicity
 
@@ -28,7 +31,23 @@ class InterviewWorld:
 
     def _set_environment(self):
         "Sets class attributes based on environment variables"
-        # TODO:
+        # TODO: Check if set, otherwise default to these values?
+        # Suggestions:
+        # LIE_FILTER, REPETITION_FILTER : turn on and off filters
+        # parameters for question_generator and dialog_flow (how many turns or questions etc)
+        # rasa_enabled and rasa_threshold
+        env = os.environ
+
+        ########## Filter parameters
+        if "LIE_FILTER" not in env:
+            env["LIE_FILTER"] = "1"
+            env["LIE_THRESHOLD"] = "0.9"
+
+        if "REPETITION_FILTER" not in env:
+            env["REPETITION_FILTER"] = "1"
+            env["SIMILARITY_THRESHOLD"] = "0.9"
+            env["N_MESSAGES_FOR_REPETITION_FILTER"] = "8"
+
         pass
 
     def wake_models(self):
@@ -47,7 +66,6 @@ class InterviewWorld:
         - Gets first message
         - Pushes data to firestore"""
         job = info.job
-        enable_small_talk = info.enable_small_talk
 
         question_list = self.question_generator.get_interview_questions(job)
 
@@ -64,7 +82,7 @@ class InterviewWorld:
         )
 
         # Get the first message
-        reply = self.dialog_flow_handler.greet(new_conversation, enable_small_talk)
+        reply = self.dialog_flow_handler.greet(new_conversation)
         reply = self.handle_bot_reply(reply, new_conversation)
 
         new_conversation.add_message(reply)
@@ -97,8 +115,16 @@ class InterviewWorld:
         # Toxic messages are replied to without doing anything specific.
         # Emely will pretend like she didn't understand and repeat her previous statement
         if contains_toxicity(user_message):
-            # TODO: Handle this
-            reply = Message()
+            return Message(
+                is_hardcoded=True,
+                lang="sv",
+                response_time=0,
+                conversation_id=conversation.conversation_id,
+                message_nbr=-1,
+                text=conversation.repeat_last_message(),
+                text_en="You said a bad word to me",
+                progress=0,
+            )
 
         # If rasa detects something
         elif rasa_response["confidence"] >= rasa_threshold:
