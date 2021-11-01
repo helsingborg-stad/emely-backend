@@ -1,9 +1,10 @@
 import os
 from src.chat.translate import ChatTranslator
 from interview import DialogFlowHandler
-from questions import QuestionGenerator
+from hardcoded_messages.questions import QuestionGenerator
 from database import FirestoreHandler
 from data import ConversationInit, Conversation, Message, UserMessage, BotMessage
+from models import RasaModel
 
 from filters import contains_toxicity
 
@@ -21,7 +22,8 @@ class InterviewWorld:
         self.question_generator = QuestionGenerator()
         self.dialog_flow_handler = DialogFlowHandler()
         self.database_handler = FirestoreHandler()
-        self.rasa_model = "https://rasa-nlu-ef5bmjer3q-ey.a.run.app"
+        self.rasa_model = RasaModel()
+        self.wake_models()
 
     def _set_environment(self):
         "Sets class attributes based on environment variables"
@@ -32,10 +34,9 @@ class InterviewWorld:
         """Wakes all MLModels. 
         Can be coupled with an API endpoint in the webserver so front end can wake everything 
         """
-        # TODO
-        # self.interview_model.wake_up()
-        # self.fika_model.wake_up()
-        # self.rasa_model.wake_up()
+        self.rasa_model.wake_up()
+        self.dialog_flow_handler.interview_model.wake_up()
+        self.dialog_flow_handler.fika_model.wake_up()
         return
 
     def create_new_conversation(self, info: ConversationInit):
@@ -82,7 +83,7 @@ class InterviewWorld:
         )
 
         # Call rasa
-        rasa_response = self.call_rasa(user_message)
+        rasa_response = self.rasa_model.get_response(user_message)
 
         # Translate
         text_en = self.translator.translate(
@@ -147,10 +148,3 @@ class InterviewWorld:
 
         return message
 
-    def call_rasa(self, message):
-        "Calls a rasa NLU model to identify certain questions"
-        # TODO: Make async and Implement with a timeout feature so it doesn't take too long
-        if rasa_enabled:
-            pass
-        else:
-            return {"confidence": 0.0, "reply": "Hejsan tjosan"}
