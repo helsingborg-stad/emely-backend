@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict
 import datetime
 from dataclasses import asdict
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # TODO: Remove progress from message classes. Keep in Conversation. Still send back to webapp
 
@@ -23,7 +23,7 @@ class UserMessage(BaseModel):
                 "created_at": "1999-01-01 00:00:00.000000",
                 "conversation_id": "123456789",
                 "lang": "sv",
-                "message": "Hej Emely",
+                "text": "Hej Emely",
                 "recording_used": False,
                 "response_time": 0.0,
             }
@@ -78,10 +78,10 @@ class ConversationInit(BaseModel):
     webapp_url: str
     webapp_version: str
 
-    job: Optional[str] = None
-    has_experience: Optional[bool] = True
-    enable_small_talk: Optional[bool] = True
-    user_id: Optional[str] = None
+    job: Optional[str] = Field(None, title="job for interview conversation")
+    has_experience: Optional[bool] = Field(True, title="If user has work experience")
+    enable_small_talk: Optional[bool] = Field(True, title="enables small talk")
+    user_id: Optional[str] = Field(None, title="user id")
 
     class Config:
         """ Default values sent when testing through swagger docs """
@@ -98,7 +98,7 @@ class ConversationInit(BaseModel):
                 "webapp_local": True,
                 "webapp_url": "null",
                 "webapp_version": "null",
-                "job": None,
+                "job": "Snickare",
                 "has_experience": True,
                 "enable_small_talk": True,
                 "user_id": None,
@@ -122,7 +122,7 @@ class Conversation(BaseModel):
     nbr_messages: int
     persona: str
     question_list: List
-    user_id: str
+    user_id: Optional[str] = Field(None)
     user_ip_number: str
     webapp_local: bool
     webapp_url: str

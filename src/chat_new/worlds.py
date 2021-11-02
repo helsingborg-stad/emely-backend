@@ -1,6 +1,7 @@
 import os
 from translator import ChatTranslator
 from interview import InterviewFlowHandler
+from fika import FikaFlowHandler
 from hardcoded_messages.questions import QuestionGenerator
 from hardcoded_messages import rasa
 from database import FirestoreHandler
@@ -99,7 +100,7 @@ class DialogWorld:
 
         return reply
 
-    async def interview_respond(self, user_message: UserMessage):
+    async def interview_reply(self, user_message: UserMessage):
         " Responds to user in an interview"
         # Call rasa
         # TODO: ASync
