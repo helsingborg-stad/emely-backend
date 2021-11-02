@@ -67,16 +67,12 @@ class Message(BaseModel):
 
 class ConversationInit(BaseModel):
     "Defines JSON schema for init requests"
-    brain_url: str
     created_at: str
     development_testing: bool
     lang: str
     name: str
     persona: str
     user_ip_number: str
-    webapp_local: bool
-    webapp_url: str
-    webapp_version: str
 
     job: Optional[str] = Field(None, title="job for interview conversation")
     has_experience: Optional[bool] = Field(True, title="If user has work experience")
@@ -108,7 +104,6 @@ class ConversationInit(BaseModel):
 
 class Conversation(BaseModel):
     "Dataclass with information about a conversation"
-    brain_url: str
     created_at: str
     current_dialog_block: str
     current_dialog_block_length: int
@@ -124,9 +119,6 @@ class Conversation(BaseModel):
     question_list: List
     user_id: Optional[str] = Field(None)
     user_ip_number: str
-    webapp_local: bool
-    webapp_url: str
-    webapp_version: str
 
     # Default values
     conversation_id: str = None  # Is set first when we've pushed to firestore so it has to be None at initialisation
