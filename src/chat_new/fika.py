@@ -60,7 +60,7 @@ class FikaFlowHandler:
     def greet(self, conversation: Conversation):
         name = conversation.name
         if name == "":
-            greeting = random.choice(greetings)
+            greeting = random.choice(greetings.fika)
         else:
             greeting = random.choice(greetings.fika_name_formatted).format(name)
         return BotMessage(
