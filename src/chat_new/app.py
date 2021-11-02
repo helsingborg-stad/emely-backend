@@ -65,6 +65,11 @@ async def fika(user_message: UserMessage, response: Response):
         return response
 
 
+@app.get("/joblist")
+def get_joblist():
+    return {"occupations": world.question_generator.get_job_list()}
+
+
 if __name__ == "__main__":
     uvicorn.run(app, log_level="warning")
 
