@@ -39,3 +39,13 @@ fika_name_formatted = [
     "Hej {}, vad fint att kunna få ta en virtuell fika med dig. Hur är läget?",
     "Goddag {}, mitt namn är Emely. Hur står det till med dig idag?",
 ]
+
+fika = [
+    "Hej, jag heter Emely! Hur är det med dig?",
+    "Hej! Mitt namn är Emely. Vad vill du prata om idag?",
+    "Hejsan! Berätta något om dig själv!",
+    "Trevligt att träffas, jag heter Emely. Hur är läget med dig idag?",
+    "Hej, jag heter Emely. Vad trevligt att du ville prata med mig. Hur mår du idag?",
+    "Hej, vad fint att kunna få ta en virtuell fika med dig. Hur är läget?",
+    "Hej. Hoppas allt är bra med dig. Jag heter Emely. Vad är du sugen på att prata om?",
+]

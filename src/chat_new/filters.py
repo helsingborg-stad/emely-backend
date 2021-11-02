@@ -13,7 +13,7 @@ lies = [
     "i'm just about to start my interview",
     "thank you for your time",
 ]
-min_text_length = 10
+min_text_length = 4
 
 
 def contains_toxicity(user_message: UserMessage) -> bool:
