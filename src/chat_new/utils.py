@@ -1,5 +1,6 @@
 import functools
 import time
+import socket
 
 
 def timer(func):
@@ -13,3 +14,12 @@ def timer(func):
         return value
 
     return wrapper_timer
+
+
+def is_gcp_instance():
+    """ Returns true if we're running on a GCP instance. Used for automatic authorization """
+    try:
+        socket.getaddrinfo("metadata.google.internal", 80)
+    except socket.gaierror:
+        return False
+    return True
