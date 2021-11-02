@@ -17,7 +17,7 @@ interview_model_context_length = 8
 fika_model_context_length = 8
 
 
-class DialogFlowHandler:
+class InterviewFlowHandler:
     "Object that encapsulates all methods relating to dialog flow"
 
     def __init__(self):

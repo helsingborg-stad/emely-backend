@@ -1,6 +1,6 @@
 import os
 from translator import ChatTranslator
-from interview import DialogFlowHandler
+from interview import InterviewFlowHandler
 from hardcoded_messages.questions import QuestionGenerator
 from hardcoded_messages import rasa
 from database import FirestoreHandler
@@ -23,7 +23,7 @@ class DialogWorld:
 
         self.translator = ChatTranslator()
         self.question_generator = QuestionGenerator()
-        self.interview_flow_handler = DialogFlowHandler()
+        self.interview_flow_handler = InterviewFlowHandler()
         self.fika_flow_handler = FikaFlowHandler()
         self.database_handler = FirestoreHandler()
         self.rasa_model = RasaModel()
