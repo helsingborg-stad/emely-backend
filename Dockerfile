@@ -8,7 +8,6 @@ RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./src /src
-COPY emelybrainapi-33194bec3069.json /emelybrainapi-33194bec3069.json
 
 WORKDIR /src/chat_new/
 
