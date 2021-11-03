@@ -11,7 +11,7 @@ from data import ConversationInit, Conversation, Message, UserMessage, BotMessag
 
 from filters import contains_toxicity
 
-# TODO: Override these with env variables in InterviewWorld._set_environment()
+# TODO: Override these with env variables in DialogWorld._set_environment()
 rasa_threshold = 0.7
 rasa_enabled = False
 
