@@ -1,5 +1,5 @@
-from data import ConversationInit, Conversation, UserMessage, Message
-from worlds import DialogWorld
+from chat.data.types import ConversationInit, Conversation, UserMessage, Message
+from chat.dialog.worlds import DialogWorld
 import asyncio
 import time
 

@@ -1,6 +1,5 @@
 from typing import List, Optional, Dict
 import datetime
-from dataclasses import asdict
 from pydantic import BaseModel, Field
 
 # TODO: Remove progress from message classes. Keep in Conversation. Still send back to webapp

@@ -1,9 +1,9 @@
-from data import Conversation, BotMessage, UserMessage
+from chat.data.types import Conversation, BotMessage, UserMessage
 import re
 from itertools import product
 from difflib import SequenceMatcher
 from typing import Tuple, List
-from hardcoded_messages.badwords import badwords
+from chat.hardcoded_messages.badwords import badwords
 import os
 
 lies = [

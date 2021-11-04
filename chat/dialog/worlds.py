@@ -1,16 +1,22 @@
 import os
-from translator import ChatTranslator
-from interview import InterviewFlowHandler
-from fika import FikaFlowHandler
-from hardcoded_messages.questions import QuestionGenerator
-from hardcoded_messages import rasa
-from database import FirestoreHandler
-from data import ConversationInit, Conversation, Message, UserMessage, BotMessage
-from models import RasaModel
-from database import FirestoreHandler
-from data import ConversationInit, Conversation, Message, UserMessage, BotMessage
+from chat.translate.translator import ChatTranslator
+from chat.fika.flow import FikaFlowHandler
 
-from filters import contains_toxicity
+from chat.interview.flow import InterviewFlowHandler
+from chat.interview.questions import QuestionGenerator
+
+from chat.data.database import FirestoreHandler
+from chat.data.types import (
+    ConversationInit,
+    Conversation,
+    Message,
+    UserMessage,
+    BotMessage,
+)
+
+from chat.hardcoded_messages import rasa
+from chat.dialog.models import RasaModel
+from chat.dialog.filters import contains_toxicity
 
 # TODO: Override these with env variables in DialogWorld._set_environment()
 rasa_threshold = 0.7
@@ -48,8 +54,6 @@ class DialogWorld:
             env["REPETITION_FILTER"] = "1"
             env["SIMILARITY_THRESHOLD"] = "0.9"
             env["N_MESSAGES_FOR_REPETITION_FILTER"] = "8"
-
-        pass
 
     def wake_models(self):
         """Wakes all MLModels. 

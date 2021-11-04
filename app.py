@@ -2,8 +2,8 @@ from fastapi import FastAPI, Response, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import uvicorn
-from data import ConversationInit, UserMessage, Message
-from worlds import DialogWorld
+from chat.data.types import ConversationInit, UserMessage, Message
+from chat.dialog.worlds import DialogWorld
 
 
 logging.basicConfig(level=logging.NOTSET)

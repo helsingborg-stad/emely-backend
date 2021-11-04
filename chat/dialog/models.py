@@ -1,10 +1,10 @@
 import logging
 import requests
-from data import UserMessage
+from chat.data.types import UserMessage
 from typing import Dict
 import os
 import aiohttp
-from utils import timer
+from chat.utils import timer
 
 interview_model_url = "https://interview-model-ef5bmjer3q-ey.a.run.app"
 fika_model_url = "https://blender-90m-ef5bmjer3q-ey.a.run.app"

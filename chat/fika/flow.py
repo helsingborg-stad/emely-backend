@@ -1,7 +1,6 @@
-from data import Message, Conversation, UserMessage, BotMessage
-from models import InterviewModel, FikaModel
-from filters import is_too_repetitive, remove_lies
-from hardcoded_messages import greetings, goodbyes
+from chat.data.types import Conversation, BotMessage
+from chat.dialog.models import FikaModel
+from chat.hardcoded_messages import greetings, goodbyes
 import logging
 
 import random

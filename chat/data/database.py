@@ -1,9 +1,9 @@
-from data import Conversation, Message
+from chat.data.types import Conversation, Message
 import firebase_admin
 from firebase_admin import credentials, firestore
 from pathlib import Path
 
-from utils import is_gcp_instance
+from chat.utils import is_gcp_instance
 
 
 class FirestoreHandler:
