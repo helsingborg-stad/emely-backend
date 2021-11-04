@@ -3,7 +3,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from pathlib import Path
 
-from src.api.utils import is_gcp_instance
+from utils import is_gcp_instance
 
 
 class FirestoreHandler:

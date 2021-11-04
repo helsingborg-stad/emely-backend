@@ -10,6 +10,7 @@ numpy
 pytest
 openpyxl
 aioify
+aiohttp
 
 # external requirements
 click~=7.1.2

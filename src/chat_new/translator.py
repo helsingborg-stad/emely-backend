@@ -3,7 +3,7 @@ from google.cloud import translate_v2 as translate
 import os
 from pathlib import Path
 import re
-from src.api.utils import is_gcp_instance
+from utils import is_gcp_instance
 from utils import timer
 from aioify import aioify
 

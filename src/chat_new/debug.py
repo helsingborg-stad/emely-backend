@@ -1,5 +1,5 @@
 from data import ConversationInit, Conversation, UserMessage, Message
-from worlds import InterviewWorld
+from worlds import DialogWorld
 import asyncio
 import time
 
@@ -33,11 +33,13 @@ msgs = [
     "jag älskar att hjälpa människor",
     "nej jag har inte jobbat med det innan",
     "är det viktigt att jag kommer i tid?",
+    "Jag är bra kollega",
+    "Jag vill ha hög lön",
 ]
 
 if __name__ == "__main__":
 
-    world = InterviewWorld()
+    world = DialogWorld()
 
     conversation_init = ConversationInit(**init)
 
@@ -45,9 +47,12 @@ if __name__ == "__main__":
     user_msg = UserMessage(**msg, conversation_id=first_reply.conversation_id)
 
     t1 = time.time()
-    for i in range(2):
+    loop = asyncio.new_event_loop()
+    for i in range(5):
         msg["text"] = msgs[i]
         user_msg = UserMessage(**msg, conversation_id=first_reply.conversation_id)
-        reply = asyncio.run(world.respond(user_msg))
+        reply = loop.run_until_complete(world.interview_reply(user_msg))
+
+    loop.close()
     t2 = time.time()
     print(t2 - t1)

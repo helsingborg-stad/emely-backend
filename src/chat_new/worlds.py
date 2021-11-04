@@ -1,6 +1,7 @@
 import os
 from translator import ChatTranslator
-from interview import DialogFlowHandler
+from interview import InterviewFlowHandler
+from fika import FikaFlowHandler
 from hardcoded_messages.questions import QuestionGenerator
 from hardcoded_messages import rasa
 from database import FirestoreHandler
@@ -16,14 +17,15 @@ rasa_threshold = 0.7
 rasa_enabled = False
 
 
-class InterviewWorld:
+class DialogWorld:
     def __init__(self):
         # Set class attributes
         self._set_environment()
 
         self.translator = ChatTranslator()
         self.question_generator = QuestionGenerator()
-        self.dialog_flow_handler = DialogFlowHandler()
+        self.interview_flow_handler = InterviewFlowHandler()
+        self.fika_flow_handler = FikaFlowHandler()
         self.database_handler = FirestoreHandler()
         self.rasa_model = RasaModel()
         self.wake_models()
@@ -54,8 +56,8 @@ class InterviewWorld:
         Can be coupled with an API endpoint in the webserver so front end can wake everything 
         """
         self.rasa_model.wake_up()
-        self.dialog_flow_handler.interview_model.wake_up()
-        self.dialog_flow_handler.fika_model.wake_up()
+        self.interview_flow_handler.interview_model.wake_up()
+        self.interview_flow_handler.fika_model.wake_up()
         return
 
     async def create_new_conversation(self, info: ConversationInit):
@@ -64,9 +66,12 @@ class InterviewWorld:
         - Generates questions
         - Gets first message
         - Pushes data to firestore"""
-        job = info.job
-
-        question_list = self.question_generator.get_interview_questions(job)
+        persona = info.persona
+        if persona == "intervju":
+            job = info.job
+            question_list = self.question_generator.get_interview_questions(job)
+        elif persona == "fika":
+            question_list = []
 
         conversation_id = self.database_handler.get_new_conversation_id()
         new_conversation = Conversation(
@@ -81,8 +86,12 @@ class InterviewWorld:
         )
 
         # Get the first message
-        reply = self.dialog_flow_handler.greet(new_conversation)
-        reply = await self.handle_bot_reply(reply, new_conversation)
+        if persona == "intervju":
+            reply = self.interview_flow_handler.greet(new_conversation)
+            reply = await self.handle_bot_reply(reply, new_conversation)
+        elif persona == "fika":
+            reply = self.fika_flow_handler.greet(new_conversation)
+            reply = await self.handle_bot_reply(reply, new_conversation)
 
         new_conversation.add_message(reply)
         self.database_handler.update(
@@ -91,8 +100,8 @@ class InterviewWorld:
 
         return reply
 
-    async def respond(self, user_message: UserMessage):
-        " Responds to user"
+    async def interview_reply(self, user_message: UserMessage):
+        " Responds to user in an interview"
         # Call rasa
         # TODO: ASync
         rasa_response = await self.rasa_model.get_response(user_message)
@@ -138,7 +147,50 @@ class InterviewWorld:
         # Let dialog flow handler act
         else:
             # TODO: ASync
-            reply = self.dialog_flow_handler.act(conversation)
+            reply = self.interview_flow_handler.act(conversation)
+
+        # Translate reply depending on if it was hardcoded or not
+        reply = await self.handle_bot_reply(reply, conversation)
+
+        # Add reply to conversation
+        conversation.add_message(reply)
+        # Update firestore with conversation and send back message to front end
+
+        self.database_handler.update(conversation)
+        return reply
+
+    async def fika_reply(self, user_message: UserMessage):
+        "Responds to user during fika"
+        # Translate
+        # TODO: ASync?
+        text_en = await self.translator.translate(
+            text=user_message.text, src=user_message.lang, target="en"
+        )
+
+        # Fetch conversation data from firestore
+        # TODO: ASync
+        conversation = self.database_handler.get_conversation(
+            user_message.conversation_id
+        )
+
+        # Add usermessage to conversation
+        conversation.add_user_message(user_message, text_en)
+
+        # Toxic messages are replied to without doing anything specific.
+        # Emely will pretend like she didn't understand and repeat her previous statement
+        if contains_toxicity(user_message):
+            return Message(
+                is_hardcoded=True,
+                lang="sv",
+                response_time=0,
+                conversation_id=conversation.conversation_id,
+                message_nbr=-1,
+                text=conversation.repeat_last_message(),
+                text_en="You said a bad word to me",
+                progress=0,
+            )
+        else:
+            reply = self.fika_flow_handler.act(conversation)
 
         # Translate reply depending on if it was hardcoded or not
         reply = await self.handle_bot_reply(reply, conversation)
