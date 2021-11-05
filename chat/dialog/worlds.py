@@ -98,9 +98,7 @@ class DialogWorld:
             reply = await self.handle_bot_reply(reply, new_conversation)
 
         new_conversation.add_message(reply)
-        self.database_handler.update(
-            new_conversation
-        )  # TODO Call create instead of update when it's implemented
+        self.database_handler.create(new_conversation)
 
         return reply
 
@@ -160,7 +158,7 @@ class DialogWorld:
         conversation.add_message(reply)
         # Update firestore with conversation and send back message to front end
 
-        self.database_handler.update(conversation)
+        self.database_handler.update(conversation)  # TODO: Make this fire and forget
         return reply
 
     async def fika_reply(self, user_message: UserMessage):
@@ -203,7 +201,7 @@ class DialogWorld:
         conversation.add_message(reply)
         # Update firestore with conversation and send back message to front end
 
-        self.database_handler.update(conversation)
+        self.database_handler.update(conversation)  # TODO: Make this fire and forget?
         return reply
 
     async def handle_bot_reply(
