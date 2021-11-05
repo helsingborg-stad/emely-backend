@@ -229,6 +229,9 @@ class FikaWorld(ChatWorld):
             "I hate you",
             "it's not a good way to live",
             "that's no way to live",
+            "hope you are fine with your dad in bed",
+            "dad is fine in bed",
+            "i have children with my child",
         ]
 
     def init_conversation(self, init_body: InitBody, build_data):
@@ -480,6 +483,9 @@ class InterviewWorld(ChatWorld):
             "i'm just about to start my interview",
             "it's not a good way to live",
             "that's no way to live",
+            "hope you are fine with your dad in bed",
+            "dad is fine in bed",
+            "i have children with my child",
         ]
 
     def init_conversation(self, init_body: InitBody, build_data):
