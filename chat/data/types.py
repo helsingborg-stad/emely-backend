@@ -1,8 +1,8 @@
 from typing import List, Optional, Dict
 import datetime
 from pydantic import BaseModel, Field
-
-# TODO: Remove progress from message classes. Keep in Conversation. Still send back to webapp
+import os
+import chat
 
 
 class UserMessage(BaseModel):
@@ -49,14 +49,13 @@ class Message(BaseModel):
     message_nbr: int
     text: str
     text_en: str
-    progress: float
     response_time: float
     who: str
 
     # Default values
     created_at: str = str(datetime.datetime.now())
-    # dialog_block: str = None
     is_hardcoded: Optional[bool]
+    progress: float = 0
     recording_used: bool = False
 
     def to_dict(self):
@@ -123,12 +122,19 @@ class Conversation(BaseModel):
     conversation_id: str = None  # Is set first when we've pushed to firestore so it has to be None at initialisation
     progress: float = 0
 
-    def add_message(self, message: Message):
-        "Adds a message to the conversation"
+    def add_message(self, message: Message) -> float:
+        """Adds a message to the conversation and computes progress. 
+        Progress is many of the interview questions you've gone through so far"""
+        if self.persona == "intervju":
+            total_questions = os.environ.get("NBR_INTERVIEW_QUESTIONS", 5)
+            progress = 1 - (len(self.question_list) / int(total_questions))
+        else:
+            progress = self.nbr_messages / chat.fika.flow.max_dialog_length
 
         self.nbr_messages += 1
         self.messages.append(message)
-        return
+        self.progress = progress
+        return progress
 
     def add_user_message(self, user_message: UserMessage, text_en: str):
         "Adds a UserMessage to conversation by first converting it to a Message"
@@ -138,7 +144,6 @@ class Conversation(BaseModel):
             message_nbr=self.nbr_messages,
             who="user",
             is_hardcoded=False,
-            progress=self.progress
         )
 
         self.add_message(message)
