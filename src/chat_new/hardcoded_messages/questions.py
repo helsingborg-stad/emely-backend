@@ -98,6 +98,11 @@ class QuestionGenerator:
             self.candidate_questions = self.candidate_questions[
                 self.candidate_questions.loc[:, "fit_4_no_exp"] == True
             ]
+        
+        # If job does not exist sample random questions
+        if job not in self.question_df.loc[:, "job"]:
+            self.temp_config["nbr_random_questions"] += self.temp_config["nbr_job_questions"]
+            self.temp_config["nbr_job_questions"] = 0
 
         # We only need to return a list of question strings
         question_list = []
@@ -232,4 +237,3 @@ class QuestionGenerator:
         job_list = list(self.question_df["job"].unique())
         job_list.remove("Allmän")
         return job_list
-
