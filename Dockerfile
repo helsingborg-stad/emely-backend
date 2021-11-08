@@ -6,6 +6,6 @@ ENV PORT 8080
 
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
-RUN python setup.py
+RUN pip install -e .
 
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
