@@ -18,10 +18,6 @@ from chat.hardcoded_messages import rasa
 from chat.dialog.models import RasaModel
 from chat.dialog.filters import contains_toxicity
 
-# TODO: Override these with env variables in DialogWorld._set_environment()
-rasa_threshold = 0.7
-rasa_enabled = False
-
 
 class DialogWorld:
     def __init__(self):
@@ -54,6 +50,10 @@ class DialogWorld:
             env["REPETITION_FILTER"] = "1"
             env["SIMILARITY_THRESHOLD"] = "0.9"
             env["N_MESSAGES_FOR_REPETITION_FILTER"] = "8"
+
+        if "RASA_ENABLED" not in env:
+            env["RASA_ENABLED"] = "0"
+            self.rasa_threshold = env.get("RASA_THRESHOLD", 0.8)
 
     def wake_models(self):
         """Wakes all MLModels. 
@@ -141,7 +141,7 @@ class DialogWorld:
 
         # If rasa detects something
         elif (
-            rasa_response["confidence"] >= rasa_threshold
+            rasa_response["confidence"] >= self.rasa_threshold
             and rasa_response["name"] in rasa.replies.keys()
         ):
             key = rasa_response["name"]
