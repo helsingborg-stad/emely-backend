@@ -20,7 +20,7 @@ class ChatTranslator:
                 Path(__file__)
                 .resolve()
                 .parents[2]
-                .joinpath("emelybrainapi-33194bec3069.json")
+                .joinpath("emely-gcp-b2705e7ec5a0.json")
             )
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = json_path.as_posix()
 
