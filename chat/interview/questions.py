@@ -4,6 +4,7 @@ from typing import List, Dict
 import random
 import json
 import copy
+import os
 
 """
 Class for generating interview questions.
@@ -42,6 +43,10 @@ class QuestionGenerator:
             "nbr_job_questions": config["nbr_job_questions"],
             "nbr_random_questions": config["nbr_random_questions"],
         }
+
+        # Used for progress calculation
+        nbr_interview_questions = sum(self.config.values())
+        os.environ["NBR_INTERVIEW_QUESTIONS"] = str(nbr_interview_questions)
 
         self.nbr_alternatives = config["nbr_alternatives"]
 

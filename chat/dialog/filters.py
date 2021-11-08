@@ -1,9 +1,9 @@
-from data import Conversation, BotMessage, UserMessage
+from chat.data.types import Conversation, BotMessage, UserMessage
 import re
 from itertools import product
 from difflib import SequenceMatcher
 from typing import Tuple, List
-from hardcoded_messages.badwords import badwords
+from chat.hardcoded_messages.badwords import badwords
 import os
 
 lies = [
@@ -12,6 +12,11 @@ lies = [
     "i'm unemployed",
     "i'm just about to start my interview",
     "thank you for your time",
+    "it's not a good way to live",
+    "that's not a good way to live",
+    "hope you are fine with your dad in bed",
+    "dad is fine in bed",
+    "i have children with my child",
 ]
 min_text_length = 4
 

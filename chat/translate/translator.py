@@ -3,8 +3,7 @@ from google.cloud import translate_v2 as translate
 import os
 from pathlib import Path
 import re
-from utils import is_gcp_instance
-from utils import timer
+from chat.utils import is_gcp_instance, timer
 from aioify import aioify
 
 """ Translates text using Google's official API
