@@ -13,7 +13,9 @@ class FirestoreHandler:
         self._authenticate_firebase()
 
         # Authenticate firebase to connect to firestore
-        self.firestore_collection = self.firestore_client.collection("conversations")
+        self.firestore_collection = self.firestore_client.collection(
+            "conversations-with-emely"
+        )
 
     def _authenticate_firebase(self):
         "Authenticates firebase"
@@ -21,7 +23,7 @@ class FirestoreHandler:
         if is_gcp_instance():
             if not firebase_admin._apps:
                 cred = credentials.ApplicationDefault()
-                firebase_admin.initialize_app(cred, {"projectId": "emelybrainapi",})
+                firebase_admin.initialize_app(cred, {"projectId": "emely-gcp",})
 
             self.firestore_client = firestore.client()
 
@@ -32,7 +34,7 @@ class FirestoreHandler:
                     Path(__file__)
                     .resolve()
                     .parents[2]
-                    .joinpath("emelybrainapi-33194bec3069.json")
+                    .joinpath("emely-gcp-b2705e7ec5a0.json")
                 )
                 cred = credentials.Certificate(json_path.as_posix())
                 firebase_admin.initialize_app(cred)
