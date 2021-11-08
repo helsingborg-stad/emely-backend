@@ -41,7 +41,8 @@ class DialogWorld:
         # rasa_enabled and rasa_threshold
         env = os.environ
 
-        env["USE_HUGGINGFACE_FIKA"] = "1"
+        if "USE_HUGGINGFACE_FIKA" not in env:
+            env["USE_HUGGINGFACE_FIKA"] = "0"
 
         ########## Filter parameters
         if "LIE_FILTER" not in env:

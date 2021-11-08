@@ -139,7 +139,10 @@ class InterviewFlowHandler:
                 fika_model_context_length
             )
             if os.environ["USE_HUGGINGFACE_FIKA"]:
-                model_reply, response_time = self.huggingface_fika_model.get_response(context)
+                try:
+                    model_reply, response_time = self.huggingface_fika_model.get_response(context)
+                except:
+                    model_reply, response_time = self.fika_model.get_response(context)
             else:
                 model_reply, response_time = self.fika_model.get_response(context)
             reply = BotMessage(
