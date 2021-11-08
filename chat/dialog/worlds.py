@@ -64,6 +64,7 @@ class DialogWorld:
         self.rasa_model.wake_up()
         self.interview_flow_handler.interview_model.wake_up()
         self.interview_flow_handler.fika_model.wake_up()
+        self.interview_flow_handler.huggingface_fika_model.wake_up()
         return
 
     async def create_new_conversation(self, info: ConversationInit):
