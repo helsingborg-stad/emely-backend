@@ -95,6 +95,9 @@ class HuggingfaceFika(MLModel):
                         "generated_responses": generated_responses,
                         "text": text,
                     },
+                    "options": {
+                        "wait_for_model": True,
+                    }
                 }
     
     '''

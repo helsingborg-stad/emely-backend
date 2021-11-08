@@ -45,7 +45,7 @@ class DialogWorld:
         # rasa_enabled and rasa_threshold
         env = os.environ
 
-        env["USE_HUGGINGFACE_FIKA"] = False
+        env["USE_HUGGINGFACE_FIKA"] = "1"
 
         ########## Filter parameters
         if "LIE_FILTER" not in env:
@@ -63,8 +63,10 @@ class DialogWorld:
         """
         self.rasa_model.wake_up()
         self.interview_flow_handler.interview_model.wake_up()
-        self.interview_flow_handler.fika_model.wake_up()
-        self.interview_flow_handler.huggingface_fika_model.wake_up()
+        if os.environ["USE_HUGGINGFACE_FIKA"]:
+            self.interview_flow_handler.huggingface_fika_model.wake_up()
+        else:
+            self.interview_flow_handler.fika_model.wake_up()
         return
 
     async def create_new_conversation(self, info: ConversationInit):
