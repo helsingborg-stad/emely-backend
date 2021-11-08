@@ -18,10 +18,6 @@ from chat.hardcoded_messages import rasa
 from chat.dialog.models import RasaModel
 from chat.dialog.filters import contains_toxicity
 
-# TODO: Override these with env variables in DialogWorld._set_environment()
-rasa_threshold = 0.7
-rasa_enabled = False
-
 
 class DialogWorld:
     def __init__(self):
@@ -56,6 +52,10 @@ class DialogWorld:
             env["REPETITION_FILTER"] = "1"
             env["SIMILARITY_THRESHOLD"] = "0.9"
             env["N_MESSAGES_FOR_REPETITION_FILTER"] = "8"
+
+        if "RASA_ENABLED" not in env:
+            env["RASA_ENABLED"] = "0"
+            self.rasa_threshold = env.get("RASA_THRESHOLD", 0.8)
 
     def wake_models(self):
         """Wakes all MLModels. 
@@ -102,11 +102,12 @@ class DialogWorld:
             reply = self.fika_flow_handler.greet(new_conversation)
             reply = await self.handle_bot_reply(reply, new_conversation)
 
-        new_conversation.add_message(reply)
+        progress = new_conversation.add_message(reply)
         self.database_handler.update(
             new_conversation
         )  # TODO Call create instead of update when it's implemented
 
+        reply.progress = progress
         return reply
 
     async def interview_reply(self, user_message: UserMessage):
@@ -141,12 +142,11 @@ class DialogWorld:
                 message_nbr=-1,
                 text=conversation.repeat_last_message(),
                 text_en="You said a bad word to me",
-                progress=0,
             )
 
         # If rasa detects something
         elif (
-            rasa_response["confidence"] >= rasa_threshold
+            rasa_response["confidence"] >= self.rasa_threshold
             and rasa_response["name"] in rasa.replies.keys()
         ):
             key = rasa_response["name"]
@@ -162,10 +162,11 @@ class DialogWorld:
         reply = await self.handle_bot_reply(reply, conversation)
 
         # Add reply to conversation
-        conversation.add_message(reply)
+        progress = conversation.add_message(reply)
         # Update firestore with conversation and send back message to front end
 
         self.database_handler.update(conversation)
+        reply.progress = progress
         return reply
 
     async def fika_reply(self, user_message: UserMessage):
@@ -196,7 +197,6 @@ class DialogWorld:
                 message_nbr=-1,
                 text=conversation.repeat_last_message(),
                 text_en="You said a bad word to me",
-                progress=0,
             )
         else:
             reply = self.fika_flow_handler.act(conversation)
@@ -205,10 +205,11 @@ class DialogWorld:
         reply = await self.handle_bot_reply(reply, conversation)
 
         # Add reply to conversation
-        conversation.add_message(reply)
+        progress = conversation.add_message(reply)
         # Update firestore with conversation and send back message to front end
 
         self.database_handler.update(conversation)
+        reply.progress = progress
         return reply
 
     async def handle_bot_reply(
@@ -235,7 +236,6 @@ class DialogWorld:
             message_nbr=conversation.get_nbr_messages(),
             text=text,
             text_en=text_en,
-            progress=0,
         )
 
         return message

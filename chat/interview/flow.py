@@ -15,7 +15,9 @@ job_question_max_length = 3
 small_talk_max_length = 3
 
 interview_model_context_length = 8
-fika_model_context_length = 8
+fika_model_context_length = 4
+
+small_talk_persona = """your persona: my name is Emely.\nyour persona: i am a digital assistant.\nyour persona: i help people learn Swedish\n"""
 
 
 class InterviewFlowHandler:
@@ -132,9 +134,9 @@ class InterviewFlowHandler:
             return self.transition_to_first_question(conversation)
 
         else:
-            # Action
-            context = conversation.get_last_x_message_strings(
-                interview_model_context_length
+            # Context is Emelys persona + the conversaiton so far
+            context = small_talk_persona + conversation.get_last_x_message_strings(
+                fika_model_context_length
             )
             if os.environ["USE_HUGGINGFACE_FIKA"]:
                 model_reply, response_time = self.huggingface_fika_model.get_response(context)

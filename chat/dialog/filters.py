@@ -12,6 +12,11 @@ lies = [
     "i'm unemployed",
     "i'm just about to start my interview",
     "thank you for your time",
+    "it's not a good way to live",
+    "that's not a good way to live",
+    "hope you are fine with your dad in bed",
+    "dad is fine in bed",
+    "i have children with my child",
 ]
 min_text_length = 4
 
