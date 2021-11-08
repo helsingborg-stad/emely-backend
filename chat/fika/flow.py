@@ -1,7 +1,8 @@
 from chat.data.types import Conversation, BotMessage
-from chat.dialog.models import FikaModel
+from chat.dialog.models import FikaModel, HuggingfaceFika
 from chat.hardcoded_messages import greetings, goodbyes
 import logging
+import os
 
 import random
 
@@ -20,6 +21,7 @@ class FikaFlowHandler:
 
     def __init__(self):
         self.fika_model = FikaModel()
+        self.huggingface_fika_model = HuggingfaceFika()
         self.goodbye_words = goodbye_words
         self.persona = random.choice(personas)
 
@@ -33,7 +35,13 @@ class FikaFlowHandler:
             return self.goodbye(conversation)
 
         context = conversation.get_last_x_message_strings(fika_model_context_length)
-        model_reply, response_time = self.fika_model.get_response(context)
+        if os.environ("USE_HUGGINGFACE_FIKA"):
+            try:
+                model_reply, response_time = self.huggingface_fika_model.get_response(context)
+            except:
+                model_reply, response_time = self.fika_model.get_response(context)
+        else:
+            model_reply, response_time = self.fika_model.get_response(context)
         reply = BotMessage(
             lang="en", text=model_reply, response_time=response_time, is_hardcoded=True,
         )

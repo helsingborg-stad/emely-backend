@@ -5,10 +5,13 @@ from typing import Dict
 import os
 import aiohttp
 from chat.utils import timer
+from pathlib import Path
+import json
 
 interview_model_url = "https://interview-model-ef5bmjer3q-ey.a.run.app"
 fika_model_url = "https://blender-90m-ef5bmjer3q-ey.a.run.app"
 rasa_nlu_url = "https://rasa-nlu-ef5bmjer3q-ey.a.run.app"
+huggingface_fika_model_url = "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"
 
 
 class MLModel:
@@ -45,7 +48,80 @@ class MLModel:
 
 
 class HuggingfaceFika(MLModel):
-    pass
+    '''
+    Interfaces communication with the huggingface fika-model
+    The api-key should be placed in the root directory with 
+    '''
+
+    def __init__(self, key_file="emely-huggingface-ck-key.json", url=huggingface_fika_model_url):
+        super().__init__(url=url)
+        if not Path.exists(Path(__file__).resolve().parent.parent.parent / key_file):
+            raise RuntimeError("The specified json key-file was not provided in the root folder")
+        
+        with open(Path(__file__).resolve().parent.parent.parent / key_file,"r") as file:
+            huggingface_key = json.load(file)
+        self.headers = {"Authorization": huggingface_key["api_key"]}
+    
+    def get_response(self, x):
+        ""
+        inputs = self._format_input(x)
+        r = requests.post(url=self.url, headers=self.headers, json=inputs)
+        outputs = self._format_outputs(r)
+
+        return outputs
+
+    '''
+    Formats the input to huggingface-format
+    '''
+    def _format_input(self, x):
+        past_user_inputs = []
+        generated_responses = []
+        text = ""
+        messages = x.split("\n")
+        messages.reverse()
+        for i in range(len(messages)):
+            if i==0:
+                text=messages[i]
+            elif i%2==1:
+                past_user_inputs.append(messages[i])
+            else:
+                generated_responses.append(messages[i])
+
+        past_user_inputs.reverse()
+        generated_responses.reverse()
+        return {
+                    "inputs": {
+                        "past_user_inputs": past_user_inputs,
+                        "generated_responses": generated_responses,
+                        "text": text,
+                    },
+                }
+    
+    '''
+    Extracts the generated response and response-time from huggingface output
+    '''
+    def _format_outputs(self, y):
+        t = y.elapsed
+        y = y.json()
+        time = t.seconds + t.microseconds / 1000000
+        if "generated_text" not in y:
+            raise RuntimeError('Model not awakened')
+
+        return (y["generated_text"], time)
+    
+    def wake_up(self):
+        "Sends a request with one word to wake up huggingface model"
+        try:
+            inputs = {
+                "inputs": {
+                    "past_user_inputs": [],
+                    "generated_responses": [],
+                    "text": ".",
+                },
+            }
+            _ = requests.post(self.url, headers=self.headers, json=inputs)
+        except:
+            logging.info(f"Sent wake up call to {type(self)} model")
 
 
 class InterviewModel(MLModel):
