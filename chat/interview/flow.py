@@ -11,7 +11,7 @@ tough_question_max_length = 5
 personal_question_max_length = 3
 general_question_max_length = 3
 job_question_max_length = 3
-small_talk_max_length = 3
+small_talk_max_length = 2
 
 interview_model_context_length = 8
 fika_model_context_length = 4
