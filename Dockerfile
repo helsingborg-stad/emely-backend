@@ -3,6 +3,7 @@ ENV PYTHONUNBUFFERED 1
 
 COPY ./ ./
 ENV PORT 8080
+ENV HUGGINGFACE_KEY=$HUGGINGFACE_KEY
 
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt

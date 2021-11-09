@@ -11,7 +11,9 @@ import json
 interview_model_url = "https://interview-model-ef5bmjer3q-ey.a.run.app"
 fika_model_url = "https://blender-90m-ef5bmjer3q-ey.a.run.app"
 rasa_nlu_url = "https://rasa-nlu-ef5bmjer3q-ey.a.run.app"
-huggingface_fika_model_url = "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"
+huggingface_fika_model_url = (
+    "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"
+)
 
 
 class MLModel:
@@ -48,22 +50,18 @@ class MLModel:
 
 
 class HuggingfaceFika(MLModel):
-    '''
+    """
     Interfaces communication with the huggingface fika-model
     The api-key should be placed in the root directory with 
-    '''
+    """
 
-    def __init__(self, key_file="emely-huggingface-ck-key.json", url=huggingface_fika_model_url):
+    def __init__(
+        self, key_file="emely-huggingface-ck-key", url=huggingface_fika_model_url
+    ):
         super().__init__(url=url)
-        key_path = Path(__file__).resolve().parent.parent.parent / key_file
-        if not Path.exists(key_path):
-            print(os.listdir(key_path.parent.as_posix()))
-            raise RuntimeError(f"The specified json key-file in {key_path}")
-        
-        with open(Path(__file__).resolve().parent.parent.parent / key_file,"r") as file:
-            huggingface_key = json.load(file)
-        self.headers = {"Authorization": huggingface_key["api_key"]}
-    
+        key = os.environ["HUGGINGFACE_KEY"]
+        self.headers = {"Authorization": key}
+
     def get_response(self, x):
         ""
         inputs = self._format_input(x)
@@ -72,9 +70,10 @@ class HuggingfaceFika(MLModel):
 
         return outputs
 
-    '''
+    """
     Formats the input to huggingface-format
-    '''
+    """
+
     def _format_input(self, x):
         past_user_inputs = []
         generated_responses = []
@@ -82,9 +81,9 @@ class HuggingfaceFika(MLModel):
         messages = x.split("\n")
         messages.reverse()
         for i in range(len(messages)):
-            if i==0:
-                text=messages[i]
-            elif i%2==0:
+            if i == 0:
+                text = messages[i]
+            elif i % 2 == 0:
                 past_user_inputs.append(messages[i])
             else:
                 generated_responses.append(messages[i])
@@ -92,28 +91,27 @@ class HuggingfaceFika(MLModel):
         past_user_inputs.reverse()
         generated_responses.reverse()
         return {
-                    "inputs": {
-                        "past_user_inputs": past_user_inputs,
-                        "generated_responses": generated_responses,
-                        "text": text,
-                    },
-                    "options": {
-                        "wait_for_model": True,
-                    }
-                }
-    
-    '''
+            "inputs": {
+                "past_user_inputs": past_user_inputs,
+                "generated_responses": generated_responses,
+                "text": text,
+            },
+            "options": {"wait_for_model": True,},
+        }
+
+    """
     Extracts the generated response and response-time from huggingface output
-    '''
+    """
+
     def _format_outputs(self, y):
         t = y.elapsed
         y = y.json()
         time = t.seconds + t.microseconds / 1000000
         if "generated_text" not in y:
-            raise RuntimeError('Model not awakened')
+            raise RuntimeError("Model not awakened")
 
         return (y["generated_text"], time)
-    
+
     def wake_up(self):
         "Sends a request with one word to wake up huggingface model"
         try:
