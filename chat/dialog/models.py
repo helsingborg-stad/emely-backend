@@ -57,6 +57,7 @@ class HuggingfaceFika(MLModel):
         super().__init__(url=url)
         key_path = Path(__file__).resolve().parent.parent.parent / key_file
         if not Path.exists(key_path):
+            print(os.listdir(key_path.parent.as_posix()))
             raise RuntimeError(f"The specified json key-file in {key_path}")
         
         with open(Path(__file__).resolve().parent.parent.parent / key_file,"r") as file:
