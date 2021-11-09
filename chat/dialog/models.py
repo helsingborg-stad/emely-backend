@@ -82,7 +82,7 @@ class HuggingfaceFika(MLModel):
         for i in range(len(messages)):
             if i==0:
                 text=messages[i]
-            elif i%2==1:
+            elif i%2==0:
                 past_user_inputs.append(messages[i])
             else:
                 generated_responses.append(messages[i])
@@ -180,4 +180,3 @@ class RasaModel(MLModel):
                 return self.dummy_reponse
         else:
             return self.dummy_reponse
-
