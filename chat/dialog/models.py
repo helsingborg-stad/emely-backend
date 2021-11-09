@@ -6,8 +6,8 @@ import os
 import aiohttp
 from chat.utils import timer
 
-interview_model_url = "https://interview-model-ef5bmjer3q-ey.a.run.app"
-fika_model_url = "https://blender-90m-ef5bmjer3q-ey.a.run.app"
+interview_model_url = "https://interview-model-em7jnms6va-ey.a.run.app"  # "https://interview-model-ef5bmjer3q-ey.a.run.app"
+fika_model_url = "https://blender-90m-em7jnms6va-ey.a.run.app"  # "https://blender-90m-ef5bmjer3q-ey.a.run.app"
 rasa_nlu_url = "https://rasa-nlu-ef5bmjer3q-ey.a.run.app"
 
 
