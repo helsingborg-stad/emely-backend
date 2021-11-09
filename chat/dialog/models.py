@@ -55,8 +55,9 @@ class HuggingfaceFika(MLModel):
 
     def __init__(self, key_file="emely-huggingface-ck-key.json", url=huggingface_fika_model_url):
         super().__init__(url=url)
-        if not Path.exists(Path(__file__).resolve().parent.parent.parent / key_file):
-            raise RuntimeError("The specified json key-file was not provided in the root folder")
+        key_path = Path(__file__).resolve().parent.parent.parent / key_file
+        if not Path.exists(key_path):
+            raise RuntimeError(f"The specified json key-file in {key_path}")
         
         with open(Path(__file__).resolve().parent.parent.parent / key_file,"r") as file:
             huggingface_key = json.load(file)
