@@ -110,17 +110,15 @@ class DialogWorld:
     async def interview_reply(self, user_message: UserMessage):
         " Responds to user in an interview"
         # Call rasa
-        # TODO: ASync
+        # TODO: Make the calls to rasa, translate and database concurrent
         rasa_response = await self.rasa_model.get_response(user_message)
 
         # Translate
-        # TODO: ASync?
         text_en = await self.translator.translate(
             text=user_message.text, src=user_message.lang, target="en"
         )
 
         # Fetch conversation data from firestore
-        # TODO: ASync
         conversation = self.database_handler.get_conversation(
             user_message.conversation_id
         )
@@ -152,7 +150,6 @@ class DialogWorld:
 
         # Let dialog flow handler act
         else:
-            # TODO: ASync
             reply = self.interview_flow_handler.act(conversation)
 
         # Translate reply depending on if it was hardcoded or not
@@ -162,20 +159,19 @@ class DialogWorld:
         progress = conversation.add_message(reply)
         # Update firestore with conversation and send back message to front end
 
-        self.database_handler.update(conversation)
+        self.database_handler.update(conversation)  # TODO: Fire and forget
         reply.progress = progress
         return reply
 
     async def fika_reply(self, user_message: UserMessage):
         "Responds to user during fika"
         # Translate
-        # TODO: ASync?
+        # TODO: Concurrent calls to database and translate
         text_en = await self.translator.translate(
             text=user_message.text, src=user_message.lang, target="en"
         )
 
         # Fetch conversation data from firestore
-        # TODO: ASync
         conversation = self.database_handler.get_conversation(
             user_message.conversation_id
         )
@@ -205,7 +201,7 @@ class DialogWorld:
         progress = conversation.add_message(reply)
         # Update firestore with conversation and send back message to front end
 
-        self.database_handler.update(conversation)
+        self.database_handler.update(conversation)  # TODO: Fire and forget
         reply.progress = progress
         return reply
 
