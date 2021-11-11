@@ -82,16 +82,12 @@ class ConversationInit(BaseModel):
 
         schema_extra = {
             "example": {
-                "brain_url": "null",
                 "created_at": "1999-04-07 18:59:24.584658",
                 "development_testing": True,
                 "lang": "sv",
                 "name": "swaggerdocs",
                 "persona": "intervju",
                 "user_ip_number": "127.0.0.1",
-                "webapp_local": True,
-                "webapp_url": "null",
-                "webapp_version": "null",
                 "job": "Snickare",
                 "has_experience": True,
                 "enable_small_talk": True,
