@@ -66,32 +66,30 @@ class FirestoreHandler:
         return conversation
 
     def create(self, conversation):
-        # TODO: Use this during create_new_conversation?
-        # conversation_ref = self.firestore_collection.document()
-        # conversation_ref.set(conversation.to_dict())
+        "creates a new conversation in firestore"
+        conversation_ref = self.firestore_collection.document(
+            conversation.conversation_id
+        )
+        conversation_ref.set(conversation.to_dict(only_updatable=False))
 
-        # messages = conversation.get_last_two_messages()
-        # message_collection = conversation_ref.collection("messages")
-        # # TODO: Don't loop
-        # for message_nbr, message in messages.items():
-        #     message_ref = message_collection.document(str(message_nbr))
-        #     message_ref.set(message.to_dict())
-        # return
-        pass
+        messages = conversation.get_last_two_messages()
+        message_collection = conversation_ref.collection("messages")
+        for message_nbr, message in messages.items():
+            message_ref = message_collection.document(str(message_nbr))
+            message_ref.set(message.to_dict())
+        return
 
-    def update(self, conversation):
+    def update(self, conversation: Conversation):
         " Updates conversation on firestore"
 
         conversation_ref = self.firestore_collection.document(
             conversation.conversation_id
         )
 
-        # TODO: Use update instead of set?
-        conversation_ref.set(conversation.to_dict())
+        conversation_ref.update(conversation.to_dict(only_updatable=True))
 
         messages = conversation.get_last_two_messages()
         message_collection = conversation_ref.collection("messages")
-        # TODO: Don't loop
         for message_nbr, message in messages.items():
             message_ref = message_collection.document(str(message_nbr))
             message_ref.set(message.to_dict())
