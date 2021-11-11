@@ -1,6 +1,13 @@
 steps:
   - name: "gcr.io/cloud-builders/docker"
-    args: ["build", "-t", "gcr.io/emely-gcp/emelybackend:$SHORT_SHA", "."]
+    args:
+      [
+        "build",
+        "-t",
+        "gcr.io/emely-gcp/emelybackend:$SHORT_SHA",
+        '--build-args="HUGGINGFACE_KEY=$_HUGGINGFACE_KEY"',
+        ".",
+      ]
   - name: "gcr.io/cloud-builders/docker"
     args: ["push", "gcr.io/emely-gcp/emelybackend:$SHORT_SHA"]
   - name: "gcr.io/cloud-builders/gcloud"
@@ -15,6 +22,5 @@ steps:
         "--allow-unauthenticated",
         "--memory=256Mi",
         "--max-instances=2",
-        "--update-secrets=HUGGINGFACE_KEY=HUGGINGFACE_SECRET:latest",
       ]
 timeout: "1200s"
