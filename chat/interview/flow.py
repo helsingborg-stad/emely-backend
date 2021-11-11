@@ -1,8 +1,9 @@
 from chat.data.types import Conversation, BotMessage
-from chat.dialog.models import InterviewModel, FikaModel
+from chat.dialog.models import InterviewModel, FikaModel, HuggingfaceFika
 from chat.dialog.filters import is_too_repetitive, remove_lies
 from chat.hardcoded_messages import greetings, goodbyes
 import logging
+import os
 
 import random
 
@@ -25,6 +26,7 @@ class InterviewFlowHandler:
     def __init__(self):
         self.interview_model = InterviewModel()
         self.fika_model = FikaModel()
+        self.huggingface_fika_model = HuggingfaceFika()
 
     def act(self, conversation: Conversation):
         """ All of the methods in this class should filter the the message 
@@ -136,7 +138,13 @@ class InterviewFlowHandler:
             context = small_talk_persona + conversation.get_last_x_message_strings(
                 fika_model_context_length
             )
-            model_reply, response_time = self.fika_model.get_response(context)
+            if os.environ["USE_HUGGINGFACE_FIKA"]:
+                try:
+                    model_reply, response_time = self.huggingface_fika_model.get_response(context)
+                except:
+                    model_reply, response_time = self.fika_model.get_response(context)
+            else:
+                model_reply, response_time = self.fika_model.get_response(context)
             reply = BotMessage(
                 lang="en",
                 text=model_reply,
