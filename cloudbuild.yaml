@@ -5,7 +5,7 @@ steps:
         "build",
         "-t",
         "gcr.io/emely-gcp/emelybackend:$SHORT_SHA",
-        '--build-args="HUGGINGFACE_KEY=$_HUGGINGFACE_KEY"',
+        '--build-args="HUGGINGFACE_KEY=$_HUGGINGFACE_KEY,USE_HUGGINGFACE_FIKA=$USE_HUGGINGFACE_FIKA"',
         ".",
       ]
   - name: "gcr.io/cloud-builders/docker"

@@ -56,7 +56,7 @@ class HuggingfaceFika(MLModel):
     """
 
     def __init__(
-        self, key_file="emely-huggingface-ck-key", url=huggingface_fika_model_url
+        self, url=huggingface_fika_model_url
     ):
         super().__init__(url=url)
         key = os.environ["HUGGINGFACE_KEY"]
