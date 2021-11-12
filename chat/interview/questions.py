@@ -140,10 +140,10 @@ class QuestionGenerator:
                 next_question = self.get_intermediate_question(
                     random.randint(1, self.nbr_alternatives), question_type
                 )
+                question_list.append(next_question)
             except Exception as e:
                 logging.error(f'Failed to get question type: {question_type} for job={job} with no_exp={no_exp}')
                 logging.error(e)
-            question_list.append(next_question)
 
         # Append the last question
         question_list.append(last_question)
