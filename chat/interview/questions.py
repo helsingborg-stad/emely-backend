@@ -5,6 +5,7 @@ import random
 import json
 import copy
 import os
+import logging
 
 """
 Class for generating interview questions.
@@ -135,9 +136,13 @@ class QuestionGenerator:
 
         # Append intermediate questions
         for question_type in question_order:
-            next_question = self.get_intermediate_question(
-                random.randint(1, self.nbr_alternatives), question_type
-            )
+            try:
+                next_question = self.get_intermediate_question(
+                    random.randint(1, self.nbr_alternatives), question_type
+                )
+            except Exception as e:
+                logging.error(f'Failed to get question type: {question_type} for job={job} with no_exp={no_exp}')
+                logging.error(e)
             question_list.append(next_question)
 
         # Append the last question
