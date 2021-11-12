@@ -164,16 +164,16 @@ class QuestionGenerator:
     Retreive an intermediate question of a specific type
     """
 
-    def get_intermediate_question(self, alt_id, type) -> Dict[str, str]:
-        if type == "always":
+    def get_intermediate_question(self, alt_id, question_type) -> Dict[str, str]:
+        if question_type == "always":
             temp_df = self.candidate_questions[
                 self.candidate_questions.loc[:, "always"] == 1
             ]
-        elif type == "personal":
+        elif question_type == "personal":
             temp_df = self.candidate_questions[
                 self.candidate_questions.loc[:, "personal"] == 1
             ]
-        elif type == "job":
+        elif question_type == "job":
             temp_df = self.candidate_questions[
                 self.candidate_questions.loc[:, "job"] != "Allmän"
             ]
