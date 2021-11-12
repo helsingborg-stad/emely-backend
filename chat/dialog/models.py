@@ -124,7 +124,8 @@ class HuggingfaceFika(MLModel):
             }
             _ = requests.post(self.url, headers=self.headers, json=inputs)
         except:
-            logging.info(f"Sent wake up call to {type(self)} model")
+            pass
+        logging.info(f"Sent wake up call to {type(self)} model")
 
 
 class InterviewModel(MLModel):
