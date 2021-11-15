@@ -6,6 +6,7 @@ COPY ./ ./
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install -e .
+RUN python -c "import nltk; nltk.download('punkt')"
 
 ARG huggingface_key
 ARG use_huggingface_fika
