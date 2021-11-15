@@ -106,7 +106,7 @@ class QuestionGenerator:
             ]
         
         # If job does not exist sample random questions
-        if job not in self.question_df.loc[:, "job"]:
+        if job not in set(self.question_df.loc[:, "job"]) or job == "Allmän":
             self.temp_config["nbr_random_questions"] += self.temp_config["nbr_job_questions"]
             self.temp_config["nbr_job_questions"] = 0
 
@@ -178,7 +178,9 @@ class QuestionGenerator:
                 self.candidate_questions.loc[:, "job"] != "Allmän"
             ]
         else:  # type==random
-            temp_df = self.candidate_questions.copy()
+            temp_df = self.candidate_questions[
+                self.candidate_questions.loc[:, "always"] == 0
+            ]
         return self.get_random_question_from_df(temp_df, alt_id)
 
     """
