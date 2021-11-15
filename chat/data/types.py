@@ -148,12 +148,24 @@ class Conversation(BaseModel):
         self.add_message(message)
         return
 
-    def to_dict(self):
+    def to_dict(self, only_updatable):
         """Used before pushing conversation to database. 
         Removes the message list as it's saved in subcollection"""
-        return self.dict(
-            exclude={"messages"}
-        )  # Messags will be saved in sub collection
+        if only_updatable:
+            return self.dict(
+                include={
+                    "current_dialog_block",
+                    "current_dialog_block_length",
+                    "episode_done",
+                    "nbr_messages",
+                    "question_list",
+                    "progress",
+                }
+            )
+        else:
+            return self.dict(
+                exclude={"messages"}
+            )  # Messags will be saved in sub collection
 
     def get_emely_messages(self, N=-1) -> List[str]:
         "Returns a list of all Messages uttered by Emely in english"
