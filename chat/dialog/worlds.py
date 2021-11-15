@@ -1,4 +1,5 @@
 import os
+import logging
 from chat.translate.translator import ChatTranslator
 from chat.fika.flow import FikaFlowHandler
 
@@ -57,6 +58,10 @@ class DialogWorld:
         if "RASA_ENABLED" not in env:
             env["RASA_ENABLED"] = "0"
             self.rasa_threshold = env.get("RASA_THRESHOLD", 0.8)
+        
+        logging.info("ENVIRONMENT VARIABLES:")
+        for k,v in env.items():
+            logging.info(f"{k}: {v}")
 
     def wake_models(self):
         """Wakes all MLModels. 

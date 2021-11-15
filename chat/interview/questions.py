@@ -5,6 +5,7 @@ import random
 import json
 import copy
 import os
+import logging
 
 """
 Class for generating interview questions.
@@ -105,7 +106,7 @@ class QuestionGenerator:
             ]
         
         # If job does not exist sample random questions
-        if job not in self.question_df.loc[:, "job"]:
+        if job not in set(self.question_df.loc[:, "job"]) or job == "Allmän":
             self.temp_config["nbr_random_questions"] += self.temp_config["nbr_job_questions"]
             self.temp_config["nbr_job_questions"] = 0
 
@@ -135,10 +136,14 @@ class QuestionGenerator:
 
         # Append intermediate questions
         for question_type in question_order:
-            next_question = self.get_intermediate_question(
-                random.randint(1, self.nbr_alternatives), question_type
-            )
-            question_list.append(next_question)
+            try:
+                next_question = self.get_intermediate_question(
+                    random.randint(1, self.nbr_alternatives), question_type
+                )
+                question_list.append(next_question)
+            except Exception as e:
+                logging.error(f'Failed to get question type: {question_type} for job={job} with no_exp={no_exp}')
+                logging.error(e)
 
         # Append the last question
         question_list.append(last_question)
@@ -159,21 +164,23 @@ class QuestionGenerator:
     Retreive an intermediate question of a specific type
     """
 
-    def get_intermediate_question(self, alt_id, type) -> Dict[str, str]:
-        if type == "always":
+    def get_intermediate_question(self, alt_id, question_type) -> Dict[str, str]:
+        if question_type == "always":
             temp_df = self.candidate_questions[
                 self.candidate_questions.loc[:, "always"] == 1
             ]
-        elif type == "personal":
+        elif question_type == "personal":
             temp_df = self.candidate_questions[
                 self.candidate_questions.loc[:, "personal"] == 1
             ]
-        elif type == "job":
+        elif question_type == "job":
             temp_df = self.candidate_questions[
                 self.candidate_questions.loc[:, "job"] != "Allmän"
             ]
         else:  # type==random
-            temp_df = self.candidate_questions.copy()
+            temp_df = self.candidate_questions[
+                self.candidate_questions.loc[:, "always"] == 0
+            ]
         return self.get_random_question_from_df(temp_df, alt_id)
 
     """

@@ -7,10 +7,11 @@ RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install -e .
 
-
+ARG huggingface_key
+ARG use_huggingface_fika
 ENV PORT 8080
-ENV HUGGINGFACE_KEY=$HUGGINGFACE_KEY
-ENV USE_HUGGINGFACE_FIKA=$USE_HUGGINGFACE_FIKA
+ENV HUGGINGFACE_KEY=$huggingface_key
+ENV USE_HUGGINGFACE_FIKA=$use_huggingface_fika
 # Set environment variables to change behaviour of backend
 
 

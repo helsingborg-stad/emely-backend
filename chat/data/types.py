@@ -82,16 +82,12 @@ class ConversationInit(BaseModel):
 
         schema_extra = {
             "example": {
-                "brain_url": "null",
                 "created_at": "1999-04-07 18:59:24.584658",
                 "development_testing": True,
                 "lang": "sv",
                 "name": "swaggerdocs",
                 "persona": "intervju",
                 "user_ip_number": "127.0.0.1",
-                "webapp_local": True,
-                "webapp_url": "null",
-                "webapp_version": "null",
                 "job": "Snickare",
                 "has_experience": True,
                 "enable_small_talk": True,
@@ -125,9 +121,12 @@ class Conversation(BaseModel):
     def add_message(self, message: Message) -> float:
         """Adds a message to the conversation and computes progress. 
         Progress is many of the interview questions you've gone through so far"""
-        if self.persona == "intervju":
+        if self.episode_done:
+            progress = 1
+        elif self.persona == "intervju":
             total_questions = os.environ.get("NBR_INTERVIEW_QUESTIONS", 5)
-            progress = 1 - (len(self.question_list) / int(total_questions))
+            progress = 1 - (len(self.question_list) / int(total_questions)) - 0.05
+
         else:
             progress = self.nbr_messages / chat.fika.flow.max_dialog_length
 
