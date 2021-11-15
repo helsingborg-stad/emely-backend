@@ -35,7 +35,7 @@ class FikaFlowHandler:
             return self.goodbye(conversation)
 
         context = conversation.get_last_x_message_strings(fika_model_context_length)
-        if os.environ["USE_HUGGINGFACE_FIKA"]:
+        if os.environ["USE_HUGGINGFACE_FIKA"] == "1":
             try:
                 model_reply, response_time = self.huggingface_fika_model.get_response(context)
             except:
