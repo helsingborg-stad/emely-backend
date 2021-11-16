@@ -44,6 +44,7 @@ class DialogWorld:
 
         if "USE_HUGGINGFACE_FIKA" not in env:
             env["USE_HUGGINGFACE_FIKA"] = "0"
+            env["HUGGINGFACE_KEY"] = ''
 
         ########## Filter parameters
         if "LIE_FILTER" not in env:
