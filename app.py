@@ -12,6 +12,9 @@ origins = [
     "http://localhost:3000",
     "https://emely-react-develop-em7jnms6va-lz.a.run.app",
     "https://emely-react-main-em7jnms6va-ey.a.run.app",
+    "https://emely-develop.nordaxon.com",
+    "https://emely.nordaxon.com",
+    "https://emely-demo.nordaxon.com",
 ]
 
 app.add_middleware(
