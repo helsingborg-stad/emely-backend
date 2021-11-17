@@ -1,9 +1,9 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='src',
+    name="emely-backend",
     packages=find_packages(),
-    version='0.1.0',
-    description='freja - our chat bot',
-    author='NordAxon',
+    version="0.5.0",
+    description="Emelys backend",
+    author="Alexander Hagelborn",
 )

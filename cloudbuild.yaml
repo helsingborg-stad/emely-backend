@@ -1,12 +1,24 @@
-
-
 steps:
-- name: 'ubuntu'
-  args: ['echo', '$SHORT_SHA', '>', 'git_version.txt']
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/emelybrainapi/emelybackend:$SHORT_SHA', '.']
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/emelybrainapi/emelybackend:$SHORT_SHA']
-- name: 'gcr.io/cloud-builders/gcloud'
-  args: ['run', 'deploy', 'emely-chat-service-api-staging', '--image=gcr.io/emelybrainapi/emelybackend:$SHORT_SHA', '--platform=managed', '--region=europe-west3', '--allow-unauthenticated', '--memory=256Mi', '--max-instances=2']
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      [
+        '-c',
+        'docker build --build-arg="huggingface_key=$_HUGGINGFACE_KEY" --build-arg="use_huggingface_fika=$_USE_HUGGINGFACE_FIKA" -t gcr.io/emely-gcp/emelybackend:$SHORT_SHA .',
+      ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/emely-gcp/emelybackend:$SHORT_SHA']
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      [
+        'run',
+        'deploy',
+        'emely-backend-develop',
+        '--image=gcr.io/emely-gcp/emelybackend:$SHORT_SHA',
+        '--platform=managed',
+        '--region=europe-west3',
+        '--allow-unauthenticated',
+        '--memory=256Mi',
+        '--max-instances=2',
+      ]
 timeout: '1200s'
