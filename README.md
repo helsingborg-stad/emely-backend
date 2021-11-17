@@ -13,15 +13,22 @@ Note: If the confirmation doesn't appear for you, please check that you have a g
 
 ## Get started - first time
 1. Create and activate the environment in Anaconda prompt
-2. Go to root folder and '$ pip install -r requirements' & '$ pip install -e'.
+2. Install dependencies and module
+```
+    $ pip install -r requirements.txt
+    $ python setup.py develop
+```
 3. Aquire 'emelybrainapi-33194bec3069.json' from OneDrive and put in root-folder.
 
-## Running the brain app locally
-To run the fastAPI app on 127.0.0.1:8000
-1. Make sure the environment is activated.
-2. Go to src/api and run the command '$ uvicorn api_main:brain' 
-3. Check the swagger docs and try the http requests at 127.0.0.1:8000/docs
+## Running the server on localhost
+```$uvicorn app:app --reload```
+
+Check the swagger docs and try the http requests at localhost:8000/docs
 
 
+## Adding things to Emely's filter
 
-<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
+There's a "lie filter" with sentences that Emely isn't allowed to say. 
+
+To add things to this list, edit the list "lies" in chat/dialog/filters.py
+
