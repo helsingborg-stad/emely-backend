@@ -31,3 +31,4 @@ Check the swagger docs and try the http requests at localhost:8000/docs
 There's a "lie filter" with sentences that Emely isn't allowed to say. 
 
 To add things to this list, edit the list "lies" in chat/dialog/filters.py
+
