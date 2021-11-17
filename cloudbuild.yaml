@@ -20,6 +20,6 @@ steps:
         "--allow-unauthenticated",
         "--memory=$_MEMORY",
         "--max-instances=$_MAX_INSTANCES",
-        "--cpus=$_CPUS",
+        "--cpu=$_CPUS",
       ]
 timeout: "1200s"
