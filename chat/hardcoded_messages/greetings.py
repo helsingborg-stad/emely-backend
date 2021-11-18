@@ -5,9 +5,7 @@ interview_small_talk = [
     "Hej och välkommen till denna arbetsintervju {}. Jag heter Emely. Är allt bra med dig idag?",
     "Hej {}, vad trevligt att du är intresserad av denna anställning. Hur står det till med dig idag?",
     "Välkommen {}. Jag heter Emely och kommer att intervjua dig idag. Hur är det med dig?",
-    "Hej och välkommen till denna arbetsintervju {}. Jag heter Emely. Kan du börja med att berätta lite om dig själv?",
     "Välkommen {}, jag heter Emely och kommer intervjua dig idag. Hur mår du idag?",
-    "Goddag {}, hoppas att allt är bra med dig. Jag heter Emely och kommer hålla intervjun idag. Vill du berätta något om dig själv?",
     "Hej {} och välkommen till denna intervju. Hur är det med dig idag?",
     "Välkommen {} till denna intervju. Är allt bra med dig idag?",
 ]
