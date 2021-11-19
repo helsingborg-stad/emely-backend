@@ -7,6 +7,7 @@ import aiohttp
 from chat.utils import timer
 from pathlib import Path
 import json
+import nltk
 
 interview_model_url = "https://interview-model-em7jnms6va-ey.a.run.app"  # "https://interview-model-ef5bmjer3q-ey.a.run.app"
 fika_model_url = "https://blender-90m-em7jnms6va-ey.a.run.app"  # "https://blender-90m-ef5bmjer3q-ey.a.run.app"
@@ -110,7 +111,11 @@ class HuggingfaceFika(MLModel):
         if "generated_text" not in y:
             raise RuntimeError("Model not awakened")
 
-        return (y["generated_text"], time)
+        # Make sure first letter is uppercase
+        sentences = nltk.tokenize.sent_tokenize(y["generated_text"])
+        formatted_sentences = [sentence[0].upper() + sentence[1:] for sentence in sentences]
+
+        return (" ".join(formatted_sentences), time)
 
     def wake_up(self):
         "Sends a request with one word to wake up huggingface model"

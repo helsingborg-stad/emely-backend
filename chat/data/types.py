@@ -125,7 +125,12 @@ class Conversation(BaseModel):
             progress = 1
         elif self.persona == "intervju":
             total_questions = os.environ.get("NBR_INTERVIEW_QUESTIONS", 5)
-            progress = 1 - (len(self.question_list) / int(total_questions)) - 0.05
+            questions_left_ratio = len(self.question_list) / int(total_questions)
+            # Small talk phase
+            if questions_left_ratio == 1:
+                progress = 0.07
+            else:
+                progress = 1 - (questions_left_ratio) - 0.05 # Remove a little bit since we don't want 1
 
         else:
             progress = self.nbr_messages / chat.fika.flow.max_dialog_length

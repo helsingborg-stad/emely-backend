@@ -45,6 +45,7 @@ class DialogWorld:
 
         if "USE_HUGGINGFACE_FIKA" not in env:
             env["USE_HUGGINGFACE_FIKA"] = "0"
+            env["HUGGINGFACE_KEY"] = ''
         
         if "MIN_ANSWER_LENGTH" not in env:
             env["MIN_ANSWER_LENGTH"] = "7"
@@ -73,7 +74,7 @@ class DialogWorld:
         """
         self.rasa_model.wake_up()
         self.interview_flow_handler.interview_model.wake_up()
-        if os.environ["USE_HUGGINGFACE_FIKA"]:
+        if os.environ["USE_HUGGINGFACE_FIKA"] == '1':
             self.interview_flow_handler.huggingface_fika_model.wake_up()
         self.interview_flow_handler.fika_model.wake_up()
         return
