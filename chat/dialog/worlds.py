@@ -15,7 +15,8 @@ from chat.data.types import (
     BotMessage,
 )
 
-from chat.hardcoded_messages import rasa
+import random
+from chat.hardcoded_messages import rasa, callstoaction
 from chat.dialog.models import RasaModel
 from chat.dialog.filters import contains_toxicity
 
@@ -44,6 +45,9 @@ class DialogWorld:
 
         if "USE_HUGGINGFACE_FIKA" not in env:
             env["USE_HUGGINGFACE_FIKA"] = "0"
+        
+        if "MIN_ANSWER_LENGTH" not in env:
+            env["MIN_ANSWER_LENGTH"] = "7"
 
         ########## Filter parameters
         if "LIE_FILTER" not in env:
@@ -152,6 +156,9 @@ class DialogWorld:
             key = rasa_response["name"]
             text = rasa.replies[key]
             reply = BotMessage(is_hardcoded=True, lang="sv", text=text, response_time=0)
+        
+        elif len(user_message.text)<float(os.environ["MIN_ANSWER_LENGTH"]):
+            reply = BotMessage(is_hardcoded=True, lang="sv", text=random.choice(callstoaction.tooshort), response_time=0)
 
         # Let dialog flow handler act
         else:
