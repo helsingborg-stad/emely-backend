@@ -119,6 +119,7 @@ class DialogWorld:
 
     async def interview_reply(self, user_message: UserMessage):
         " Responds to user in an interview"
+
         # Call rasa
         # TODO: Make the calls to rasa, translate and database concurrent
         rasa_response = await self.rasa_model.get_response(user_message)
@@ -133,38 +134,38 @@ class DialogWorld:
             user_message.conversation_id
         )
 
-        # Add usermessage to conversation
-        conversation.add_user_message(user_message, text_en)
-
-        # Toxic messages are replied to without doing anything specific.
-        # Emely will pretend like she didn't understand and repeat her previous statement
-        if contains_toxicity(user_message):
+        # Replies that aren't added to the conversation
+        if len(user_message.text) < float(os.environ["MIN_ANSWER_LENGTH"]):
             return Message(
                 is_hardcoded=True,
                 lang="sv",
                 response_time=0,
-                conversation_id=conversation.conversation_id,
+                conversation_id=user_message.conversation_id,
+                message_nbr=-1,
+                text=random.choice(callstoaction.tooshort),
+                text_en="Please elaborate and write a longer answer so I understand",
+            )
+        elif contains_toxicity(user_message):
+            return Message(
+                is_hardcoded=True,
+                lang="sv",
+                response_time=0,
+                conversation_id=user_message.conversation_id,
                 message_nbr=-1,
                 text=conversation.repeat_last_message(),
                 text_en="You said a bad word to me",
             )
 
-        # If rasa detects something
-        elif (
+        # Add usermessage to conversation
+        conversation.add_user_message(user_message, text_en)
+
+        if (
             rasa_response["confidence"] >= self.rasa_threshold
             and rasa_response["name"] in rasa.replies.keys()
         ):
             key = rasa_response["name"]
             text = rasa.replies[key]
             reply = BotMessage(is_hardcoded=True, lang="sv", text=text, response_time=0)
-
-        elif len(user_message.text) < float(os.environ["MIN_ANSWER_LENGTH"]):
-            reply = BotMessage(
-                is_hardcoded=True,
-                lang="sv",
-                text=random.choice(callstoaction.tooshort),
-                response_time=0,
-            )
 
         # Let dialog flow handler act
         else:
