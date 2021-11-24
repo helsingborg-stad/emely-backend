@@ -1,7 +1,8 @@
-FROM python:3.9
+FROM tiangolo/uvicorn-gunicorn-fastapi:latest
 ENV PYTHONUNBUFFERED 1
 
-COPY ./ ./
+COPY ./ /app
+WORKDIR /app
 
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
@@ -15,6 +16,3 @@ ENV HUGGINGFACE_KEY=$huggingface_key
 ENV USE_HUGGINGFACE_FIKA=$use_huggingface_fika
 # Set environment variables to change behaviour of backend
 
-
-
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
