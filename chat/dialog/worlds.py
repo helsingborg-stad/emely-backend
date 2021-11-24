@@ -45,8 +45,8 @@ class DialogWorld:
 
         if "USE_HUGGINGFACE_FIKA" not in env:
             env["USE_HUGGINGFACE_FIKA"] = "0"
-            env["HUGGINGFACE_KEY"] = ''
-        
+            env["HUGGINGFACE_KEY"] = ""
+
         if "MIN_ANSWER_LENGTH" not in env:
             env["MIN_ANSWER_LENGTH"] = "7"
 
@@ -63,9 +63,9 @@ class DialogWorld:
         if "RASA_ENABLED" not in env:
             env["RASA_ENABLED"] = "0"
             self.rasa_threshold = env.get("RASA_THRESHOLD", 0.8)
-        
+
         logging.info("ENVIRONMENT VARIABLES:")
-        for k,v in env.items():
+        for k, v in env.items():
             logging.info(f"{k}: {v}")
 
     def wake_models(self):
@@ -74,7 +74,7 @@ class DialogWorld:
         """
         self.rasa_model.wake_up()
         self.interview_flow_handler.interview_model.wake_up()
-        if os.environ["USE_HUGGINGFACE_FIKA"] == '1':
+        if os.environ["USE_HUGGINGFACE_FIKA"] == "1":
             self.interview_flow_handler.huggingface_fika_model.wake_up()
         self.interview_flow_handler.fika_model.wake_up()
         return
@@ -157,9 +157,14 @@ class DialogWorld:
             key = rasa_response["name"]
             text = rasa.replies[key]
             reply = BotMessage(is_hardcoded=True, lang="sv", text=text, response_time=0)
-        
-        elif len(user_message.text)<float(os.environ["MIN_ANSWER_LENGTH"]):
-            reply = BotMessage(is_hardcoded=True, lang="sv", text=random.choice(callstoaction.tooshort), response_time=0)
+
+        elif len(user_message.text) < float(os.environ["MIN_ANSWER_LENGTH"]):
+            reply = BotMessage(
+                is_hardcoded=True,
+                lang="sv",
+                text=random.choice(callstoaction.tooshort),
+                response_time=0,
+            )
 
         # Let dialog flow handler act
         else:
