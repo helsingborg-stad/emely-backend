@@ -151,7 +151,7 @@ class DialogWorld:
             and rasa_response["name"] in rasa.intents
         ):
             intent = rasa_response["name"]
-            reply = rasa.act(intent, conversation)
+            reply = self.interview_flow_handler.rasa_act(intent, conversation)
 
         # Let dialog flow handler act
         else:
