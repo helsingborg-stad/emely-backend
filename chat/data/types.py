@@ -201,7 +201,7 @@ class Conversation(BaseModel):
         )
 
         # We will take all
-        if x <= len(sorted_messages):
+        if x >= len(sorted_messages):
             messages = sorted_messages
 
         else:
