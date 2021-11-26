@@ -4,8 +4,34 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+"""
+This is a test for response time when simulating multiple chatters. (Currently only tests fika)
 
+Used to find out how gunicorn with uvicorn workers affect latency.
+
+It produces a scatterplot with elapsed time(y) and message number(x) and the hue(conversation_id) indicates which simulated chatter it was.
+Also prints mean elapsed time for all messages and by conversation_id
+
+
+The test works like this:
+1. X conversations are initiated
+2. Loop over number of messages
+    - each time, send a battery of messages(one for each conversation) to the backend
+    - gather all results and note elapsed times
+3. Produce plot and means
+
+"""
+
+
+# --------------- parameters ------------------
 url = "https://emely-backend-develop-em7jnms6va-ey.a.run.app"
+
+nbr_messages = 5
+nbr_chatters = 4
+
+
+# ---------------------------------------------
+
 
 init_url = url + "/init"
 fika_url = url + "/fika"
@@ -52,13 +78,13 @@ if __name__ == "__main__":
 
     loop = asyncio.get_event_loop()
 
-    init_tasks = asyncio.gather(*[create_convo() for i in range(4)])
+    init_tasks = asyncio.gather(*[create_convo() for i in range(nbr_chatters)])
     conversation_ids = loop.run_until_complete(init_tasks)
     print(conversation_ids)
 
     # We send a request per conversation_id to the backend and then gather them
     elapsed = []
-    for i in range(5):
+    for i in range(nbr_messages):
 
         tasks = asyncio.gather(*[dummy_request(c) for c in conversation_ids])
 
@@ -74,6 +100,7 @@ if __name__ == "__main__":
 
     loop.close()
     df = pd.DataFrame(elapsed)
+    print("Total mean", df["elapsed"].mean())
     print("Means by conversation id")
     print(df.groupby("conversation_id").mean())
 
