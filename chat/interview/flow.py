@@ -120,7 +120,7 @@ class InterviewFlowHandler:
                 lang="en",
                 text=model_reply,
                 response_time=response_time,
-                is_hardcoded=True,
+                is_hardcoded=False,
             )
             # Post filtering of model replies
             if is_too_repetitive(reply, conversation):
@@ -179,6 +179,7 @@ class InterviewFlowHandler:
     def goodbye_block(self, conversation: Conversation) -> BotMessage:
         "Last block of the interview"
         conversation.episode_done = True
+        conversation.current_dialog_block = "goodbye"
         goodbye = random.choice(goodbyes.interview)
         reply = BotMessage(
             lang=conversation.lang, text=goodbye, response_time=0.0, is_hardcoded=True,
@@ -215,8 +216,15 @@ class InterviewFlowHandler:
 
         elif intent == "dont_understand":
 
-            if conversation.last_bot_message_was_hardcoded:
-                text = rasa.replies[intent]
+            # If it was a question - we want to pop an alternative formulation of it
+            if conversation.last_bot_message_was_hardcoded():
+
+                if conversation.current_dialog_block_length == 0:
+                    text = rasa.replies[intent]
+                else:
+                    text = rasa.replies[intent]
+
+            # If user didn't understand the blenderbot we move on
             else:
                 transition_message = rasa.dont_understand_transition
                 return self.transition_to_next_block(conversation)
@@ -224,4 +232,5 @@ class InterviewFlowHandler:
         else:
             logging.warning("Unknown intent slipped through")
 
-        return BotMessage()
+        return BotMessage(lang="sv", text=text, response_time=0, is_hardcoded=True)
+
