@@ -14,4 +14,4 @@ replies = {
 
 # Used in case user didn't understand something Emely said that was hardcoded
 dont_understand_transition = "Okej, då går vi vidare till nästa fråga."
-dont_understand_other_formulation = "Jag formulerar om frågan:"
+dont_understand_other_formulation = "Jag formulerar om frågan."

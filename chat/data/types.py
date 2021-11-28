@@ -225,3 +225,7 @@ class Conversation(BaseModel):
         assert latest_emely_message.who == "bot"
         return latest_emely_message.is_hardcoded
 
+    def get_last_question(self) -> str:
+        "Gets emelys latest question for formulating a new version of it"
+        latest_emely_message = self.messages[-2]
+        return latest_emely_message.text

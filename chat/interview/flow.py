@@ -4,6 +4,8 @@ from chat.dialog.filters import is_too_repetitive, remove_lies
 from chat.hardcoded_messages import greetings, goodbyes, rasa
 import logging
 import os
+from pathlib import Path
+import pandas as pd
 
 import random
 
@@ -27,6 +29,8 @@ class InterviewFlowHandler:
         self.interview_model = InterviewModel()
         self.fika_model = FikaModel()
         self.huggingface_fika_model = HuggingfaceFika()
+        p = Path(__file__).resolve().parent / "questions.xlsx"
+        self.question_df = pd.read_excel(p)
 
     def act(self, conversation: Conversation):
         """ All of the methods in this class should filter the the message 
@@ -40,6 +44,7 @@ class InterviewFlowHandler:
 
         if current_dialog_block == "greet":
             if conversation.enable_small_talk:
+                conversation.current_dialog_block = "small_talk"
                 bot_message = self.small_talk_block(conversation)
             else:
                 bot_message = self.transition_to_next_block(conversation)
@@ -84,7 +89,7 @@ class InterviewFlowHandler:
             new_question = conversation.question_list.pop(0)
             if transition is None:
                 transition = new_question["transition"]
-            text = transition + new_question["question"]
+            text = transition + " " + new_question["question"]
 
             # Update attributes
             conversation.current_dialog_block = new_question["label"]
@@ -219,18 +224,58 @@ class InterviewFlowHandler:
             # If it was a question - we want to pop an alternative formulation of it
             if conversation.last_bot_message_was_hardcoded():
 
-                if conversation.current_dialog_block_length == 0:
-                    text = rasa.replies[intent]
+                if conversation.current_dialog_block_length == 1:
+                    last_question = conversation.get_last_question()
+                    try:
+                        text = self.get_new_question(last_question)
+                    except Exception as e:
+                        logging.warning(
+                            "Encountered problem during InterviewFlowHandler.get_new_question():\n",
+                            e,
+                        )
+                        transition_message = rasa.dont_understand_transition
+                        return self.transition_to_next_block(
+                            conversation, transition_message
+                        )
                 else:
                     text = rasa.replies[intent]
 
             # If user didn't understand the blenderbot we move on
             else:
                 transition_message = rasa.dont_understand_transition
-                return self.transition_to_next_block(conversation)
+                return self.transition_to_next_block(conversation, transition_message)
 
         else:
             logging.warning("Unknown intent slipped through")
 
         return BotMessage(lang="sv", text=text, response_time=0, is_hardcoded=True)
+
+    def get_new_question(self, question: str) -> str:
+        """This funtion should 
+        1. Find the question in the question dataframe
+        2. Pick another version of the question
+        3. Concatenate with the rasa.dont_understand_other_formulation """
+        transitions = self.question_df["transition"].copy()
+        idx = None
+        for i, trans in transitions.iteritems():
+            if trans in question:
+                idx = i
+                break
+        if idx is None:
+            logging.warning("Couldn't find the question in the dataframe...")
+            return question
+        else:
+            new_transition = rasa.dont_understand_other_formulation
+            question_alternatives = self.question_df.loc[idx][
+                ["alt_1", "alt_2", "alt_3"]
+            ]
+            new_question = None
+            for alt_q in question_alternatives:
+                if alt_q not in question:
+                    new_question = alt_q
+
+            if new_question is None:
+                new_question = question
+
+            return new_transition + " " + new_question
 
