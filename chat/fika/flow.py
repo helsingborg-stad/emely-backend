@@ -43,7 +43,7 @@ class FikaFlowHandler:
         else:
             model_reply, response_time = self.fika_model.get_response(context)
         reply = BotMessage(
-            lang="en", text=model_reply, response_time=response_time, is_hardcoded=True,
+            lang="en", text=model_reply, response_time=response_time, is_hardcoded=False,
         )
         # Post filtering of model replies
         # if is_too_repetitive(reply, conversation):
@@ -71,6 +71,6 @@ class FikaFlowHandler:
         else:
             greeting = random.choice(greetings.fika_name_formatted).format(name)
         return BotMessage(
-            lang=conversation.lang, text=greeting, response_time=0.1, is_hardcoded=True,
+            lang=conversation.lang, text=greeting, response_time=0.0, is_hardcoded=True,
         )
 

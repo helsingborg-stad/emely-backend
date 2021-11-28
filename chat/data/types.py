@@ -130,7 +130,9 @@ class Conversation(BaseModel):
             if questions_left_ratio == 1:
                 progress = 0.07
             else:
-                progress = 1 - (questions_left_ratio) - 0.05 # Remove a little bit since we don't want 1
+                progress = (
+                    1 - (questions_left_ratio) - 0.05
+                )  # Remove a little bit since we don't want 1
 
         else:
             progress = self.nbr_messages / chat.fika.flow.max_dialog_length
@@ -199,7 +201,7 @@ class Conversation(BaseModel):
         )
 
         # We will take all
-        if x <= len(sorted_messages):
+        if x >= len(sorted_messages):
             messages = sorted_messages
 
         else:
@@ -216,4 +218,10 @@ class Conversation(BaseModel):
         latest_emely_message = self.messages[-2]
         assert latest_emely_message.who == "bot"
         return latest_emely_message.text
+
+    def last_bot_message_was_hardcoded(self) -> str:
+        "Returns true if Emelys last message was hardcoded"
+        latest_emely_message = self.messages[-2]
+        assert latest_emely_message.who == "bot"
+        return latest_emely_message.is_hardcoded
 

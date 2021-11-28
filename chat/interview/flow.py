@@ -1,7 +1,7 @@
 from chat.data.types import Conversation, BotMessage
 from chat.dialog.models import InterviewModel, FikaModel, HuggingfaceFika
 from chat.dialog.filters import is_too_repetitive, remove_lies
-from chat.hardcoded_messages import greetings, goodbyes
+from chat.hardcoded_messages import greetings, goodbyes, rasa
 import logging
 import os
 
@@ -75,12 +75,16 @@ class InterviewFlowHandler:
 
         return bot_message
 
-    def transition_to_next_block(self, conversation: Conversation) -> BotMessage:
+    def transition_to_next_block(
+        self, conversation: Conversation, transition: str = None
+    ) -> BotMessage:
         "Pops a new question or hardcoded message and moves into the next block"
         if len(conversation.question_list) > 0:
 
             new_question = conversation.question_list.pop(0)
-            text = new_question["transition"] + new_question["question"]
+            if transition is None:
+                transition = new_question["transition"]
+            text = transition + new_question["question"]
 
             # Update attributes
             conversation.current_dialog_block = new_question["label"]
@@ -116,7 +120,7 @@ class InterviewFlowHandler:
                 lang="en",
                 text=model_reply,
                 response_time=response_time,
-                is_hardcoded=True,
+                is_hardcoded=False,
             )
             # Post filtering of model replies
             if is_too_repetitive(reply, conversation):
@@ -140,7 +144,10 @@ class InterviewFlowHandler:
             )
             if os.environ["USE_HUGGINGFACE_FIKA"] == "1":
                 try:
-                    model_reply, response_time = self.huggingface_fika_model.get_response(context)
+                    (
+                        model_reply,
+                        response_time,
+                    ) = self.huggingface_fika_model.get_response(context)
                 except:
                     model_reply, response_time = self.fika_model.get_response(context)
             else:
@@ -172,6 +179,7 @@ class InterviewFlowHandler:
     def goodbye_block(self, conversation: Conversation) -> BotMessage:
         "Last block of the interview"
         conversation.episode_done = True
+        conversation.current_dialog_block = "goodbye"
         goodbye = random.choice(goodbyes.interview)
         reply = BotMessage(
             lang=conversation.lang, text=goodbye, response_time=0.0, is_hardcoded=True,
@@ -194,3 +202,35 @@ class InterviewFlowHandler:
         return BotMessage(
             lang=conversation.lang, text=greeting, response_time=0.1, is_hardcoded=True,
         )
+
+    def rasa_act(self, intent, conversation: Conversation) -> BotMessage:
+
+        if intent == "ask_salary":
+            text = rasa.replies[intent]
+
+        elif intent == "no_experience":
+            text = rasa.replies[intent]
+
+        elif intent == "tell_sfi":
+            text = rasa.replies[intent]
+
+        elif intent == "dont_understand":
+
+            # If it was a question - we want to pop an alternative formulation of it
+            if conversation.last_bot_message_was_hardcoded():
+
+                if conversation.current_dialog_block_length == 0:
+                    text = rasa.replies[intent]
+                else:
+                    text = rasa.replies[intent]
+
+            # If user didn't understand the blenderbot we move on
+            else:
+                transition_message = rasa.dont_understand_transition
+                return self.transition_to_next_block(conversation)
+
+        else:
+            logging.warning("Unknown intent slipped through")
+
+        return BotMessage(lang="sv", text=text, response_time=0, is_hardcoded=True)
+

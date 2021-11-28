@@ -161,11 +161,10 @@ class DialogWorld:
 
         if (
             rasa_response["confidence"] >= self.rasa_threshold
-            and rasa_response["name"] in rasa.replies.keys()
+            and rasa_response["name"] in rasa.intents
         ):
-            key = rasa_response["name"]
-            text = rasa.replies[key]
-            reply = BotMessage(is_hardcoded=True, lang="sv", text=text, response_time=0)
+            intent = rasa_response["name"]
+            reply = self.interview_flow_handler.rasa_act(intent, conversation)
 
         # Let dialog flow handler act
         else:
