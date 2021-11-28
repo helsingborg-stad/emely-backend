@@ -278,4 +278,3 @@ class InterviewFlowHandler:
                 new_question = question
 
             return new_transition + " " + new_question
-

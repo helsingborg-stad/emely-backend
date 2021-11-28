@@ -61,8 +61,8 @@ class DialogWorld:
             env["N_MESSAGES_FOR_REPETITION_FILTER"] = "8"
 
         if "RASA_ENABLED" not in env:
-            env["RASA_ENABLED"] = "0"
-            self.rasa_threshold = env.get("RASA_THRESHOLD", 0.8)
+            env["RASA_ENABLED"] = "1"
+            self.rasa_threshold = env.get("RASA_THRESHOLD", 0.9)
 
         logging.info("ENVIRONMENT VARIABLES:")
         for k, v in env.items():
