@@ -3,11 +3,7 @@ google-cloud-translate
 google-cloud-storage
 firebase_admin
 six~=1.15.0
-fastapi
-pydantic
-uvicorn
 pandas
-pytest
 openpyxl
 aioify
 aiohttp
