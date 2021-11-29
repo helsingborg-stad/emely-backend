@@ -69,8 +69,8 @@ class DialogWorld:
             logging.info(f"{k}: {v}")
 
     def wake_models(self):
-        """Wakes all MLModels. 
-        Can be coupled with an API endpoint in the webserver so front end can wake everything 
+        """Wakes all MLModels.
+        Can be coupled with an API endpoint in the webserver so front end can wake everything
         """
         self.rasa_model.wake_up()
         self.interview_flow_handler.interview_model.wake_up()
@@ -118,7 +118,7 @@ class DialogWorld:
         return reply
 
     async def interview_reply(self, user_message: UserMessage):
-        " Responds to user in an interview"
+        "Responds to user in an interview"
 
         # Call rasa
         # TODO: Make the calls to rasa, translate and database concurrent
@@ -141,9 +141,10 @@ class DialogWorld:
                 lang="sv",
                 response_time=0,
                 conversation_id=user_message.conversation_id,
-                message_nbr=conversation.get_nbr_messages() -1,
+                message_nbr=conversation.get_nbr_messages() - 1,
                 text=random.choice(callstoaction.tooshort),
                 text_en="Please elaborate and write a longer answer so I understand",
+                who="bot",
             )
         elif contains_toxicity(user_message):
             return Message(
@@ -151,9 +152,10 @@ class DialogWorld:
                 lang="sv",
                 response_time=0,
                 conversation_id=user_message.conversation_id,
-                message_nbr=conversation.get_nbr_messages() -1,
+                message_nbr=conversation.get_nbr_messages() - 1,
                 text=conversation.repeat_last_message(),
                 text_en="You said a bad word to me",
+                who="bot",
             )
 
         # Add usermessage to conversation
@@ -208,6 +210,7 @@ class DialogWorld:
                 message_nbr=-1,
                 text=conversation.repeat_last_message(),
                 text_en="You said a bad word to me",
+                who="bot",
             )
         else:
             reply = self.fika_flow_handler.act(conversation)
@@ -250,4 +253,3 @@ class DialogWorld:
         )
 
         return message
-
