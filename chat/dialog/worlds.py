@@ -141,7 +141,7 @@ class DialogWorld:
                 lang="sv",
                 response_time=0,
                 conversation_id=user_message.conversation_id,
-                message_nbr=-1,
+                message_nbr=conversation.get_nbr_messages() -1,
                 text=random.choice(callstoaction.tooshort),
                 text_en="Please elaborate and write a longer answer so I understand",
             )
@@ -151,7 +151,7 @@ class DialogWorld:
                 lang="sv",
                 response_time=0,
                 conversation_id=user_message.conversation_id,
-                message_nbr=-1,
+                message_nbr=conversation.get_nbr_messages() -1,
                 text=conversation.repeat_last_message(),
                 text_en="You said a bad word to me",
             )
