@@ -144,6 +144,7 @@ class DialogWorld:
                 message_nbr=conversation.get_nbr_messages() - 1,
                 text=random.choice(callstoaction.tooshort),
                 text_en="Please elaborate and write a longer answer so I understand",
+                who="bot",
             )
         elif contains_toxicity(user_message):
             return Message(
@@ -154,6 +155,7 @@ class DialogWorld:
                 message_nbr=conversation.get_nbr_messages() - 1,
                 text=conversation.repeat_last_message(),
                 text_en="You said a bad word to me",
+                who="bot",
             )
 
         # Add usermessage to conversation
@@ -208,6 +210,7 @@ class DialogWorld:
                 message_nbr=-1,
                 text=conversation.repeat_last_message(),
                 text_en="You said a bad word to me",
+                who="bot",
             )
         else:
             reply = self.fika_flow_handler.act(conversation)
