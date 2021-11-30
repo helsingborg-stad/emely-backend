@@ -214,15 +214,22 @@ class Conversation(BaseModel):
         return len(self.messages)
 
     def repeat_last_message(self) -> str:
-        "Repeats last message. Used when user says badword"
-        latest_emely_message = self.messages[-2]
-        assert latest_emely_message.who == "bot"
+        "Gets last message. Used when user says badword"
+        for i in range(1, 3):
+            recent_message = self.messages[-i]
+            if recent_message.who == "bot":
+                latest_emely_message = recent_message
+                break
+
         return latest_emely_message.text
 
     def last_bot_message_was_hardcoded(self) -> str:
         "Returns true if Emelys last message was hardcoded"
-        latest_emely_message = self.messages[-2]
-        assert latest_emely_message.who == "bot"
+        for i in range(1, 3):
+            recent_message = self.messages[-i]
+            if recent_message.who == "bot":
+                latest_emely_message = recent_message
+                break
         return latest_emely_message.is_hardcoded
 
     def get_last_question(self) -> str:
