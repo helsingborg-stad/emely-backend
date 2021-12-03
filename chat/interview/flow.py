@@ -10,10 +10,10 @@ import pandas as pd
 import random
 
 
-tough_question_max_length = 5
-personal_question_max_length = 3
-general_question_max_length = 3
-job_question_max_length = 3
+tough_question_max_length = 3
+personal_question_max_length = 2
+general_question_max_length = 2
+job_question_max_length = 2
 small_talk_max_length = 2
 
 interview_model_context_length = 8
