@@ -71,6 +71,7 @@ class ConversationInit(BaseModel):
     name: str
     persona: str
     user_ip_number: str
+    use_huggingface: bool
 
     job: Optional[str] = Field(None, title="job for interview conversation")
     has_experience: Optional[bool] = Field(True, title="If user has work experience")
@@ -113,6 +114,7 @@ class Conversation(BaseModel):
     question_list: List
     user_id: Optional[str] = Field(None)
     user_ip_number: str
+    use_huggingface: bool
 
     # Default values
     conversation_id: str = None  # Is set first when we've pushed to firestore so it has to be None at initialisation

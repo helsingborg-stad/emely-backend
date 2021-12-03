@@ -12,7 +12,7 @@ personas = [
     "your persona:i am a computer geek",
     "your persona:i am an hockey fan",
 ]
-fika_model_context_length = 10
+fika_model_context_length = 8
 max_dialog_length = 40
 
 
@@ -35,15 +35,20 @@ class FikaFlowHandler:
             return self.goodbye(conversation)
 
         context = conversation.get_last_x_message_strings(fika_model_context_length)
-        if os.environ["USE_HUGGINGFACE_FIKA"] == "1":
+        if conversation.use_huggingface:
             try:
-                model_reply, response_time = self.huggingface_fika_model.get_response(context)
+                model_reply, response_time = self.huggingface_fika_model.get_response(
+                    context
+                )
             except:
                 model_reply, response_time = self.fika_model.get_response(context)
         else:
             model_reply, response_time = self.fika_model.get_response(context)
         reply = BotMessage(
-            lang="en", text=model_reply, response_time=response_time, is_hardcoded=False,
+            lang="en",
+            text=model_reply,
+            response_time=response_time,
+            is_hardcoded=False,
         )
         # Post filtering of model replies
         # if is_too_repetitive(reply, conversation):
