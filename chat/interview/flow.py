@@ -147,7 +147,7 @@ class InterviewFlowHandler:
             context = small_talk_persona + conversation.get_last_x_message_strings(
                 fika_model_context_length
             )
-            if os.environ["USE_HUGGINGFACE_FIKA"] == "1":
+            if conversation.use_huggingface:
                 try:
                     (
                         model_reply,
