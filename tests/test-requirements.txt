@@ -1,0 +1,4 @@
+pandas
+seaborn
+requests_async
+pytest
