@@ -71,14 +71,12 @@ class ConversationInit(BaseModel):
     name: str
     persona: str
     user_ip_number: str
+    use_huggingface: bool
 
     job: Optional[str] = Field(None, title="job for interview conversation")
     has_experience: Optional[bool] = Field(True, title="If user has work experience")
     enable_small_talk: Optional[bool] = Field(True, title="enables small talk")
     user_id: Optional[str] = Field(None, title="user id")
-    use_huggingface: Optional[bool] = Field(
-        False, title="Enables using the huggingface model"
-    )
 
     class Config:
         """ Default values sent when testing through swagger docs """
