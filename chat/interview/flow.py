@@ -225,11 +225,14 @@ class InterviewFlowHandler:
         elif intent == "dont_understand":
 
             # If it was a question - we want to pop an alternative formulation of it
-            if conversation.last_bot_message_was_hardcoded():
+            if (
+                conversation.last_bot_message_was_hardcoded()
+                and conversation.current_dialog_block != "greet"
+            ):
 
-                if conversation.current_dialog_block_length == 1:
-                    last_question = conversation.get_last_question()
+                if conversation.current_dialog_block_length == 0:
                     try:
+                        last_question = conversation.repeat_last_message()
                         text = self.get_new_question(last_question)
                     except Exception as e:
                         logging.warning(
@@ -258,10 +261,10 @@ class InterviewFlowHandler:
         1. Find the question in the question dataframe
         2. Pick another version of the question
         3. Concatenate with the rasa.dont_understand_other_formulation """
-        transitions = self.question_df["transition"].copy()
+        all_questions = self.question_df[["alt_1", "alt_2", "alt_3"]].copy()
         idx = None
-        for i, trans in transitions.iteritems():
-            if trans in question:
+        for i, alts in all_questions.iterrows():
+            if any([alt in question for alt in alts]):
                 idx = i
                 break
         if idx is None:
@@ -269,9 +272,7 @@ class InterviewFlowHandler:
             return question
         else:
             new_transition = rasa.dont_understand_other_formulation
-            question_alternatives = self.question_df.loc[idx][
-                ["alt_1", "alt_2", "alt_3"]
-            ]
+            question_alternatives = all_questions.loc[idx]
             new_question = None
             for alt_q in question_alternatives:
                 if alt_q not in question:
