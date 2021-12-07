@@ -1,6 +1,6 @@
 from chat.data.types import Conversation, BotMessage
 from chat.dialog.models import InterviewModel, FikaModel, HuggingfaceFika
-from chat.dialog.filters import is_too_repetitive, remove_lies
+from chat.dialog.filters import is_too_repetitive, remove_lies, contains_question
 from chat.hardcoded_messages import greetings, goodbyes, rasa
 import logging
 import os
@@ -133,6 +133,9 @@ class InterviewFlowHandler:
                 return self.transition_to_next_block(conversation)
             elif remove_lies(reply):
                 logging.warning("Early transition to next block due lying")
+                return self.transition_to_next_block(conversation)
+            elif not contains_question(reply):
+                logging.warning("Early transition to next block due to non-question")
                 return self.transition_to_next_block(conversation)
 
             return reply

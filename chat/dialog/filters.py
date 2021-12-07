@@ -133,6 +133,12 @@ def remove_lies(bot_message: BotMessage) -> bool:
         return True
 
 
+def contains_question(reply: BotMessage) -> bool:
+    "Determines if reply is not a question"
+
+    return "?" in reply.text
+
+
 # Method 2: Just remove if
 
 
