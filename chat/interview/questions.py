@@ -104,10 +104,12 @@ class QuestionGenerator:
             self.candidate_questions = self.candidate_questions[
                 self.candidate_questions.loc[:, "fit_4_no_exp"] == True
             ]
-        
+
         # If job does not exist sample random questions
         if job not in set(self.question_df.loc[:, "job"]) or job == "Allmän":
-            self.temp_config["nbr_random_questions"] += self.temp_config["nbr_job_questions"]
+            self.temp_config["nbr_random_questions"] += self.temp_config[
+                "nbr_job_questions"
+            ]
             self.temp_config["nbr_job_questions"] = 0
 
         # We only need to return a list of question strings
@@ -142,7 +144,9 @@ class QuestionGenerator:
                 )
                 question_list.append(next_question)
             except Exception as e:
-                logging.error(f'Failed to get question type: {question_type} for job={job} with no_exp={no_exp}')
+                logging.error(
+                    f"Failed to get question type: {question_type} for job={job} with no_exp={no_exp}"
+                )
                 logging.error(e)
 
         # Append the last question
@@ -248,4 +252,5 @@ class QuestionGenerator:
         "Returns jobs with questions"
         job_list = list(self.question_df["job"].unique())
         job_list.remove("Allmän")
-        return job_list
+        return ["Allmän intervjuträning"] + job_list
+
