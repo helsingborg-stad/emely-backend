@@ -137,7 +137,7 @@ class Conversation(BaseModel):
                 )  # Remove a little bit since we don't want 1
 
         else:
-            progress = self.nbr_messages / chat.fika.flow.max_dialog_length
+            progress = self.nbr_messages / (chat.fika.flow.max_dialog_length + 1)
 
         self.nbr_messages += 1
         self.messages.append(message)
