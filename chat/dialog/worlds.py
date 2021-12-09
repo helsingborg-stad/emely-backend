@@ -136,6 +136,7 @@ class DialogWorld:
 
         # Replies that aren't added to the conversation
         if len(user_message.text) < float(os.environ["MIN_ANSWER_LENGTH"]) and not conversation.current_dialog_block=="small_talk":
+            # In this case we request a more elaborate answer if we are not in the small-talk block
             return Message(
                 is_hardcoded=True,
                 lang="sv",
