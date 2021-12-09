@@ -135,7 +135,7 @@ class DialogWorld:
         )
 
         # Replies that aren't added to the conversation
-        if len(user_message.text) < float(os.environ["MIN_ANSWER_LENGTH"]):
+        if len(user_message.text) < float(os.environ["MIN_ANSWER_LENGTH"]) and not conversation.current_dialog_block=="small_talk":
             return Message(
                 is_hardcoded=True,
                 lang="sv",
