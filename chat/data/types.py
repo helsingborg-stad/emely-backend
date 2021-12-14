@@ -145,7 +145,9 @@ class Conversation(BaseModel):
         self.progress = progress
         return progress
 
-    def add_user_message(self, user_message: UserMessage, text_en: str, show_emely: bool):
+    def add_user_message(
+        self, user_message: UserMessage, text_en: str, show_emely: bool
+    ):
         "Adds a UserMessage to conversation by first converting it to a Message"
         message = Message(
             **user_message.dict(),
@@ -203,13 +205,14 @@ class Conversation(BaseModel):
         sorted_messages = sorted(
             self.messages, key=lambda x: x.message_nbr, reverse=False
         )
+        filtered_messages = filter(lambda message: message.show_emely, sorted_messages)
 
         # We will take all
         if x >= len(sorted_messages):
-            messages = sorted_messages
+            messages = filtered_messages
 
         else:
-            messages = sorted_messages[-x:]
+            messages = filtered_messages[-x:]
 
         strings = [m.text_en for m in messages]
         return "\n".join(strings)
