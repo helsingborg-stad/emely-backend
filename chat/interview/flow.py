@@ -19,8 +19,8 @@ small_talk_max_length = 2
 interview_model_context_length = 8
 fika_model_context_length = 4
 
-small_talk_persona = """your persona: my name is Emely.\nyour persona: i am a digital assistant.\nyour persona: i help people learn Swedish\n"""
-
+#small_talk_persona = """your persona: my name is Emely.\nyour persona: i am a digital assistant.\nyour persona: i help people learn Swedish\n"""
+small_talk_persona = """your persona: my name is Emely\nyour persona: i speak Swedish\nyour persona: i interview people\n"""
 
 class InterviewFlowHandler:
     "Object that encapsulates all methods relating to dialog flow"
