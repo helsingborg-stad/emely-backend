@@ -81,7 +81,7 @@ class InterviewFlowHandler:
         return bot_message
 
     def transition_to_next_block(
-        self, conversation: Conversation, transition: str = None
+        self, conversation: Conversation, transition: str = None, filtered_message: str = None, filtered_reason: str = None
     ) -> BotMessage:
         "Pops a new question or hardcoded message and moves into the next block"
         if len(conversation.question_list) > 0:
@@ -96,7 +96,7 @@ class InterviewFlowHandler:
             conversation.current_dialog_block_length = 0
 
             bot_message = BotMessage(
-                is_hardcoded=True, lang=conversation.lang, text=text, response_time=0,
+                is_hardcoded=True, lang=conversation.lang, text=text, response_time=0, filtered_message=filtered_message, filtered_reason=filtered_reason
             )
 
             return bot_message
@@ -129,14 +129,14 @@ class InterviewFlowHandler:
             )
             # Post filtering of model replies
             if is_too_repetitive(reply, conversation):
-                logging.warning("Early transition to next block due to repetitiveness")
-                return self.transition_to_next_block(conversation)
+                reason = "too_repetitive"
+                return self.transition_to_next_block(conversation, filtered_message=reply.text, filtered_reason=reason)
             elif remove_lies(reply):
-                logging.warning("Early transition to next block due lying")
-                return self.transition_to_next_block(conversation)
+                reason = "lie"
+                return self.transition_to_next_block(conversation, filtered_message=reply.text, filtered_reason=reason)
             elif not contains_question(reply):
-                logging.warning("Early transition to next block due to non-question")
-                return self.transition_to_next_block(conversation)
+                reason = "not_question"
+                return self.transition_to_next_block(conversation, filtered_message=reply.text, filtered_reason=reason)
 
             return reply
 
@@ -241,7 +241,7 @@ class InterviewFlowHandler:
                         )
                         transition_message = rasa.dont_understand_transition
                         return self.transition_to_next_block(
-                            conversation, transition_message
+                            conversation, transition=transition_message
                         )
                 else:
                     text = rasa.replies[intent]
@@ -249,7 +249,7 @@ class InterviewFlowHandler:
             # If user didn't understand the blenderbot we move on
             else:
                 transition_message = rasa.dont_understand_transition
-                return self.transition_to_next_block(conversation, transition_message)
+                return self.transition_to_next_block(conversation, transition=transition_message)
 
         else:
             logging.warning("Unknown intent slipped through")
