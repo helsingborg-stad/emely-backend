@@ -50,6 +50,7 @@ class Message(BaseModel):
     text: str
     text_en: str
     response_time: float
+    show_emely: bool
     who: str
 
     # Default values
@@ -144,7 +145,7 @@ class Conversation(BaseModel):
         self.progress = progress
         return progress
 
-    def add_user_message(self, user_message: UserMessage, text_en: str):
+    def add_user_message(self, user_message: UserMessage, text_en: str, show_emely: bool):
         "Adds a UserMessage to conversation by first converting it to a Message"
         message = Message(
             **user_message.dict(),
@@ -152,6 +153,7 @@ class Conversation(BaseModel):
             message_nbr=self.nbr_messages,
             who="user",
             is_hardcoded=False,
+            show_emely=show_emely,
         )
 
         self.add_message(message)
