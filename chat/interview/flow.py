@@ -19,8 +19,32 @@ small_talk_max_length = 2
 interview_model_context_length = 8
 fika_model_context_length = 4
 
-# small_talk_persona = """your persona: my name is Emely.\nyour persona: i am a digital assistant.\nyour persona: i help people learn Swedish\n"""
 small_talk_persona = """your persona: my name is Emely\nyour persona: i speak Swedish\nyour persona: i interview people\n"""
+
+filter_lies = False
+
+interview_block_list = ["hobbies",
+    "hobby",
+    "do for a living",
+    "stay at home mom",
+    "i'm unemployed",
+    "i'm just about to start my interview",
+    "it's not a good way to live",
+    "that's not a good way to live",
+    "in bed",
+    "children with my child",
+]
+small_talk_block_list = ["hobbies",
+    "hobby",
+    "do for a living",
+    "stay at home mom",
+    "i'm unemployed",
+    "i'm just about to start my interview",
+    "it's not a good way to live",
+    "that's not a good way to live",
+    "in bed",
+    "children with my child",
+]
 
 
 class InterviewFlowHandler:
@@ -130,7 +154,7 @@ class InterviewFlowHandler:
             context = conversation.get_last_x_message_strings(
                 interview_model_context_length
             )
-            model_reply, response_time = self.interview_model.get_response(context)
+            model_reply, response_time = self.interview_model.get_response(context, interview_block_list)
             reply = BotMessage(
                 lang="en",
                 text=model_reply,
@@ -143,7 +167,7 @@ class InterviewFlowHandler:
                 return self.transition_to_next_block(
                     conversation, filtered_message=reply.text, filtered_reason=reason
                 )
-            elif remove_lies(reply):
+            elif remove_lies(reply) and filter_lies:
                 reason = "lie"
                 return self.transition_to_next_block(
                     conversation, filtered_message=reply.text, filtered_reason=reason
@@ -173,9 +197,9 @@ class InterviewFlowHandler:
                         response_time,
                     ) = self.huggingface_fika_model.get_response(context)
                 except:
-                    model_reply, response_time = self.fika_model.get_response(context)
+                    model_reply, response_time = self.fika_model.get_response(context, small_talk_block_list)
             else:
-                model_reply, response_time = self.fika_model.get_response(context)
+                model_reply, response_time = self.fika_model.get_response(context, small_talk_block_list)
             reply = BotMessage(
                 lang="en",
                 text=model_reply,

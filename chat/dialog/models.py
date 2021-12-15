@@ -139,9 +139,17 @@ class InterviewModel(MLModel):
     def __init__(self, url=interview_model_url):
         inference_url = url + "/inference"
         super().__init__(url=inference_url)
+    
+    def get_response(self, x, block_list):
+        ""
+        inputs = self._format_input(x, block_list)
+        r = requests.post(url=self.url, json=inputs)
+        outputs = self._format_outputs(r)
 
-    def _format_input(self, x):
-        return {"text": x}
+        return outputs
+
+    def _format_input(self, x, block_list):
+        return {"text": x, "block_list": block_list}
 
     def _format_outputs(self, y):
         t = y.elapsed

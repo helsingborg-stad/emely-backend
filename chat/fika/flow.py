@@ -17,6 +17,11 @@ personas = [
 fika_model_context_length = 8
 max_dialog_length = 40
 
+fika_block_list = ["it's not a good way to live",
+    "that's not a good way to live",
+    "in bed",
+    "children with my child",
+]
 
 class FikaFlowHandler:
     "Object that encapsulates methods for fika dialog flow"
@@ -45,9 +50,9 @@ class FikaFlowHandler:
                     context
                 )
             except:
-                model_reply, response_time = self.fika_model.get_response(context)
+                model_reply, response_time = self.fika_model.get_response(context, fika_block_list)
         else:
-            model_reply, response_time = self.fika_model.get_response(context)
+            model_reply, response_time = self.fika_model.get_response(context, fika_block_list)
         reply = BotMessage(
             lang="en",
             text=model_reply,
