@@ -9,10 +9,10 @@ import random
 goodbye_words = ["hej då", "hejdå"]
 personas = [
     "your persona:my name is Emely\nyour persona:i speak Swedish\nyour persona:i like horses\n",
-    "your persona:my name is Emely\nyour persona:i speak Swedish\nyour persona:i am a computer geek",
-    "your persona:my name is Emely\nyour persona:i speak Swedish\nyour persona:i like hockey",
-    "your persona:my name is Emely\nyour persona:i speak Swedish\nyour persona:i like snow",
-    "your persona:my name is Emely\nyour persona:i speak Swedish\nyour persona:i like summer",
+    "your persona:my name is Emely\nyour persona:i speak Swedish\nyour persona:i am a computer geek\n",
+    "your persona:my name is Emely\nyour persona:i speak Swedish\nyour persona:i like hockey\n",
+    "your persona:my name is Emely\nyour persona:i speak Swedish\nyour persona:i like snow\n",
+    "your persona:my name is Emely\nyour persona:i speak Swedish\nyour persona:i like summer\n",
 ]
 fika_model_context_length = 8
 max_dialog_length = 40
@@ -36,7 +36,9 @@ class FikaFlowHandler:
         ):
             return self.goodbye(conversation)
 
-        context = self.persona + conversation.get_last_x_message_strings(fika_model_context_length)
+        context = self.persona + conversation.get_last_x_message_strings(
+            fika_model_context_length
+        )
         if conversation.use_huggingface:
             try:
                 model_reply, response_time = self.huggingface_fika_model.get_response(

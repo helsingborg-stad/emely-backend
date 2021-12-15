@@ -106,13 +106,20 @@ class QuestionGenerator:
             ]
 
         # If job does not exist assume "Allmän intervjuträning"
-        if job not in set(self.question_df.loc[:, "job"]) or job == "Allmän intervjuträning":
-            self.candidate_questions = self.candidate_questions[self.candidate_questions.loc[:, "fit_4_general"] == 1]
-            self.temp_config["nbr_random_questions"] += self.temp_config[
-                "nbr_job_questions"
-            ] + 1
+        if (
+            job not in set(self.question_df.loc[:, "job"])
+            or job == "Allmän intervjuträning"
+        ):
+            self.candidate_questions = self.candidate_questions[
+                self.candidate_questions.loc[:, "fit_4_general"] == 1
+            ]
+            self.temp_config["nbr_random_questions"] += (
+                self.temp_config["nbr_job_questions"] + 1
+            )
             self.temp_config["nbr_job_questions"] = 0
-            self.temp_config["nbr_always_questions"] -= 1   # In this case we currently only have one "always"-question
+            self.temp_config[
+                "nbr_always_questions"
+            ] -= 1  # In this case we currently only have one "always"-question
 
         # We only need to return a list of question strings
         question_list = []

@@ -19,8 +19,9 @@ small_talk_max_length = 2
 interview_model_context_length = 8
 fika_model_context_length = 4
 
-#small_talk_persona = """your persona: my name is Emely.\nyour persona: i am a digital assistant.\nyour persona: i help people learn Swedish\n"""
+# small_talk_persona = """your persona: my name is Emely.\nyour persona: i am a digital assistant.\nyour persona: i help people learn Swedish\n"""
 small_talk_persona = """your persona: my name is Emely\nyour persona: i speak Swedish\nyour persona: i interview people\n"""
+
 
 class InterviewFlowHandler:
     "Object that encapsulates all methods relating to dialog flow"
@@ -81,7 +82,11 @@ class InterviewFlowHandler:
         return bot_message
 
     def transition_to_next_block(
-        self, conversation: Conversation, transition: str = None, filtered_message: str = None, filtered_reason: str = None
+        self,
+        conversation: Conversation,
+        transition: str = None,
+        filtered_message: str = None,
+        filtered_reason: str = None,
     ) -> BotMessage:
         "Pops a new question or hardcoded message and moves into the next block"
         if len(conversation.question_list) > 0:
@@ -96,7 +101,12 @@ class InterviewFlowHandler:
             conversation.current_dialog_block_length = 0
 
             bot_message = BotMessage(
-                is_hardcoded=True, lang=conversation.lang, text=text, response_time=0, filtered_message=filtered_message, filtered_reason=filtered_reason
+                is_hardcoded=True,
+                lang=conversation.lang,
+                text=text,
+                response_time=0,
+                filtered_message=filtered_message,
+                filtered_reason=filtered_reason,
             )
 
             return bot_message
@@ -130,13 +140,19 @@ class InterviewFlowHandler:
             # Post filtering of model replies
             if is_too_repetitive(reply, conversation):
                 reason = "too_repetitive"
-                return self.transition_to_next_block(conversation, filtered_message=reply.text, filtered_reason=reason)
+                return self.transition_to_next_block(
+                    conversation, filtered_message=reply.text, filtered_reason=reason
+                )
             elif remove_lies(reply):
                 reason = "lie"
-                return self.transition_to_next_block(conversation, filtered_message=reply.text, filtered_reason=reason)
+                return self.transition_to_next_block(
+                    conversation, filtered_message=reply.text, filtered_reason=reason
+                )
             elif not contains_question(reply):
                 reason = "not_question"
-                return self.transition_to_next_block(conversation, filtered_message=reply.text, filtered_reason=reason)
+                return self.transition_to_next_block(
+                    conversation, filtered_message=reply.text, filtered_reason=reason
+                )
 
             return reply
 
@@ -249,7 +265,9 @@ class InterviewFlowHandler:
             # If user didn't understand the blenderbot we move on
             else:
                 transition_message = rasa.dont_understand_transition
-                return self.transition_to_next_block(conversation, transition=transition_message)
+                return self.transition_to_next_block(
+                    conversation, transition=transition_message
+                )
 
         else:
             logging.warning("Unknown intent slipped through")
