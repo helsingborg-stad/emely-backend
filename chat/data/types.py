@@ -52,6 +52,7 @@ class Message(BaseModel):
     text: str
     text_en: str
     response_time: float
+    show_emely: bool
     who: str
 
     # Default values
@@ -148,14 +149,24 @@ class Conversation(BaseModel):
         self.progress = progress
         return progress
 
-    def add_user_message(self, user_message: UserMessage, text_en: str):
+    def add_user_message(
+        self,
+        user_message: UserMessage,
+        text_en: str,
+        show_emely: bool,
+        filtered_reason: str = None,
+    ):
         "Adds a UserMessage to conversation by first converting it to a Message"
+        if not show_emely:
+            assert filtered_reason != None
         message = Message(
             **user_message.dict(),
             text_en=text_en,
             message_nbr=self.nbr_messages,
             who="user",
             is_hardcoded=False,
+            show_emely=show_emely,
+            filtered_reason=filtered_reason,
         )
 
         self.add_message(message)
@@ -205,13 +216,14 @@ class Conversation(BaseModel):
         sorted_messages = sorted(
             self.messages, key=lambda x: x.message_nbr, reverse=False
         )
+        filtered_messages = filter(lambda message: message.show_emely, sorted_messages)
 
         # We will take all
         if x >= len(sorted_messages):
-            messages = sorted_messages
+            messages = filtered_messages
 
         else:
-            messages = sorted_messages[-x:]
+            messages = filtered_messages[-x:]
 
         strings = [m.text_en for m in messages]
         return "\n".join(strings)
