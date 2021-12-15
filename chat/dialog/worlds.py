@@ -141,7 +141,7 @@ class DialogWorld:
         ):
             # We don't want these messages to show up in the dialog history
             conversation.add_user_message(
-                user_message, text_en, show_emely=False, why_filtered="too_short"
+                user_message, text_en, show_emely=False, filtered_reason="too_short"
             )
             reply = Message(
                 is_hardcoded=True,
@@ -159,7 +159,7 @@ class DialogWorld:
         elif contains_toxicity(user_message):
             # We don't want these messages to show up in the dialog history
             conversation.add_user_message(
-                user_message, text_en, show_emely=False, why_filtered="toxic"
+                user_message, text_en, show_emely=False, filtered_reason="toxic"
             )
             reply = Message(
                 is_hardcoded=True,

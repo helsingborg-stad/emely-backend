@@ -58,7 +58,7 @@ class Message(BaseModel):
     is_hardcoded: Optional[bool]
     progress: float = 0
     recording_used: bool = False
-    why_filtered: Optional[str]
+    filtered_reason: Optional[str]
 
     def to_dict(self):
         "Used before pushing to database"
@@ -151,11 +151,11 @@ class Conversation(BaseModel):
         user_message: UserMessage,
         text_en: str,
         show_emely: bool,
-        why_filtered: str = None,
+        filtered_reason: str = None,
     ):
         "Adds a UserMessage to conversation by first converting it to a Message"
         if not show_emely:
-            assert why_filtered != None
+            assert filtered_reason != None
         message = Message(
             **user_message.dict(),
             text_en=text_en,
@@ -163,7 +163,7 @@ class Conversation(BaseModel):
             who="user",
             is_hardcoded=False,
             show_emely=show_emely,
-            why_filtered=why_filtered,
+            filtered_reason=filtered_reason,
         )
 
         self.add_message(message)
