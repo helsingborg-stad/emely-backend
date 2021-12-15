@@ -134,13 +134,18 @@ class DialogWorld:
             user_message.conversation_id
         )
 
-        # Replies that aren't added to the conversation
+        # Too short filter
         if (
             len(user_message.text) < float(os.environ["MIN_ANSWER_LENGTH"])
             and not conversation.current_dialog_block == "small_talk"
         ):
-            # In this case we request a more elaborate answer if we are not in the small-talk block
-            return Message(
+
+            # We don't want these messages to show up in the dialog history
+            reason="too_short"
+            conversation.add_user_message(
+                user_message, text_en, show_emely=False, filtered_reason=reason
+            )
+            reply = Message(
                 is_hardcoded=True,
                 lang="sv",
                 response_time=0,
@@ -149,9 +154,18 @@ class DialogWorld:
                 text=random.choice(callstoaction.tooshort),
                 text_en="Please elaborate and write a longer answer so I understand",
                 who="bot",
+                show_emely=False,
+                filtered_reason=reason,
             )
+
+        # Toxicity filter
         elif contains_toxicity(user_message):
-            return Message(
+            # We don't want these messages to show up in the dialog history
+            reason="toxic"
+            conversation.add_user_message(
+                user_message, text_en, show_emely=False, filtered_reason=reason
+            )
+            reply = Message(
                 is_hardcoded=True,
                 lang="sv",
                 response_time=0,
@@ -160,26 +174,28 @@ class DialogWorld:
                 text=conversation.repeat_last_message(),
                 text_en="You said a bad word to me",
                 who="bot",
+                show_emely=False,
+                filtered_reason=reason,
             )
-
-        # Add usermessage to conversation with rasa intent
-        if rasa_response["confidence"] >= self.rasa_threshold:
-            intent = rasa_response["name"]
-            conversation.add_user_message(user_message, text_en, rasa_intent=intent)
         else:
-            intent = None
-            conversation.add_user_message(user_message, text_en)
 
-        # Rasa act
-        if intent in rasa.replies.keys():
-            reply = self.interview_flow_handler.rasa_act(intent, conversation)
+            if rasa_response["confidence"] >= self.rasa_threshold:
+                intent = rasa_response["name"]
+            else:
+                intent = None
 
-        # Regular act
-        else:
-            reply = self.interview_flow_handler.act(conversation)
+            conversation.add_user_message(user_message, text_en, rasa_intent=intent, show_emely=True)
 
-        # Translate reply depending on if it was hardcoded or not
-        reply = await self.handle_bot_reply(reply, conversation)
+            # Rasa act
+            if intent in rasa.replies.keys():
+                reply = self.interview_flow_handler.rasa_act(intent, conversation)
+
+            # Regular act
+            else:
+                reply = self.interview_flow_handler.act(conversation)
+
+            # Translate reply depending on if it was hardcoded or not
+            reply = await self.handle_bot_reply(reply, conversation)
 
         # Add reply to conversation
         progress = conversation.add_message(reply)
@@ -202,23 +218,23 @@ class DialogWorld:
             user_message.conversation_id
         )
 
-        # Add usermessage to conversation
-        conversation.add_user_message(user_message, text_en)
-
         # Toxic messages are replied to without doing anything specific.
         # Emely will pretend like she didn't understand and repeat her previous statement
         if contains_toxicity(user_message):
-            return Message(
+            conversation.add_user_message(user_message, text_en, show_emely=False)
+            reply = Message(
                 is_hardcoded=True,
                 lang="sv",
                 response_time=0,
-                conversation_id=conversation.conversation_id,
-                message_nbr=-1,
+                conversation_id=user_message.conversation_id,
+                message_nbr=conversation.get_nbr_messages() - 1,
                 text=conversation.repeat_last_message(),
                 text_en="You said a bad word to me",
                 who="bot",
+                show_emely=False,
             )
         else:
+            conversation.add_user_message(user_message, text_en, show_emely=True)
             reply = self.fika_flow_handler.act(conversation)
 
         # Translate reply depending on if it was hardcoded or not
@@ -256,6 +272,7 @@ class DialogWorld:
             message_nbr=conversation.get_nbr_messages(),
             text=text,
             text_en=text_en,
+            show_emely=True,
         )
 
         return message

@@ -22,7 +22,7 @@ init_data = {
     "has_experience": True,
     "enable_small_talk": False,
     "user_id": None,
-    "use_huggingface": True,
+    "use_huggingface": False,
 }
 
 if conversation_id is None:
