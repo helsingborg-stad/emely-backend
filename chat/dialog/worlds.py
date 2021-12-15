@@ -153,6 +153,7 @@ class DialogWorld:
                 text_en="Please elaborate and write a longer answer so I understand",
                 who="bot",
                 show_emely=False,
+                filtered_reason="too_short_reply",
             )
 
         # Toxicity filter
@@ -171,6 +172,7 @@ class DialogWorld:
                 text_en="You said a bad word to me",
                 who="bot",
                 show_emely=False,
+                filtered_reason="toxic_reply",
             )
 
         # Rasa or Model actions
