@@ -140,8 +140,9 @@ class DialogWorld:
             and not conversation.current_dialog_block == "small_talk"
         ):
             # We don't want these messages to show up in the dialog history
+            reason="too_short"
             conversation.add_user_message(
-                user_message, text_en, show_emely=False, filtered_reason="too_short"
+                user_message, text_en, show_emely=False, filtered_reason=reason
             )
             reply = Message(
                 is_hardcoded=True,
@@ -153,14 +154,15 @@ class DialogWorld:
                 text_en="Please elaborate and write a longer answer so I understand",
                 who="bot",
                 show_emely=False,
-                filtered_reason="too_short_reply",
+                filtered_reason=reason,
             )
 
         # Toxicity filter
         elif contains_toxicity(user_message):
             # We don't want these messages to show up in the dialog history
+            reason="toxic"
             conversation.add_user_message(
-                user_message, text_en, show_emely=False, filtered_reason="toxic"
+                user_message, text_en, show_emely=False, filtered_reason=reason
             )
             reply = Message(
                 is_hardcoded=True,
@@ -172,7 +174,7 @@ class DialogWorld:
                 text_en="You said a bad word to me",
                 who="bot",
                 show_emely=False,
-                filtered_reason="toxic_reply",
+                filtered_reason=reason,
             )
 
         # Rasa or Model actions
