@@ -61,6 +61,7 @@ class Message(BaseModel):
     recording_used: bool = False
     filtered_message: str = None
     filtered_reason: str = None
+    rasa_intent: str = None
 
     def to_dict(self):
         "Used before pushing to database"
@@ -148,7 +149,9 @@ class Conversation(BaseModel):
         self.progress = progress
         return progress
 
-    def add_user_message(self, user_message: UserMessage, text_en: str):
+    def add_user_message(
+        self, user_message: UserMessage, text_en: str, rasa_intent: str = None
+    ):
         "Adds a UserMessage to conversation by first converting it to a Message"
         message = Message(
             **user_message.dict(),
@@ -156,6 +159,7 @@ class Conversation(BaseModel):
             message_nbr=self.nbr_messages,
             who="user",
             is_hardcoded=False,
+            rasa_intent=rasa_intent,
         )
 
         self.add_message(message)

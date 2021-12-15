@@ -135,7 +135,10 @@ class DialogWorld:
         )
 
         # Replies that aren't added to the conversation
-        if len(user_message.text) < float(os.environ["MIN_ANSWER_LENGTH"]) and not conversation.current_dialog_block=="small_talk":
+        if (
+            len(user_message.text) < float(os.environ["MIN_ANSWER_LENGTH"])
+            and not conversation.current_dialog_block == "small_talk"
+        ):
             # In this case we request a more elaborate answer if we are not in the small-talk block
             return Message(
                 is_hardcoded=True,
@@ -159,17 +162,19 @@ class DialogWorld:
                 who="bot",
             )
 
-        # Add usermessage to conversation
-        conversation.add_user_message(user_message, text_en)
-
-        if (
-            rasa_response["confidence"] >= self.rasa_threshold
-            and rasa_response["name"] in rasa.intents
-        ):
+        # Add usermessage to conversation with rasa intent
+        if rasa_response["confidence"] >= self.rasa_threshold:
             intent = rasa_response["name"]
+            conversation.add_user_message(user_message, text_en, rasa_intent=intent)
+        else:
+            intent = None
+            conversation.add_user_message(user_message, text_en)
+
+        # Rasa act
+        if intent in rasa.replies.keys():
             reply = self.interview_flow_handler.rasa_act(intent, conversation)
 
-        # Let dialog flow handler act
+        # Regular act
         else:
             reply = self.interview_flow_handler.act(conversation)
 
