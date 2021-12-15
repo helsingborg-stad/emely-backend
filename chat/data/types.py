@@ -40,6 +40,8 @@ class BotMessage(BaseModel):
     created_at: str = str(datetime.datetime.now())
     recording_used: bool = False
     who: str = "bot"
+    filtered_message: str = None
+    filtered_reason: str = None
 
 
 class Message(BaseModel):
@@ -57,6 +59,8 @@ class Message(BaseModel):
     is_hardcoded: Optional[bool]
     progress: float = 0
     recording_used: bool = False
+    filtered_message: str = None
+    filtered_reason: str = None
 
     def to_dict(self):
         "Used before pushing to database"
