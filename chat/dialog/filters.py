@@ -94,45 +94,6 @@ def is_too_repetitive(bot_message: BotMessage, conversation: Conversation) -> bo
             return True
 
 
-def remove_lies(bot_message: BotMessage) -> bool:
-    "Removes lies (in english) "
-
-    # We don't do anything if message is in english, there are no lies or the filter is deactivated
-    if bot_message.lang != "en" and len(lies) != 0 and not os.environ["LIE_FILTER"]:
-        return False
-
-    sentences, separators = split_text_into_sentences(bot_message.text)
-
-    lie_threshold = float(os.environ["LIE_THRESHOLD"])
-
-    keep_idx = []
-    # Create combinations of sentences and lies and check if they are similar
-    for i in range(len(sentences)):
-        combos = list(product([sentences[i]], lies))
-        lie_probabilities = [SequenceMatcher(a=s1, b=s2).ratio() for s1, s2 in combos]
-        if max(lie_probabilities) < lie_threshold:
-            keep_idx.append(i)
-
-    keep_sentences = [sentences[i] for i in keep_idx]
-    keep_separators = [separators[i] for i in keep_idx]
-
-    # Everything is kept
-    if len(keep_idx) == len(sentences):
-        return False
-    # Everything is removed
-    elif len(keep_idx) == 0:
-        return True
-
-    new_reply = stitch_together_sentences(keep_sentences, keep_separators)
-
-    # Last check if it's too short
-    if len(new_reply) > min_text_length:
-        bot_message.text = new_reply
-        return False
-    else:
-        return True
-
-
 def contains_question(reply: BotMessage) -> bool:
     "Determines if reply is not a question"
 

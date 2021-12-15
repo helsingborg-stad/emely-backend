@@ -1,6 +1,6 @@
 from chat.data.types import Conversation, BotMessage
 from chat.dialog.models import InterviewModel, FikaModel, HuggingfaceFika
-from chat.dialog.filters import is_too_repetitive, remove_lies, contains_question
+from chat.dialog.filters import is_too_repetitive, contains_question
 from chat.hardcoded_messages import greetings, goodbyes, rasa
 import logging
 import os
@@ -23,7 +23,8 @@ small_talk_persona = """your persona: my name is Emely\nyour persona: i speak Sw
 
 filter_lies = False
 
-interview_block_list = ["hobbies",
+interview_block_list = [
+    "hobbies",
     "hobby",
     "do for a living",
     "stay at home mom",
@@ -34,7 +35,8 @@ interview_block_list = ["hobbies",
     "in bed",
     "children with my child",
 ]
-small_talk_block_list = ["hobbies",
+small_talk_block_list = [
+    "hobbies",
     "hobby",
     "do for a living",
     "stay at home mom",
@@ -154,7 +156,9 @@ class InterviewFlowHandler:
             context = conversation.get_last_x_message_strings(
                 interview_model_context_length
             )
-            model_reply, response_time = self.interview_model.get_response(context, interview_block_list)
+            model_reply, response_time = self.interview_model.get_response(
+                context, interview_block_list
+            )
             reply = BotMessage(
                 lang="en",
                 text=model_reply,
@@ -164,11 +168,6 @@ class InterviewFlowHandler:
             # Post filtering of model replies
             if is_too_repetitive(reply, conversation):
                 reason = "too_repetitive"
-                return self.transition_to_next_block(
-                    conversation, filtered_message=reply.text, filtered_reason=reason
-                )
-            elif remove_lies(reply) and filter_lies:
-                reason = "lie"
                 return self.transition_to_next_block(
                     conversation, filtered_message=reply.text, filtered_reason=reason
                 )
@@ -197,9 +196,13 @@ class InterviewFlowHandler:
                         response_time,
                     ) = self.huggingface_fika_model.get_response(context)
                 except:
-                    model_reply, response_time = self.fika_model.get_response(context, small_talk_block_list)
+                    model_reply, response_time = self.fika_model.get_response(
+                        context, small_talk_block_list
+                    )
             else:
-                model_reply, response_time = self.fika_model.get_response(context, small_talk_block_list)
+                model_reply, response_time = self.fika_model.get_response(
+                    context, small_talk_block_list
+                )
             reply = BotMessage(
                 lang="en",
                 text=model_reply,
