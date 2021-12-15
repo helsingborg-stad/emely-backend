@@ -139,6 +139,7 @@ class DialogWorld:
             len(user_message.text) < float(os.environ["MIN_ANSWER_LENGTH"])
             and not conversation.current_dialog_block == "small_talk"
         ):
+
             # We don't want these messages to show up in the dialog history
             reason="too_short"
             conversation.add_user_message(
@@ -176,20 +177,20 @@ class DialogWorld:
                 show_emely=False,
                 filtered_reason=reason,
             )
-
-        # Rasa or Model actions
         else:
-            # Add usermessage to conversation
-            conversation.add_user_message(user_message, text_en, show_emely=True)
 
-            if (
-                rasa_response["confidence"] >= self.rasa_threshold
-                and rasa_response["name"] in rasa.intents
-            ):
+            if rasa_response["confidence"] >= self.rasa_threshold:
                 intent = rasa_response["name"]
+            else:
+                intent = None
+
+            conversation.add_user_message(user_message, text_en, rasa_intent=intent, show_emely=True)
+
+            # Rasa act
+            if intent in rasa.replies.keys():
                 reply = self.interview_flow_handler.rasa_act(intent, conversation)
 
-            # Let dialog flow handler act
+            # Regular act
             else:
                 reply = self.interview_flow_handler.act(conversation)
 

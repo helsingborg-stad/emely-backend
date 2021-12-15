@@ -62,6 +62,7 @@ class Message(BaseModel):
     recording_used: bool = False
     filtered_message: str = None
     filtered_reason: str = None
+    rasa_intent: str = None
 
     def to_dict(self):
         "Used before pushing to database"
@@ -153,6 +154,7 @@ class Conversation(BaseModel):
         self,
         user_message: UserMessage,
         text_en: str,
+        rasa_intent: str = None
         show_emely: bool,
         filtered_reason: str = None,
     ):
@@ -165,6 +167,7 @@ class Conversation(BaseModel):
             message_nbr=self.nbr_messages,
             who="user",
             is_hardcoded=False,
+            rasa_intent=rasa_intent,
             show_emely=show_emely,
             filtered_reason=filtered_reason,
         )
