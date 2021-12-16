@@ -141,7 +141,7 @@ class DialogWorld:
         ):
 
             # We don't want these messages to show up in the dialog history
-            reason="too_short"
+            reason = "too_short"
             conversation.add_user_message(
                 user_message, text_en, show_emely=False, filtered_reason=reason
             )
@@ -161,7 +161,7 @@ class DialogWorld:
         # Toxicity filter
         elif contains_toxicity(user_message):
             # We don't want these messages to show up in the dialog history
-            reason="toxic"
+            reason = "toxic"
             conversation.add_user_message(
                 user_message, text_en, show_emely=False, filtered_reason=reason
             )
@@ -184,7 +184,9 @@ class DialogWorld:
             else:
                 intent = None
 
-            conversation.add_user_message(user_message, text_en, rasa_intent=intent, show_emely=True)
+            conversation.add_user_message(
+                user_message, text_en, rasa_intent=intent, show_emely=True
+            )
 
             # Rasa act
             if intent in rasa.replies.keys():
@@ -207,6 +209,9 @@ class DialogWorld:
 
     async def fika_reply(self, user_message: UserMessage):
         "Responds to user during fika"
+
+        rasa_response = await self.rasa_model.get_response(user_message)
+
         # Translate
         # TODO: Concurrent calls to database and translate
         text_en = await self.translator.translate(
@@ -234,8 +239,20 @@ class DialogWorld:
                 show_emely=False,
             )
         else:
-            conversation.add_user_message(user_message, text_en, show_emely=True)
-            reply = self.fika_flow_handler.act(conversation)
+
+            if rasa_response["confidence"] >= self.rasa_threshold:
+                intent = rasa_response["name"]
+            else:
+                intent = None
+
+            conversation.add_user_message(
+                user_message, text_en, rasa_intent=intent, show_emely=True
+            )
+
+            if intent in rasa.fika_intents:
+                reply = self.interview_flow_handler.rasa_act(intent, conversation)
+            else:
+                reply = self.fika_flow_handler.act(conversation)
 
         # Translate reply depending on if it was hardcoded or not
         reply = await self.handle_bot_reply(reply, conversation)
