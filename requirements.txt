@@ -9,3 +9,5 @@ aioify
 aiohttp
 setuptools~=52.0.0
 nltk
+fastapi
+uvicorn
