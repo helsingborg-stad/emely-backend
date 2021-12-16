@@ -154,8 +154,8 @@ class Conversation(BaseModel):
         self,
         user_message: UserMessage,
         text_en: str,
-        rasa_intent: str = None
         show_emely: bool,
+        rasa_intent: str = None,
         filtered_reason: str = None,
     ):
         "Adds a UserMessage to conversation by first converting it to a Message"
