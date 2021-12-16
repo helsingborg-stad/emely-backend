@@ -62,7 +62,7 @@ class DialogWorld:
 
         if "RASA_ENABLED" not in env:
             env["RASA_ENABLED"] = "1"
-            self.rasa_threshold = env.get("RASA_THRESHOLD", 0.9)
+            self.rasa_threshold = env.get("RASA_THRESHOLD", 0.95)
 
         logging.info("ENVIRONMENT VARIABLES:")
         for k, v in env.items():
