@@ -15,7 +15,7 @@ class UserMessage(BaseModel):
     response_time: float
 
     class Config:
-        """ Default values sent when testing through swagger docs """
+        """Default values sent when testing through swagger docs"""
 
         schema_extra = {
             "example": {
@@ -85,7 +85,7 @@ class ConversationInit(BaseModel):
     user_id: Optional[str] = Field(None, title="user id")
 
     class Config:
-        """ Default values sent when testing through swagger docs """
+        """Default values sent when testing through swagger docs"""
 
         schema_extra = {
             "example": {
@@ -127,7 +127,7 @@ class Conversation(BaseModel):
     progress: float = 0
 
     def add_message(self, message: Message) -> float:
-        """Adds a message to the conversation and computes progress. 
+        """Adds a message to the conversation and computes progress.
         Progress is many of the interview questions you've gone through so far"""
         if self.episode_done:
             progress = 1
@@ -176,7 +176,7 @@ class Conversation(BaseModel):
         return
 
     def to_dict(self, only_updatable):
-        """Used before pushing conversation to database. 
+        """Used before pushing conversation to database.
         Removes the message list as it's saved in subcollection"""
         if only_updatable:
             return self.dict(
@@ -215,7 +215,7 @@ class Conversation(BaseModel):
             return {m.message_nbr: m for m in last_two_message}
 
     def get_last_x_message_strings(self, x):
-        " Returns blenderbot formatted string of last x messages"
+        "Returns blenderbot formatted string of last x messages"
         sorted_messages = sorted(
             self.messages, key=lambda x: x.message_nbr, reverse=False
         )
