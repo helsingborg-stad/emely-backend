@@ -60,9 +60,9 @@ class InterviewFlowHandler:
         self.question_df = pd.read_excel(p)
 
     def act(self, conversation: Conversation):
-        """ All of the methods in this class should filter the the message 
-            and possible return something appropirate (transition to next question?) 
-            if it's too short or otherwise doesn't pass the filter"""
+        """All of the methods in this class should filter the the message
+        and possible return something appropirate (transition to next question?)
+        if it's too short or otherwise doesn't pass the filter"""
 
         current_dialog_block = conversation.current_dialog_block
 
@@ -181,7 +181,7 @@ class InterviewFlowHandler:
 
     def small_talk_block(self, conversation: Conversation) -> BotMessage:
         "First block of small talk. Uses the fika model instead of the Interview Model"
-        if conversation.current_dialog_block_length > small_talk_max_length:
+        if conversation.current_dialog_block_length >= small_talk_max_length + 1:
             return self.transition_to_first_question(conversation)
 
         else:
@@ -222,7 +222,10 @@ class InterviewFlowHandler:
         conversation.current_dialog_block_length = 0
 
         bot_message = BotMessage(
-            is_hardcoded=True, lang=conversation.lang, text=text, response_time=0,
+            is_hardcoded=True,
+            lang=conversation.lang,
+            text=text,
+            response_time=0,
         )
 
         return bot_message
@@ -233,7 +236,10 @@ class InterviewFlowHandler:
         conversation.current_dialog_block = "goodbye"
         goodbye = random.choice(goodbyes.interview)
         reply = BotMessage(
-            lang=conversation.lang, text=goodbye, response_time=0.0, is_hardcoded=True,
+            lang=conversation.lang,
+            text=goodbye,
+            response_time=0.0,
+            is_hardcoded=True,
         )
         return reply
 
@@ -251,7 +257,10 @@ class InterviewFlowHandler:
             )
 
         return BotMessage(
-            lang=conversation.lang, text=greeting, response_time=0.1, is_hardcoded=True,
+            lang=conversation.lang,
+            text=greeting,
+            response_time=0.1,
+            is_hardcoded=True,
         )
 
     def rasa_act(self, intent, conversation: Conversation) -> BotMessage:
@@ -302,10 +311,10 @@ class InterviewFlowHandler:
         return BotMessage(lang="sv", text=text, response_time=0, is_hardcoded=True)
 
     def get_new_question(self, question: str) -> str:
-        """This funtion should 
+        """This funtion should
         1. Find the question in the question dataframe
         2. Pick another version of the question
-        3. Concatenate with the rasa.dont_understand_other_formulation """
+        3. Concatenate with the rasa.dont_understand_other_formulation"""
         all_questions = self.question_df[["alt_1", "alt_2", "alt_3"]].copy()
         idx = None
         for i, alts in all_questions.iterrows():
