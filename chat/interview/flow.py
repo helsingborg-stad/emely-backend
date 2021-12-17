@@ -111,8 +111,8 @@ class InterviewFlowHandler:
         self,
         conversation: Conversation,
         transition: str = None,
-        filtered_message: str = None,
-        filtered_reason: str = None,
+        filtered_message: str = "",
+        filtered_reason: str = "",
     ) -> BotMessage:
         "Pops a new question or hardcoded message and moves into the next block"
         if len(conversation.question_list) > 0:
@@ -164,6 +164,8 @@ class InterviewFlowHandler:
                 text=model_reply,
                 response_time=response_time,
                 is_hardcoded=False,
+                filtered_message="",
+                filtered_reason="",
             )
             # Post filtering of model replies
             if is_too_repetitive(reply, conversation):
@@ -208,6 +210,8 @@ class InterviewFlowHandler:
                 text=model_reply,
                 response_time=response_time,
                 is_hardcoded=True,
+                filtered_reason="",
+                filtered_message="",
             )
             return reply
 
@@ -226,6 +230,8 @@ class InterviewFlowHandler:
             lang=conversation.lang,
             text=text,
             response_time=0,
+            filtered_reason="",
+            filtered_message="",
         )
 
         return bot_message
@@ -240,6 +246,8 @@ class InterviewFlowHandler:
             text=goodbye,
             response_time=0.0,
             is_hardcoded=True,
+            filtered_reason="",
+            filtered_message="",
         )
         return reply
 
@@ -261,6 +269,8 @@ class InterviewFlowHandler:
             text=greeting,
             response_time=0.1,
             is_hardcoded=True,
+            filtered_message="",
+            filtered_reason="",
         )
 
     def rasa_act(self, intent, conversation: Conversation) -> BotMessage:
@@ -308,7 +318,14 @@ class InterviewFlowHandler:
         else:
             logging.warning("Unknown intent slipped through")
 
-        return BotMessage(lang="sv", text=text, response_time=0, is_hardcoded=True)
+        return BotMessage(
+            lang="sv",
+            text=text,
+            response_time=0,
+            is_hardcoded=True,
+            filtered_reason="",
+            filtered_message="",
+        )
 
     def get_new_question(self, question: str) -> str:
         """This funtion should

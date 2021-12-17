@@ -182,10 +182,14 @@ class DialogWorld:
             if rasa_response["confidence"] >= self.rasa_threshold:
                 intent = rasa_response["name"]
             else:
-                intent = None
+                intent = ""
 
             conversation.add_user_message(
-                user_message, text_en, rasa_intent=intent, show_emely=True
+                user_message,
+                text_en,
+                rasa_intent=intent,
+                show_emely=True,
+                filtered_reason="",
             )
 
             # Rasa act
@@ -290,6 +294,7 @@ class DialogWorld:
             text=text,
             text_en=text_en,
             show_emely=True,
+            rasa_intent="test",
         )
 
         return message
