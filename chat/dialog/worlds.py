@@ -143,7 +143,11 @@ class DialogWorld:
             # We don't want these messages to show up in the dialog history
             reason = "too_short"
             conversation.add_user_message(
-                user_message, text_en, show_emely=False, filtered_reason=reason
+                user_message,
+                text_en,
+                show_emely=False,
+                filtered_reason=reason,
+                rasa_intent="",
             )
             reply = Message(
                 is_hardcoded=True,
@@ -155,7 +159,9 @@ class DialogWorld:
                 text_en="Please elaborate and write a longer answer so I understand",
                 who="bot",
                 show_emely=False,
+                rasa_intent="",
                 filtered_reason=reason,
+                filtered_message="",
             )
 
         # Toxicity filter
@@ -163,7 +169,11 @@ class DialogWorld:
             # We don't want these messages to show up in the dialog history
             reason = "toxic"
             conversation.add_user_message(
-                user_message, text_en, show_emely=False, filtered_reason=reason
+                user_message,
+                text_en,
+                show_emely=False,
+                filtered_reason=reason,
+                rasa_intent="",
             )
             reply = Message(
                 is_hardcoded=True,
@@ -175,7 +185,9 @@ class DialogWorld:
                 text_en="You said a bad word to me",
                 who="bot",
                 show_emely=False,
+                rasa_intent="",
                 filtered_reason=reason,
+                filtered_message="",
             )
         else:
 
@@ -230,7 +242,13 @@ class DialogWorld:
         # Toxic messages are replied to without doing anything specific.
         # Emely will pretend like she didn't understand and repeat her previous statement
         if contains_toxicity(user_message):
-            conversation.add_user_message(user_message, text_en, show_emely=False)
+            conversation.add_user_message(
+                user_message,
+                text_en,
+                show_emely=False,
+                rasa_intent="",
+                filtered_reason="",
+            )
             reply = Message(
                 is_hardcoded=True,
                 lang="sv",
@@ -241,16 +259,23 @@ class DialogWorld:
                 text_en="You said a bad word to me",
                 who="bot",
                 show_emely=False,
+                filtered_message="",
+                filtered_reason="",
+                rasa_intent="",
             )
         else:
 
             if rasa_response["confidence"] >= self.rasa_threshold:
                 intent = rasa_response["name"]
             else:
-                intent = None
+                intent = ""
 
             conversation.add_user_message(
-                user_message, text_en, rasa_intent=intent, show_emely=True
+                user_message,
+                text_en,
+                rasa_intent=intent,
+                show_emely=True,
+                filtered_reason="",
             )
 
             if intent in rasa.fika_intents:
@@ -294,7 +319,7 @@ class DialogWorld:
             text=text,
             text_en=text_en,
             show_emely=True,
-            rasa_intent="test",
+            rasa_intent="",
         )
 
         return message

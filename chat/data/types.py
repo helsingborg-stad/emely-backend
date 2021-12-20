@@ -35,13 +35,13 @@ class BotMessage(BaseModel):
     lang: str
     text: str
     response_time: float
+    filtered_message: str
+    filtered_reason: str
 
     # Default values
     created_at: str = str(datetime.datetime.now())
     recording_used: bool = False
     who: str = "bot"
-    filtered_message: str
-    filtered_reason: str
 
 
 class Message(BaseModel):
@@ -54,15 +54,15 @@ class Message(BaseModel):
     response_time: float
     show_emely: bool
     who: str
-
-    # Default values
-    created_at: str = str(datetime.datetime.now())
-    is_hardcoded: Optional[bool]
-    progress: float = 0
-    recording_used: bool = False
     filtered_message: str
     filtered_reason: str
     rasa_intent: str
+    is_hardcoded: Optional[bool]
+
+    # Default values
+    created_at: str = str(datetime.datetime.now())
+    progress: float = 0
+    recording_used: bool = False
 
     def to_dict(self):
         "Used before pushing to database"
