@@ -49,24 +49,14 @@ async def new_chat(msg: ConversationInit, response: Response, request: Request):
 
 @app.post("/intervju", status_code=200)
 async def interview(user_message: UserMessage, response: Response):
-    try:
-        reply = await world.interview_reply(user_message)
-        return reply
-    except Exception as e:
-        logging.warning(e)
-        response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response
+    reply = await world.interview_reply(user_message)
+    return reply
 
 
 @app.post("/fika", status_code=200)
 async def fika(user_message: UserMessage, response: Response):
-    try:
-        reply = await world.fika_reply(user_message)
-        return reply
-    except Exception as e:
-        logging.warning(e)
-        response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-        return response
+    reply = await world.fika_reply(user_message)
+    return reply
 
 
 @app.get("/joblist")

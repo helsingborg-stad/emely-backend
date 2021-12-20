@@ -40,8 +40,8 @@ class BotMessage(BaseModel):
     created_at: str = str(datetime.datetime.now())
     recording_used: bool = False
     who: str = "bot"
-    filtered_message: str = None
-    filtered_reason: str = None
+    filtered_message: str
+    filtered_reason: str
 
 
 class Message(BaseModel):
@@ -60,9 +60,9 @@ class Message(BaseModel):
     is_hardcoded: Optional[bool]
     progress: float = 0
     recording_used: bool = False
-    filtered_message: str = None
-    filtered_reason: str = None
-    rasa_intent: str = None
+    filtered_message: str
+    filtered_reason: str
+    rasa_intent: str
 
     def to_dict(self):
         "Used before pushing to database"
@@ -155,8 +155,8 @@ class Conversation(BaseModel):
         user_message: UserMessage,
         text_en: str,
         show_emely: bool,
-        rasa_intent: str = None,
-        filtered_reason: str = None,
+        rasa_intent: str,
+        filtered_reason: str,
     ):
         "Adds a UserMessage to conversation by first converting it to a Message"
         if not show_emely:
@@ -170,6 +170,7 @@ class Conversation(BaseModel):
             rasa_intent=rasa_intent,
             show_emely=show_emely,
             filtered_reason=filtered_reason,
+            filtered_message="",
         )
 
         self.add_message(message)
@@ -219,7 +220,9 @@ class Conversation(BaseModel):
         sorted_messages = sorted(
             self.messages, key=lambda x: x.message_nbr, reverse=False
         )
-        filtered_messages = filter(lambda message: message.show_emely, sorted_messages)
+        filtered_messages = list(
+            filter(lambda message: message.show_emely, sorted_messages)
+        )
 
         # We will take all
         if x >= len(sorted_messages):
