@@ -10,6 +10,7 @@ import pandas as pd
 import random
 
 
+# Number of follow-up questions, i.e. not including hardcoded question
 tough_question_max_length = 3
 personal_question_max_length = 2
 general_question_max_length = 2
@@ -183,7 +184,7 @@ class InterviewFlowHandler:
 
     def small_talk_block(self, conversation: Conversation) -> BotMessage:
         "First block of small talk. Uses the fika model instead of the Interview Model"
-        if conversation.current_dialog_block_length >= small_talk_max_length + 1:
+        if conversation.current_dialog_block_length >= small_talk_max_length:
             return self.transition_to_first_question(conversation)
 
         else:
