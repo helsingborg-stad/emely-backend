@@ -283,8 +283,8 @@ class DialogWorld:
             else:
                 reply = self.fika_flow_handler.act(conversation)
 
-        # Translate reply depending on if it was hardcoded or not
-        reply = await self.handle_bot_reply(reply, conversation)
+            # Translate reply depending on if it was hardcoded or not
+            reply = await self.handle_bot_reply(reply, conversation)
 
         # Add reply to conversation
         progress = conversation.add_message(reply)
