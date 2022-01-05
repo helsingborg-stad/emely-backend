@@ -2,6 +2,7 @@ from chat.data.types import Conversation, Message
 import firebase_admin
 from firebase_admin import credentials, firestore
 from pathlib import Path
+from datetime import datetime
 
 from chat.utils import is_gcp_instance
 
@@ -94,3 +95,47 @@ class FirestoreHandler:
             message_ref = message_collection.document(str(message_nbr))
             message_ref.set(message.to_dict())
         return
+
+    def get_user_conversations(self, user_id: str):
+        conversations_data = self.firestore_collection.where(
+            "user_id", "==", user_id
+        ).get()
+        conversations = []
+        for post in conversations_data:
+            conv_data = post.to_dict()
+            message_collection = self.firestore_collection.document(
+                conv_data["conversation_id"]
+            ).collection("messages")
+            docs = message_collection.stream()
+            messages = {doc.id: doc.to_dict() for doc in docs}
+            conversations.append((conv_data, messages))
+        conversations = sorted(
+            conversations,
+            key=lambda d: datetime.strptime(d[0]["created_at"], "%Y-%m-%d %H:%M:%S"),
+        )
+        return conversations
+
+    def get_user_conversations_formatted(self, user_id: str):
+        try:
+            conversations = self.get_user_conversations(user_id)
+            all_conv_string = "\nYour conversations:\n"
+            for conv_data, messages in conversations:
+                all_conv_string = all_conv_string + self.format_conversation(
+                    conv_data, messages
+                )
+        except:
+            all_conv_string = "Something went wrong when retrieving the data, please contact us at emely@nordaxon.com"
+        return all_conv_string
+
+    def format_conversation(self, conv_data, messages):
+        separator = "_______________________________________________________________\n"
+        conv_string = separator
+        info_included = ["persona", "job", "created_at"]
+        for param in info_included:
+            conv_string = conv_string + param + ":\t" + conv_data[param] + "\n"
+        conv_string = conv_string + separator
+        for _, v in messages.items():
+            conv_string = conv_string + v["who"] + ":\t" + v["text"] + "\n"
+        conv_string = conv_string + "\n\n"
+        return conv_string
+

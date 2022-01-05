@@ -64,6 +64,15 @@ def get_joblist():
     return {"occupations": world.question_generator.get_job_list()}
 
 
+@app.get("/user_conversations")
+def get_user_conversations(user_id: str):
+    return {
+        "user_conversations": world.database_handler.get_user_conversations_formatted(
+            user_id
+        )
+    }
+
+
 if __name__ == "__main__":
     uvicorn.run(app, log_level="warning")
 
