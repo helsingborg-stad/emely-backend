@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, Request
+from fastapi import FastAPI, Response, status, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import uvicorn
@@ -62,6 +62,32 @@ async def fika(user_message: UserMessage, response: Response):
 @app.get("/joblist")
 def get_joblist():
     return {"occupations": world.question_generator.get_job_list()}
+
+
+@app.get("/user_conversations")
+def get_user_conversations(user_id: str):
+    response = world.database_handler.get_user_conversations_formatted(
+            user_id
+        )
+    if response:
+        return {"user_conversations": response}
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail="Something went wrong when fetching the user data, please contact us at emely@nordaxon.com",
+        )
+
+
+@app.post("/user_delete")
+def delete_user_data(user_id: str):
+    response = world.database_handler.delete_user_data(user_id)
+    if response:
+        return {"response": "Successfully deleted all user data"}
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail="Something went wrong when deleting the user data, please contact us at emely@nordaxon.com",
+        )
 
 
 if __name__ == "__main__":
