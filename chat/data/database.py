@@ -139,3 +139,27 @@ class FirestoreHandler:
         conv_string = conv_string + "\n\n"
         return conv_string
 
+    def delete_user_data(self, user_id: str):
+        try:
+            conversations_data = self.firestore_collection.where(
+                "user_id", "==", user_id
+            ).get()
+            # Delete the "messages"-collection in each conversation document
+            for post in conversations_data:
+                conv_data = post.to_dict()
+                message_collection = self.firestore_collection.document(
+                    conv_data["conversation_id"]
+                ).collection("messages")
+                docs = message_collection.stream()
+                for doc in docs:
+                    doc.reference.delete()
+            # Delete all documents
+            conversations_docs = self.firestore_collection.where(
+                "user_id", "==", user_id
+            ).stream()
+            for doc in conversations_docs:
+                doc.reference.delete()
+            return True
+        except:
+            return False
+
