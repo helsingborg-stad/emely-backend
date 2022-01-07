@@ -124,7 +124,7 @@ class FirestoreHandler:
                     conv_data, messages
                 )
         except:
-            all_conv_string = "Something went wrong when retrieving the data, please contact us at emely@nordaxon.com"
+            return False
         return all_conv_string
 
     def format_conversation(self, conv_data, messages):

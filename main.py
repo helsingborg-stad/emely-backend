@@ -66,11 +66,16 @@ def get_joblist():
 
 @app.get("/user_conversations")
 def get_user_conversations(user_id: str):
-    return {
-        "user_conversations": world.database_handler.get_user_conversations_formatted(
+    response = world.database_handler.get_user_conversations_formatted(
             user_id
         )
-    }
+    if response:
+        return {"user_conversations": response}
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail="Something went wrong when fetching the user data, please contact us at emely@nordaxon.com",
+        )
 
 
 @app.post("/user_delete")
@@ -80,7 +85,7 @@ def delete_user_data(user_id: str):
         return {"response": "Successfully deleted all user data"}
     else:
         raise HTTPException(
-            status_code=404,
+            status_code=500,
             detail="Something went wrong when deleting the user data, please contact us at emely@nordaxon.com",
         )
 
