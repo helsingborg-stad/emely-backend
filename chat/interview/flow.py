@@ -295,7 +295,7 @@ class InterviewFlowHandler:
 
                 if conversation.current_dialog_block_length == 0:
                     try:
-                        last_question = conversation.repeat_last_message()
+                        last_question = conversation.get_last_question()
                         text = self.get_new_question(last_question)
                     except Exception as e:
                         logging.warning(

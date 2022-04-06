@@ -247,7 +247,7 @@ class DialogWorld:
                 text_en,
                 show_emely=False,
                 rasa_intent="",
-                filtered_reason="",
+                filtered_reason="toxic",
             )
             reply = Message(
                 is_hardcoded=True,

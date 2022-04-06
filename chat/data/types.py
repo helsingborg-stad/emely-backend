@@ -244,8 +244,16 @@ class Conversation(BaseModel):
             if recent_message.who == "bot":
                 latest_emely_message = recent_message
                 break
-        assert latest_emely_message.is_hardcoded
         return latest_emely_message.text
+
+    def get_last_question(self) -> str:
+        "Gets last question"
+        for i in range(1, len(self.messages)):
+            recent_message = self.messages[-i]
+            if recent_message.who == "bot" and recent_message.is_hardcoded:
+                last_question = recent_message
+                return last_question.text
+        assert False, "No last question found"
 
     def last_bot_message_was_hardcoded(self) -> str:
         "Returns true if Emelys last message was hardcoded"
