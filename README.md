@@ -1,14 +1,15 @@
 Emely
 ==============================
+## Overview
+This project was developed by NordAxon for Helsingborg Stad 2021-2022, and open sourced in April 2023.
 
-## Pushing and continuous deployment
+Emely is a Conversational AI System for practicing job interviews in Swedish. The dialogue model is a finetuned Blenderbot 1.
 
-This repo has CD set up with GCP. GCP will automatically deploy from the develop branch.
-To prevent unintended things from happening we add a git hook that's checked before pushing to GitHub.
+The project is separated in 3 repositories: [emely-frontend](https://github.com/helsingborg-stad/emely-frontend), [emely-backend](https://github.com/helsingborg-stad/emely-backend) & [emely-models](https://github.com/helsingborg-stad/emely-models).
 
-You'll have to place it in .git/hooks/ manually and you'll find it in the OneDrive under AI ML PROJECTS\Emely\Design - Development - Test\pre-push
-
-Note: If the confirmation doesn't appear for you, please check that you have a git version higher than 1.8.2 (run git --version on the command line) and also check that the pre-push file is executable (run chmod +x pre-push on the command line) and try again :)
+## Deployment & Environment variables
+The project is built around deployment using Google Cloud Platform, using Cloud Run, Cloud Build, Firebase Authentication & Firestore. 
+The deployment code is set up for Cloud Build, and assumes that environment variables are stored as substitution variables in a Cloud Build Trigger.
 
 
 ## Get started - first time
@@ -18,7 +19,7 @@ Note: If the confirmation doesn't appear for you, please check that you have a g
     $ pip install -r requirements.txt
     $ python setup.py develop
 ```
-3. Aquire 'emelybrainapi-33194bec3069.json' from OneDrive and put in root-folder.
+3. Create, or get existing json credentials for a GCP service account with role _Firebase Admin SDK Administrator Service Agent_ and put in root-folder.
 
 ## Running the server on localhost
 ```$uvicorn app:app --reload```
