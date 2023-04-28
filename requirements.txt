@@ -8,6 +8,6 @@ openpyxl==3.0.9
 aioify==0.4.0
 aiohttp==3.8.1
 setuptools~=52.0.0
-nltk==3.6.5
+nltk==3.6.6
 fastapi==0.70.0
 uvicorn==0.15.0
